@@ -1,1 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
 
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Products | Genius Scientific ERP</title>
+
+<link rel="stylesheet" href="../css/app.css">
+<link rel="stylesheet" href="../css/sidebar.css">
+<link rel="stylesheet" href="../css/products.css">
+
+</head>
+
+<body>
+
+<div class="app">
+
+    <aside id="sidebar"></aside>
+
+    <main class="main">
+
+        <header id="navbar"></header>
+
+        <section class="content">
+
+            <div class="page-header">
+
+                <h1>Products</h1>
+
+                <button id="addProductBtn">
+                    + Add Product
+                </button>
+
+            </div>
+
+            <div class="toolbar">
+
+                <input
+                    type="text"
+                    id="searchProduct"
+                    placeholder="Search Product...">
+
+            </div>
+
+            <table class="table">
+
+                <thead>
+
+                    <tr>
+
+                        <th>Code</th>
+                        <th>Product</th>
+                        <th>Category</th>
+                        <th>MRP</th>
+                        <th>Sale Rate</th>
+                        <th>Stock</th>
+                        <th>GST</th>
+                        <th>Action</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody id="productTable">
+
+                </tbody>
+
+            </table>
+
+        </section>
+
+    </main>
+
+</div>
+
+<script type="module" src="../js/layout.js"></script>
+
+<script type="module" src="../js/products.js"></script>
+
+</body>
+
+</html>
