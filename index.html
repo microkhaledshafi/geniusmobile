@@ -1,1 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
 
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Genius Scientific ERP</title>
+
+    <meta name="description" content="Genius Scientific ERP">
+
+    <link rel="manifest" href="manifest.json">
+
+    <meta name="theme-color" content="#2563eb">
+
+    <link rel="icon" href="assets/logo.png">
+
+    <style>
+        *{
+            margin:0;
+            padding:0;
+            box-sizing:border-box;
+            font-family:Arial,Helvetica,sans-serif;
+        }
+
+        body{
+            height:100vh;
+            display:flex;
+            justify-content:center;
+            align-items:center;
+            background:#f4f7fb;
+        }
+
+        .loader{
+            text-align:center;
+        }
+
+        .loader h2{
+            color:#2563eb;
+            margin-bottom:10px;
+        }
+
+        .spinner{
+            width:45px;
+            height:45px;
+            border:5px solid #ddd;
+            border-top:5px solid #2563eb;
+            border-radius:50%;
+            animation:spin 1s linear infinite;
+            margin:auto;
+        }
+
+        @keyframes spin{
+            100%{
+                transform:rotate(360deg);
+            }
+        }
+
+        p{
+            margin-top:15px;
+            color:#666;
+        }
+    </style>
+
+</head>
+
+<body>
+
+<div class="loader">
+
+    <h2>Genius Scientific ERP</h2>
+
+    <div class="spinner"></div>
+
+    <p>Loading...</p>
+
+</div>
+
+<script type="module">
+
+import { supabase } from "./js/supabase.js";
+
+const { data } = await supabase.auth.getSession();
+
+if(data.session){
+
+    window.location.href="pages/dashboard.html";
+
+}else{
+
+    window.location.href="login.html";
+
+}
+
+</script>
+
+</body>
+
+</html>
