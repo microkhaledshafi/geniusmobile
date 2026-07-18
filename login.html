@@ -1,1 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
 
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Login | Genius Scientific ERP</title>
+
+<link rel="stylesheet" href="css/app.css">
+<link rel="stylesheet" href="css/login.css">
+
+</head>
+
+<body>
+
+<div class="login-container">
+
+    <div class="login-card">
+
+        <div class="logo-area">
+
+            <img src="assets/logo.png" alt="Logo" class="logo">
+
+            <h2>Genius Scientific ERP</h2>
+
+            <p>Sign in to continue</p>
+
+        </div>
+
+        <form id="loginForm">
+
+            <div class="form-group">
+
+                <label>Email</label>
+
+                <input
+                    type="email"
+                    id="email"
+                    placeholder="Enter email"
+                    required>
+
+            </div>
+
+            <div class="form-group">
+
+                <label>Password</label>
+
+                <input
+                    type="password"
+                    id="password"
+                    placeholder="Enter password"
+                    required>
+
+            </div>
+
+            <button type="submit" id="loginBtn">
+
+                Login
+
+            </button>
+
+        </form>
+
+        <div id="message"></div>
+
+    </div>
+
+</div>
+
+<script type="module" src="js/auth.js"></script>
+
+</body>
+
+</html>
