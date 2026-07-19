@@ -1,281 +1,690 @@
-/*********************************************************************
- * Genius Scientific ERP
- * products.js
- * PART 1 OF 4
- *********************************************************************/
-
 import { supabase } from "./supabase.js";
 
-/*********************************************************************
- * DOM REFERENCES
- *********************************************************************/
+/* ======================================================
+   PRODUCTS MODULE
+   PART 1 OF 4
+   ====================================================== */
+
+let products = [];
+let editingId = null;
+
+/* -------------------------
+   DOM ELEMENTS
+------------------------- */
 
 const productTable = document.getElementById("productTable");
 const productForm = document.getElementById("productForm");
-
 const productModal = document.getElementById("productModal");
 const modalTitle = document.getElementById("modalTitle");
 
 const addProductBtn = document.getElementById("addProductBtn");
-const closeModalBtn = document.getElementById("closeModal");
-
-const searchInput = document.getElementById("searchProduct");
-
+const closeModal = document.getElementById("closeModal");
 const saveProductBtn = document.getElementById("saveProductBtn");
 
-const txtProduct = document.getElementById("productName");
-const txtManufacturer = document.getElementById("manufacturer");
-const txtCategory = document.getElementById("category");
-const txtHSN = document.getElementById("hsn");
+const searchProduct = document.getElementById("searchProduct");
 
-const txtPurchaseRate = document.getElementById("purchaseRate");
-const txtSellingRate = document.getElementById("sellingRate");
-const txtMRP = document.getElementById("mrp");
-const txtGST = document.getElementById("gst");
+const productName = document.getElementById("productName");
+const manufacturer = document.getElementById("manufacturer");
+const category = document.getElementById("category");
+const hsn = document.getElementById("hsn");
 
-const txtQuantity = document.getElementById("quantity");
-const txtUnit = document.getElementById("unit");
-const txtBatch = document.getElementById("batch");
-const txtLot = document.getElementById("lot");
-const txtExpiry = document.getElementById("expiry");
+const purchaseRate = document.getElementById("purchaseRate");
+const sellingRate = document.getElementById("sellingRate");
+const mrp = document.getElementById("mrp");
+const gst = document.getElementById("gst");
 
-/*********************************************************************
- * GLOBAL VARIABLES
- *********************************************************************/
+const quantity = document.getElementById("quantity");
+const unit = document.getElementById("unit");
 
-let products = [];
-let editingProductId = null;
+const batch = document.getElementById("batch");
+const lot = document.getElementById("lot");
+const expiry = document.getElementById("expiry");
 
-/*********************************************************************
- * INITIALIZATION
- *********************************************************************/
+/* -------------------------
+   PAGE LOAD
+------------------------- */
 
-document.addEventListener("DOMContentLoaded", initialize);
+document.addEventListener("DOMContentLoaded", () => {
 
-async function initialize() {
+    loadProducts();
 
-    registerEvents();
+});
 
-    await loadProducts();
-
-}
-
-/*********************************************************************
- * EVENTS
- *********************************************************************/
-
-function registerEvents() {
-
-    addProductBtn.addEventListener("click", openAddModal);
-
-    closeModalBtn.addEventListener("click", closeModal);
-
-    window.addEventListener("click", outsideModalClose);
-
-    searchInput.addEventListener("input", filterProducts);
-
-}
-
-/*********************************************************************
- * LOAD PRODUCTS
- *********************************************************************/
+/* -------------------------
+   LOAD PRODUCTS
+------------------------- */
 
 async function loadProducts() {
 
-    try {
+    productTable.innerHTML = `
+        <tr>
+            <td colspan="13" style="text-align:center;">
+                Loading Products...
+            </td>
+        </tr>
+    `;
 
-        showLoading();
+    const { data, error } = await supabase
+        .from("products")
+        .select("*")
+        .order("product", { ascending: true });
 
-        const { data, error } = await supabase
-            .from("products")
-            .select("*")
-            .order("product", { ascending: true });
+    if (error) {
 
-        if (error) throw error;
+        console.error(error);
 
-        products = data || [];
+        productTable.innerHTML = `
+            <tr>
+                <td colspan="13" style="text-align:center;color:red;">
+                    Error Loading Products
+                </td>
+            </tr>
+        `;
 
-        renderProducts(products);
-
+        return;
     }
-    catch (err) {
 
-        console.error(err);
+    products = data || [];
 
-        showError(err.message);
-
-    }
+    renderProducts(products);
 
 }
 
-/*********************************************************************
- * RENDER TABLE
- *********************************************************************/
+/* -------------------------
+   RENDER TABLE
+------------------------- */
 
-function renderProducts(list) {
+/* ======================================================
+   COMPATIBILITY PATCH
+====================================================== */
 
-    productTable.innerHTML = "";
+/* Replace renderProducts with formatted version */
 
-    if (list.length === 0) {
+renderProducts = function (list) {
+
+    if (!list || list.length === 0) {
 
         productTable.innerHTML = `
         <tr>
             <td colspan="13" style="text-align:center;">
                 No Products Found
             </td>
-        </tr>`;
+        </tr>
+        `;
 
         return;
-
     }
 
-    list.forEach(product => {
+    let html = "";
 
-        productTable.insertAdjacentHTML("beforeend", `
+    list.forEach(item => {
 
-<tr>
+        html += `
+        <tr>
 
-<td>${product.product ?? ""}</td>
+            <td>${item.product ?? ""}</td>
+            <td>${item.manufacturer ?? ""}</td>
+            <td>${item.category ?? ""}</td>
 
-<td>${product.manufacturer ?? ""}</td>
+            <td>${formatNumber(item.mrp)}</td>
+            <td>${formatNumber(item.selling_rate)}</td>
+            <td>${formatNumber(item.purchase_rate)}</td>
 
-<td>${product.category ?? ""}</td>
+            <td>${item.gst ?? ""}</td>
+            <td>${formatNumber(item.quantity)}</td>
 
-<td>${product.mrp ?? ""}</td>
+            <td>${item.unit ?? ""}</td>
+            <td>${item.batch ?? ""}</td>
+            <td>${item.lot ?? ""}</td>
 
-<td>${product.selling_rate ?? ""}</td>
+            <td>${formatDate(item.expiry)}</td>
 
-<td>${product.purchase_rate ?? ""}</td>
+            <td>
 
-<td>${product.gst ?? ""}</td>
+                <button
+                    class="edit-btn"
+                    data-id="${item.id}">
+                    Edit
+                </button>
 
-<td>${product.quantity ?? ""}</td>
+                <button
+                    class="delete-btn"
+                    data-id="${item.id}">
+                    Delete
+                </button>
 
-<td>${product.unit ?? ""}</td>
+            </td>
 
-<td>${product.batch ?? ""}</td>
-
-<td>${product.lot ?? ""}</td>
-
-<td>${formatDate(product.expiry)}</td>
-
-<td>
-
-<button onclick="editProduct(${product.id})">
-Edit
-</button>
-
-<button onclick="deleteProduct(${product.id})">
-Delete
-</button>
-
-</td>
-
-</tr>
-
-`);
+        </tr>
+        `;
 
     });
 
-}
+    productTable.innerHTML = html;
 
-/*********************************************************************
- * SEARCH
- *********************************************************************/
+};
 
-function filterProducts() {
+/* Reload table using patched renderer */
 
-    const keyword = searchInput.value.trim().toLowerCase();
+loadProducts();
+
+/* End Compatibility Patch */
+/* -------------------------
+   SEARCH
+------------------------- */
+
+searchProduct.addEventListener("keyup", () => {
+
+    const keyword = searchProduct.value
+        .trim()
+        .toLowerCase();
 
     if (keyword === "") {
 
         renderProducts(products);
-
         return;
 
     }
 
     const filtered = products.filter(item =>
 
-        (item.product || "").toLowerCase().includes(keyword) ||
+        (item.product || "")
+            .toLowerCase()
+            .includes(keyword)
 
-        (item.manufacturer || "").toLowerCase().includes(keyword) ||
+        ||
 
-        (item.category || "").toLowerCase().includes(keyword)
+        (item.manufacturer || "")
+            .toLowerCase()
+            .includes(keyword)
+
+        ||
+
+        (item.category || "")
+            .toLowerCase()
+            .includes(keyword)
+
+        ||
+
+        (item.batch || "")
+            .toLowerCase()
+            .includes(keyword)
+
+        ||
+
+        (item.lot || "")
+            .toLowerCase()
+            .includes(keyword)
 
     );
 
     renderProducts(filtered);
 
-}
+});
 
-/*********************************************************************
- * MODAL
- *********************************************************************/
+/* ======================================================
+   PART 2 OF 4
+   MODAL + ADD + EDIT + SAVE
+====================================================== */
 
-function openAddModal() {
+/* -------------------------
+   OPEN ADD PRODUCT
+------------------------- */
 
-    editingProductId = null;
+addProductBtn.addEventListener("click", () => {
+
+    editingId = null;
 
     modalTitle.textContent = "Add Product";
 
-    productForm.reset();
+    clearForm();
 
     productModal.style.display = "flex";
 
-}
+});
 
-function closeModal() {
+/* -------------------------
+   CLOSE MODAL
+------------------------- */
+
+closeModal.addEventListener("click", () => {
 
     productModal.style.display = "none";
 
-}
+});
 
-function outsideModalClose(event) {
+window.addEventListener("click", (e) => {
 
-    if (event.target === productModal) {
+    if (e.target === productModal) {
 
-        closeModal();
+        productModal.style.display = "none";
 
     }
 
-}
+});
 
-/*********************************************************************
- * HELPERS
- *********************************************************************/
+/* -------------------------
+   CLEAR FORM
+------------------------- */
 
-function showLoading() {
+function clearForm() {
 
-    productTable.innerHTML = `
-    <tr>
-        <td colspan="13" style="text-align:center;">
-            Loading Products...
-        </td>
-    </tr>`;
+    productForm.reset();
+
+    productName.focus();
 
 }
 
-function showError(message) {
+/* -------------------------
+   SAVE PRODUCT
+------------------------- */
 
-    productTable.innerHTML = `
-    <tr>
-        <td colspan="13" style="text-align:center;color:red;">
-            ${message}
-        </td>
-    </tr>`;
+saveProductBtn.addEventListener("click", async (e) => {
+
+    e.preventDefault();
+
+    if (productName.value.trim() === "") {
+
+        alert("Please enter Product Name");
+        productName.focus();
+        return;
+
+    }
+
+    const productData = {
+
+        product: productName.value.trim(),
+
+        manufacturer: manufacturer.value.trim(),
+
+        category: category.value.trim(),
+
+        hsn: hsn.value.trim(),
+
+        purchase_rate: Number(purchaseRate.value) || 0,
+
+        selling_rate: Number(sellingRate.value) || 0,
+
+        mrp: Number(mrp.value) || 0,
+
+        gst: Number(gst.value) || 0,
+
+        quantity: Number(quantity.value) || 0,
+
+        unit: unit.value.trim(),
+
+        batch: batch.value.trim(),
+
+        lot: lot.value.trim(),
+
+        expiry: expiry.value || null
+
+    };
+
+    let error;
+
+    if (editingId === null) {
+
+        ({ error } = await supabase
+            .from("products")
+            .insert([productData]));
+
+    } else {
+
+        ({ error } = await supabase
+            .from("products")
+            .update(productData)
+            .eq("id", editingId));
+
+    }
+
+    if (error) {
+
+        console.error(error);
+
+        alert(error.message);
+
+        return;
+
+    }
+
+    productModal.style.display = "none";
+
+    clearForm();
+
+    loadProducts();
+
+});
+
+/* -------------------------
+   EDIT PRODUCT
+------------------------- */
+
+productTable.addEventListener("click", async (e) => {
+
+    const editButton = e.target.closest(".edit-btn");
+
+    if (!editButton) return;
+
+    editingId = editButton.dataset.id;
+
+    const product = products.find(item => item.id == editingId);
+
+    if (!product) return;
+
+    modalTitle.textContent = "Edit Product";
+
+    productName.value = product.product || "";
+
+    manufacturer.value = product.manufacturer || "";
+
+    category.value = product.category || "";
+
+    hsn.value = product.hsn || "";
+
+    purchaseRate.value = product.purchase_rate || "";
+
+    sellingRate.value = product.selling_rate || "";
+
+    mrp.value = product.mrp || "";
+
+    gst.value = product.gst || "";
+
+    quantity.value = product.quantity || "";
+
+    unit.value = product.unit || "";
+
+    batch.value = product.batch || "";
+
+    lot.value = product.lot || "";
+
+    expiry.value = product.expiry || "";
+
+    productModal.style.display = "flex";
+
+});
+
+/* ======================================================
+   PART 3 OF 4
+   DELETE + KEYBOARD SHORTCUTS + UTILITIES
+====================================================== */
+
+/* -------------------------
+   DELETE PRODUCT
+------------------------- */
+
+productTable.addEventListener("click", async (e) => {
+
+    const deleteButton = e.target.closest(".delete-btn");
+
+    if (!deleteButton) return;
+
+    const id = deleteButton.dataset.id;
+
+    const confirmDelete = confirm(
+        "Are you sure you want to delete this product?"
+    );
+
+    if (!confirmDelete) return;
+
+    const { error } = await supabase
+        .from("products")
+        .delete()
+        .eq("id", id);
+
+    if (error) {
+
+        console.error(error);
+
+        alert(error.message);
+
+        return;
+
+    }
+
+    await loadProducts();
+
+});
+
+/* -------------------------
+   ESC KEY CLOSE MODAL
+------------------------- */
+
+document.addEventListener("keydown", (e) => {
+
+    if (e.key === "Escape") {
+
+        productModal.style.display = "none";
+
+    }
+
+});
+
+/* -------------------------
+   ENTER KEY SAVE
+------------------------- */
+
+productForm.addEventListener("keydown", (e) => {
+
+    if (e.key !== "Enter") return;
+
+    if (e.target.tagName === "TEXTAREA") return;
+
+    e.preventDefault();
+
+    saveProductBtn.click();
+
+});
+
+/* -------------------------
+   REFRESH TABLE
+------------------------- */
+
+async function refreshProducts() {
+
+    await loadProducts();
 
 }
+
+/* -------------------------
+   RESET SEARCH
+------------------------- */
+
+function resetSearch() {
+
+    searchProduct.value = "";
+
+    renderProducts(products);
+
+}
+
+/* -------------------------
+   FORMAT NUMBER
+------------------------- */
+
+function formatNumber(value) {
+
+    if (
+        value === null ||
+        value === undefined ||
+        value === ""
+    ) {
+
+        return "";
+
+    }
+
+    return Number(value).toLocaleString();
+
+}
+
+/* -------------------------
+   FORMAT DATE
+------------------------- */
 
 function formatDate(value) {
 
     if (!value) return "";
 
-    return value;
+    const d = new Date(value);
+
+    if (isNaN(d.getTime())) {
+
+        return value;
+
+    }
+
+    const day = String(d.getDate()).padStart(2, "0");
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const year = d.getFullYear();
+
+    return `${day}-${month}-${year}`;
 
 }
 
-/*********************************************************************
- * END OF PART 1
- *********************************************************************/
+/* -------------------------
+   WINDOW FOCUS
+------------------------- */
 
+window.addEventListener("focus", () => {
+
+    refreshProducts();
+
+});
+
+/* -------------------------
+   PAGE VISIBILITY
+------------------------- */
+
+document.addEventListener("visibilitychange", () => {
+
+    if (!document.hidden) {
+
+        refreshProducts();
+
+    }
+
+});
+
+/* ======================================================
+   PART 4 OF 4
+   FINAL INITIALIZATION
+====================================================== */
+
+/* -------------------------
+   PREVENT DOUBLE SAVE
+------------------------- */
+
+let savingProduct = false;
+
+/* Override save button to prevent double click */
+
+saveProductBtn.addEventListener("click", async () => {
+
+    if (savingProduct) return;
+
+    savingProduct = true;
+
+    saveProductBtn.disabled = true;
+
+    setTimeout(() => {
+
+        savingProduct = false;
+
+        saveProductBtn.disabled = false;
+
+    }, 800);
+
+});
+
+/* -------------------------
+   AUTO CLOSE AFTER SAVE
+------------------------- */
+
+async function reloadProducts() {
+
+    await loadProducts();
+
+    productModal.style.display = "none";
+
+    editingId = null;
+
+}
+
+/* -------------------------
+   CLEAR FORM WHEN MODAL CLOSES
+------------------------- */
+
+function closeProductModal() {
+
+    productModal.style.display = "none";
+
+    clearForm();
+
+    editingId = null;
+
+}
+
+closeModal.addEventListener("click", closeProductModal);
+
+window.addEventListener("click", function (e) {
+
+    if (e.target === productModal) {
+
+        closeProductModal();
+
+    }
+
+});
+
+/* -------------------------
+   SORT PRODUCTS
+------------------------- */
+
+function sortProductsAZ() {
+
+    products.sort((a, b) =>
+
+        (a.product || "").localeCompare(b.product || "")
+
+    );
+
+    renderProducts(products);
+
+}
+
+/* -------------------------
+   PRODUCT COUNT
+------------------------- */
+
+function getProductCount() {
+
+    return products.length;
+
+}
+
+/* -------------------------
+   REFRESH AFTER OPERATIONS
+------------------------- */
+
+async function refreshModule() {
+
+    await loadProducts();
+
+    sortProductsAZ();
+
+}
+
+/* -------------------------
+   START MODULE
+------------------------- */
+
+(async function () {
+
+    await refreshModule();
+
+    console.log(
+        "Products Module Loaded Successfully"
+    );
+
+})();
