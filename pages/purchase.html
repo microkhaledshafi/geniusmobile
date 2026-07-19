@@ -6,106 +6,129 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Purchase Register | Genius Scientific ERP</title>
 
-    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/app.css">
+    <link rel="stylesheet" href="../css/sidebar.css">
     <link rel="stylesheet" href="../css/purchase.css">
+
     <link rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
 
 <body>
 
-<div class="layout">
+<div class="app">
 
-    <div id="sidebar-container"></div>
+    <!-- Sidebar -->
+    <aside id="sidebar"></aside>
 
-    <main class="content">
+    <!-- Main -->
+    <main class="main">
 
-        <div class="page-header">
+        <!-- Navbar -->
+        <header id="navbar"></header>
 
-            <div>
+        <!-- Page -->
+        <section class="content">
+
+            <div class="page-header">
+
                 <h1>Purchase Register</h1>
-                <p>Manage supplier purchase invoices</p>
+
+                <button
+                    id="newPurchaseBtn"
+                    class="primary-btn">
+                    <i class="fa-solid fa-plus"></i>
+                    New Purchase
+                </button>
+
             </div>
 
-            <button id="newPurchaseBtn" class="primary-btn">
-                <i class="fa-solid fa-plus"></i>
-                New Purchase
-            </button>
+            <!-- Dashboard Cards -->
 
-        </div>
+            <div class="stats-grid">
 
-        <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>Total Purchases</h3>
+                    <span id="totalPurchaseCount">0</span>
+                </div>
 
-            <div class="stat-card">
-                <span>Total Purchases</span>
-                <h2 id="purchaseCount">0</h2>
+                <div class="stat-card">
+                    <h3>Total Amount</h3>
+                    <span id="totalPurchaseAmount">₹0.00</span>
+                </div>
+
             </div>
 
-            <div class="stat-card">
-                <span>Total Purchase Amount</span>
-                <h2 id="purchaseAmount">₹0.00</h2>
+            <!-- Toolbar -->
+
+            <div class="toolbar">
+
+                <input
+                    type="text"
+                    id="searchPurchase"
+                    placeholder="Search Supplier / Invoice No">
+
             </div>
 
-        </div>
+            <!-- Purchase Table -->
 
-        <div class="toolbar">
+            <div class="table-container">
 
-            <input
-                type="text"
-                id="searchPurchase"
-                placeholder="Search supplier or invoice">
+                <table class="table">
 
-        </div>
+                    <thead>
 
-        <div class="table-container">
+                        <tr>
 
-            <table>
+                            <th>Date</th>
+                            <th>Supplier</th>
+                            <th>Invoice No</th>
+                            <th>Total</th>
+                            <th>Status</th>
+                            <th>Attachment</th>
+                            <th>Action</th>
 
-                <thead>
+                        </tr>
 
-                <tr>
+                    </thead>
 
-                    <th>Supplier Invoice</th>
-                    <th>Purchase Date</th>
-                    <th>Supplier</th>
-                    <th>Total</th>
-                    <th>Status</th>
-                    <th>Attachment</th>
-                    <th>Action</th>
+                    <tbody id="purchaseBody">
 
-                </tr>
+                    </tbody>
 
-                </thead>
+                </table>
 
-                <tbody id="purchaseBody">
+            </div>
 
-                </tbody>
-
-            </table>
-
-        </div>
+        </section>
 
     </main>
 
 </div>
 
-<div id="deleteModal" class="modal">
+<!-- Delete Modal -->
+
+<div
+    id="deleteModal"
+    class="modal">
 
     <div class="modal-content">
 
-        <h3>Delete Purchase</h3>
+        <h3>Delete Purchase?</h3>
 
         <p>
-            Are you sure you want to delete this purchase?
+            This will remove the purchase and reverse the stock.
         </p>
 
         <div class="modal-actions">
 
-            <button id="cancelDeleteBtn" class="secondary-btn">
+            <button id="cancelDelete">
                 Cancel
             </button>
 
-            <button id="confirmDeleteBtn" class="danger-btn">
+            <button
+                id="confirmDelete"
+                class="danger-btn">
                 Delete
             </button>
 
@@ -115,7 +138,7 @@
 
 </div>
 
-<script src="../js/layout.js"></script>
+<script type="module" src="../js/layout.js"></script>
 <script type="module" src="../js/purchase-register.js"></script>
 
 </body>
