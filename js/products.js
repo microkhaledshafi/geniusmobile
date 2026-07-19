@@ -94,13 +94,11 @@ async function loadProducts() {
    RENDER TABLE
 ------------------------- */
 
-/* ======================================================
-   COMPATIBILITY PATCH
-====================================================== */
+/* -------------------------
+   RENDER PRODUCTS
+------------------------- */
 
-/* Replace renderProducts with formatted version */
-
-renderProducts = function (list) {
+function renderProducts(list) {
 
     if (!list || list.length === 0) {
 
@@ -140,19 +138,13 @@ renderProducts = function (list) {
             <td>${formatDate(item.expiry)}</td>
 
             <td>
-
-                <button
-                    class="edit-btn"
-                    data-id="${item.id}">
+                <button class="edit-btn" data-id="${item.id}">
                     Edit
                 </button>
 
-                <button
-                    class="delete-btn"
-                    data-id="${item.id}">
+                <button class="delete-btn" data-id="${item.id}">
                     Delete
                 </button>
-
             </td>
 
         </tr>
@@ -162,13 +154,7 @@ renderProducts = function (list) {
 
     productTable.innerHTML = html;
 
-};
-
-/* Reload table using patched renderer */
-
-loadProducts();
-
-/* End Compatibility Patch */
+}
 /* -------------------------
    SEARCH
 ------------------------- */
