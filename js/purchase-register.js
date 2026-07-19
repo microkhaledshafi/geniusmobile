@@ -177,23 +177,6 @@ ${attachment}
 
 <td>
 
-<button
-class="icon-btn edit-btn"
-data-id="${purchase.id}"
-title="Edit">
-
-<i class="fa-solid fa-pen"></i>
-
-</button>
-
-<button
-class="icon-btn delete-btn"
-data-id="${purchase.id}"
-title="Delete">
-
-<i class="fa-solid fa-trash"></i>
-
-</button>
 
 <button
 class="icon-btn print-btn"
