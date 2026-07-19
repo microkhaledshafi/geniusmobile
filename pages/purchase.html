@@ -1,47 +1,153 @@
-<div class="page-header">
-    <h2>Purchase Register</h2>
+<!DOCTYPE html>
+<html lang="en">
 
-    <button id="newPurchaseBtn" class="primary-btn">
-        + New Purchase
-    </button>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Purchase Register | Genius Scientific ERP</title>
+
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/purchase.css">
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+</head>
+
+<body>
+
+<div class="layout">
+
+    <!-- Sidebar -->
+    <div id="sidebar-container"></div>
+
+    <!-- Main Content -->
+    <main class="content">
+
+        <!-- Header -->
+        <div class="page-header">
+
+            <div>
+                <h1>Purchase Register</h1>
+                <p>Manage supplier purchase invoices</p>
+            </div>
+
+            <button id="newPurchaseBtn" class="primary-btn">
+                <i class="fa-solid fa-plus"></i>
+                New Purchase
+            </button>
+
+        </div>
+
+        <!-- Statistics -->
+        <div class="stats-grid">
+
+            <div class="stat-card">
+                <span>Total Purchases</span>
+                <h2 id="purchaseCount">0</h2>
+            </div>
+
+            <div class="stat-card">
+                <span>Total Amount</span>
+                <h2 id="purchaseAmount">₹0.00</h2>
+            </div>
+
+        </div>
+
+        <!-- Toolbar -->
+        <div class="toolbar">
+
+            <div class="search-box">
+
+                <i class="fa-solid fa-magnifying-glass"></i>
+
+                <input
+                    type="text"
+                    id="searchPurchase"
+                    placeholder="Search supplier, invoice number..."
+                >
+
+            </div>
+
+        </div>
+
+        <!-- Purchase Table -->
+        <div class="table-container">
+
+            <table id="purchaseTable">
+
+                <thead>
+
+                    <tr>
+
+                        <th>Supplier Invoice</th>
+
+                        <th>Date</th>
+
+                        <th>Supplier</th>
+
+                        <th>Total</th>
+
+                        <th>Attachment</th>
+
+                        <th>Status</th>
+
+                        <th>Action</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody id="purchaseBody">
+
+                    <!-- Loaded by JavaScript -->
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </main>
+
 </div>
 
-<div class="toolbar">
+<!-- Delete Modal -->
 
-    <input
-        type="text"
-        id="searchPurchase"
-        placeholder="Search supplier invoice, supplier..."
-    >
+<div id="deleteModal" class="modal">
+
+    <div class="modal-content">
+
+        <h3>Delete Purchase</h3>
+
+        <p>
+            Are you sure you want to delete this purchase?
+        </p>
+
+        <div class="modal-actions">
+
+            <button
+                id="cancelDeleteBtn"
+                class="secondary-btn">
+
+                Cancel
+
+            </button>
+
+            <button
+                id="confirmDeleteBtn"
+                class="danger-btn">
+
+                Delete
+
+            </button>
+
+        </div>
+
+    </div>
 
 </div>
 
-<table id="purchaseTable">
+<script src="../js/layout.js"></script>
+<script type="module" src="../js/purchase.js"></script>
 
-<thead>
-
-<tr>
-
-<th>Supplier Invoice</th>
-
-<th>Date</th>
-
-<th>Supplier</th>
-
-<th>Amount</th>
-
-<th>Attachment</th>
-
-<th>Status</th>
-
-<th>Actions</th>
-
-</tr>
-
-</thead>
-
-<tbody id="purchaseBody">
-
-</tbody>
-
-</table>
+</body>
+</html>
