@@ -1,32 +1,21 @@
 import { supabase } from "./supabase.js";
 
-/* =====================================================
+/* ==========================================
    PURCHASE REGISTER
-   PART 1 - INITIALIZATION
-===================================================== */
+========================================== */
+
+const purchaseBody = document.getElementById("purchaseBody");
+const purchaseCount = document.getElementById("purchaseCount");
+const purchaseAmount = document.getElementById("purchaseAmount");
+const searchPurchase = document.getElementById("searchPurchase");
+const newPurchaseBtn = document.getElementById("newPurchaseBtn");
 
 let purchases = [];
 let deleteId = null;
 
-/* =====================================================
-   DOM ELEMENTS
-===================================================== */
-
-const purchaseBody = document.getElementById("purchaseBody");
-const searchPurchase = document.getElementById("searchPurchase");
-
-const purchaseCount = document.getElementById("purchaseCount");
-const purchaseAmount = document.getElementById("purchaseAmount");
-
-const newPurchaseBtn = document.getElementById("newPurchaseBtn");
-
-const deleteModal = document.getElementById("deleteModal");
-const confirmDeleteBtn = document.getElementById("confirmDeleteBtn");
-const cancelDeleteBtn = document.getElementById("cancelDeleteBtn");
-
-/* =====================================================
+/* ==========================================
    PAGE LOAD
-===================================================== */
+========================================== */
 
 document.addEventListener("DOMContentLoaded", () => {
 
@@ -34,49 +23,39 @@ document.addEventListener("DOMContentLoaded", () => {
 
 });
 
-/* =====================================================
+/* ==========================================
    NEW PURCHASE
-===================================================== */
+========================================== */
 
-if (newPurchaseBtn) {
+newPurchaseBtn.addEventListener("click", () => {
 
-    newPurchaseBtn.addEventListener("click", () => {
+    window.location.href = "purchase-form.html";
 
-        window.location.href = "purchase-form.html";
+});
 
-    });
-
-}
-
-/* =====================================================
+/* ==========================================
    LOAD PURCHASES
-===================================================== */
+========================================== */
 
 async function loadPurchases() {
 
     purchaseBody.innerHTML = `
         <tr>
-            <td colspan="7" style="text-align:center;padding:20px;">
-                Loading purchases...
+            <td colspan="7" style="text-align:center;">
+                Loading...
             </td>
         </tr>
     `;
 
     const { data, error } = await supabase
-
         .from("purchase_master")
-
         .select(`
-            id,
-            supplier_invoice_no,
-            purchase_date,
-            supplier_id,
-            grand_total,
-            status,
-            attachment_url,
-            suppliers(name)
+            *,
+            suppliers(
+                id,
+                name
+            )
         `)
-
         .order("purchase_date", { ascending: false });
 
     if (error) {
@@ -103,9 +82,9 @@ async function loadPurchases() {
 
 }
 
-/* =====================================================
-   SUMMARY
-===================================================== */
+/* ==========================================
+   SUMMARY CARDS
+========================================== */
 
 function updateSummary() {
 
@@ -113,45 +92,45 @@ function updateSummary() {
 
     let total = 0;
 
-    purchases.forEach(item => {
+    purchases.forEach(p => {
 
-        total += Number(item.grand_total || 0);
+        total += Number(p.grand_total || 0);
 
     });
 
     purchaseAmount.textContent =
-        "₹ " + total.toFixed(2);
+        "₹" + total.toLocaleString("en-IN", {
+            minimumFractionDigits: 2
+        });
 
 }
 
-/* =====================================================
+/* ==========================================
    DATE FORMAT
-===================================================== */
+========================================== */
 
 function formatDate(date) {
 
-    if (!date) return "-";
+    if (!date) return "";
 
     return new Date(date).toLocaleDateString("en-IN");
 
 }
 
-console.log("Purchase Register Part 1 Loaded");
-
-/* =====================================================
+/* ==========================================
    RENDER PURCHASES
-===================================================== */
+========================================== */
 
-function renderPurchases(rows) {
+function renderPurchases(data) {
 
     purchaseBody.innerHTML = "";
 
-    if (rows.length === 0) {
+    if (data.length === 0) {
 
         purchaseBody.innerHTML = `
             <tr>
-                <td colspan="7" style="text-align:center;padding:20px;">
-                    No purchase records found.
+                <td colspan="7" style="text-align:center;">
+                    No purchases found.
                 </td>
             </tr>
         `;
@@ -159,65 +138,75 @@ function renderPurchases(rows) {
         return;
     }
 
-    rows.forEach((purchase) => {
+    data.forEach(purchase => {
+
+        const attachment = purchase.attachment_url
+            ? `<a href="${purchase.attachment_url}" target="_blank">
+                    <i class="fa-solid fa-paperclip"></i>
+               </a>`
+            : "-";
+
+        const statusClass =
+            purchase.status === "Cancelled"
+                ? "badge-danger"
+                : purchase.status === "Pending"
+                ? "badge-warning"
+                : "badge-success";
 
         purchaseBody.insertAdjacentHTML("beforeend", `
 
-            <tr>
+<tr>
 
-                <td>${purchase.supplier_invoice_no || "-"}</td>
+<td>${purchase.supplier_invoice_no || ""}</td>
 
-                <td>${formatDate(purchase.purchase_date)}</td>
+<td>${formatDate(purchase.purchase_date)}</td>
 
-                <td>${purchase.suppliers?.name || "-"}</td>
+<td>${purchase.suppliers?.name || ""}</td>
 
-                <td>₹ ${Number(purchase.grand_total || 0).toFixed(2)}</td>
+<td>₹${Number(purchase.grand_total || 0).toFixed(2)}</td>
 
-                <td>
+<td>
+<span class="${statusClass}">
+${purchase.status || "Saved"}
+</span>
+</td>
 
-                    ${
-                        purchase.attachment_url
-                        ?
-                        `<a href="${purchase.attachment_url}" target="_blank">
-                            📎 View
-                        </a>`
-                        :
-                        "-"
-                    }
+<td>
+${attachment}
+</td>
 
-                </td>
+<td>
 
-                <td>
+<button
+class="icon-btn edit-btn"
+data-id="${purchase.id}"
+title="Edit">
 
-                    <span class="status-badge">
+<i class="fa-solid fa-pen"></i>
 
-                        ${purchase.status || "Saved"}
+</button>
 
-                    </span>
+<button
+class="icon-btn delete-btn"
+data-id="${purchase.id}"
+title="Delete">
 
-                </td>
+<i class="fa-solid fa-trash"></i>
 
-                <td>
+</button>
 
-                    <button
-                        class="edit-btn"
-                        onclick="editPurchase(${purchase.id})">
+<button
+class="icon-btn print-btn"
+data-id="${purchase.id}"
+title="Print">
 
-                        Edit
+<i class="fa-solid fa-print"></i>
 
-                    </button>
+</button>
 
-                    <button
-                        class="delete-btn"
-                        onclick="showDeleteModal(${purchase.id})">
+</td>
 
-                        Delete
-
-                    </button>
-
-                </td>
-
-            </tr>
+</tr>
 
         `);
 
@@ -225,186 +214,190 @@ function renderPurchases(rows) {
 
 }
 
-/* =====================================================
-   SEARCH
-===================================================== */
+/* ==========================================
+   SEARCH PURCHASES
+========================================== */
 
-if (searchPurchase) {
+searchPurchase.addEventListener("input", () => {
 
-    searchPurchase.addEventListener("input", function () {
+    const keyword = searchPurchase.value
+        .trim()
+        .toLowerCase();
 
-        const keyword = this.value
-            .toLowerCase()
-            .trim();
+    const filtered = purchases.filter(p => {
 
-        if (keyword === "") {
+        const invoice =
+            (p.supplier_invoice_no || "")
+            .toLowerCase();
 
-            renderPurchases(purchases);
+        const supplier =
+            (p.suppliers?.name || "")
+            .toLowerCase();
 
-            return;
-
-        }
-
-        const filtered = purchases.filter(item => {
-
-            return (
-
-                (item.supplier_invoice_no || "")
-                .toLowerCase()
-                .includes(keyword)
-
-                ||
-
-                (item.suppliers?.name || "")
-                .toLowerCase()
-                .includes(keyword)
-
-                ||
-
-                (item.status || "")
-                .toLowerCase()
-                .includes(keyword)
-
-            );
-
-        });
-
-        renderPurchases(filtered);
+        return invoice.includes(keyword)
+            || supplier.includes(keyword);
 
     });
 
-}
+    renderPurchases(filtered);
 
-/* =====================================================
+});
+
+/* ==========================================
    EDIT PURCHASE
-===================================================== */
+========================================== */
 
-window.editPurchase = function(id) {
+purchaseBody.addEventListener("click", (e) => {
+
+    const editBtn = e.target.closest(".edit-btn");
+
+    if (!editBtn) return;
+
+    const id = editBtn.dataset.id;
 
     window.location.href =
         `purchase-form.html?id=${id}`;
 
-};
+});
 
-/* =====================================================
+/* ==========================================
+   DELETE BUTTON
+========================================== */
+
+purchaseBody.addEventListener("click", (e) => {
+
+    const btn = e.target.closest(".delete-btn");
+
+    if (!btn) return;
+
+    deleteId = Number(btn.dataset.id);
+
+    document
+        .getElementById("deleteModal")
+        .style.display = "flex";
+
+});
+
+/* ==========================================
+   PRINT BUTTON
+========================================== */
+
+purchaseBody.addEventListener("click", (e) => {
+
+    const btn = e.target.closest(".print-btn");
+
+    if (!btn) return;
+
+    const id = btn.dataset.id;
+
+    window.open(
+        `purchase-print.html?id=${id}`,
+        "_blank"
+    );
+
+});
+
+/* ==========================================
    DELETE MODAL
-===================================================== */
+========================================== */
 
-window.showDeleteModal = function(id) {
+const deleteModal = document.getElementById("deleteModal");
+const cancelDeleteBtn = document.getElementById("cancelDeleteBtn");
+const confirmDeleteBtn = document.getElementById("confirmDeleteBtn");
 
-    deleteId = id;
+/* ==========================================
+   CANCEL DELETE
+========================================== */
 
-    deleteModal.style.display = "flex";
+cancelDeleteBtn.addEventListener("click", () => {
 
-};
+    deleteId = null;
 
-if (cancelDeleteBtn) {
+    deleteModal.style.display = "none";
 
-    cancelDeleteBtn.addEventListener("click", () => {
-
-        deleteModal.style.display = "none";
-
-        deleteId = null;
-
-    });
-
-}
+});
 
 window.addEventListener("click", (e) => {
 
     if (e.target === deleteModal) {
 
-        deleteModal.style.display = "none";
-
         deleteId = null;
+
+        deleteModal.style.display = "none";
 
     }
 
 });
 
-document.addEventListener("keydown", (e) => {
+/* ==========================================
+   CONFIRM DELETE
+========================================== */
 
-    if (e.key === "Escape") {
+confirmDeleteBtn.addEventListener("click", async () => {
 
-        deleteModal.style.display = "none";
+    if (!deleteId) return;
 
-        deleteId = null;
+    await deletePurchase(deleteId);
 
-    }
+    deleteModal.style.display = "none";
+
+    deleteId = null;
 
 });
 
-console.log("Purchase Register Part 2 Loaded");
-
-/* =====================================================
+/* ==========================================
    DELETE PURCHASE
-===================================================== */
-
-if (confirmDeleteBtn) {
-
-    confirmDeleteBtn.addEventListener("click", async () => {
-
-        if (!deleteId) return;
-
-        await deletePurchase(deleteId);
-
-        deleteModal.style.display = "none";
-
-        deleteId = null;
-
-    });
-
-}
+========================================== */
 
 async function deletePurchase(id) {
 
     try {
 
         /* =============================
-           GET PURCHASE ITEMS
+           LOAD PURCHASE ITEMS
         ============================== */
 
-        const { data: items, error: itemFetchError } =
+        const { data: items, error: itemLoadError } =
             await supabase
                 .from("purchase_items")
                 .select("*")
                 .eq("purchase_id", id);
 
-        if (itemFetchError) throw itemFetchError;
+        if (itemLoadError)
+            throw itemLoadError;
 
         /* =============================
-           REVERSE PRODUCT STOCK
+           REVERSE STOCK
         ============================== */
 
-        for (const item of (items || [])) {
+        for (const item of items || []) {
 
-            const { data: product, error: productError } =
-                await supabase
-                    .from("products")
-                    .select("id, quantity")
-                    .eq("id", item.product_id)
-                    .single();
+            const { data: product } = await supabase
+                .from("products")
+                .select("quantity")
+                .eq("id", item.product_id)
+                .single();
 
-            if (productError) continue;
+            if (!product) continue;
 
             const newQty =
-                Math.max(
-                    0,
-                    Number(product.quantity || 0) -
-                    Number(item.qty || 0)
-                );
+                Number(product.quantity || 0) -
+                Number(item.qty || 0);
 
-            await supabase
+            const { error } = await supabase
                 .from("products")
                 .update({
-                    quantity: newQty
+                    quantity: Math.max(0, newQty)
                 })
                 .eq("id", item.product_id);
+
+            if (error)
+                throw error;
 
         }
 
         /* =============================
-           DELETE PURCHASE ITEMS
+           DELETE ITEMS
         ============================== */
 
         const { error: deleteItemsError } =
@@ -413,7 +406,8 @@ async function deletePurchase(id) {
                 .delete()
                 .eq("purchase_id", id);
 
-        if (deleteItemsError) throw deleteItemsError;
+        if (deleteItemsError)
+            throw deleteItemsError;
 
         /* =============================
            DELETE MASTER
@@ -425,23 +419,16 @@ async function deletePurchase(id) {
                 .delete()
                 .eq("id", id);
 
-        if (deleteMasterError) throw deleteMasterError;
-
-        /* =============================
-           REMOVE FROM LOCAL ARRAY
-        ============================== */
-
-        purchases = purchases.filter(
-            purchase => purchase.id !== id
-        );
-
-        renderPurchases(purchases);
-
-        updateSummary();
+        if (deleteMasterError)
+            throw deleteMasterError;
 
         alert("Purchase deleted successfully.");
 
-    } catch (err) {
+        await loadPurchases();
+
+    }
+
+    catch (err) {
 
         console.error(err);
 
@@ -450,16 +437,3 @@ async function deletePurchase(id) {
     }
 
 }
-
-/* =====================================================
-   REFRESH
-===================================================== */
-
-async function refreshPurchases() {
-
-    await loadPurchases();
-
-}
-
-console.log("Purchase Register Part 3 Loaded");
-
