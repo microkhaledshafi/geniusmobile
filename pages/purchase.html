@@ -16,13 +16,10 @@
 
 <div class="layout">
 
-    <!-- Sidebar -->
     <div id="sidebar-container"></div>
 
-    <!-- Main Content -->
     <main class="content">
 
-        <!-- Header -->
         <div class="page-header">
 
             <div>
@@ -37,7 +34,6 @@
 
         </div>
 
-        <!-- Statistics -->
         <div class="stats-grid">
 
             <div class="stat-card">
@@ -46,59 +42,42 @@
             </div>
 
             <div class="stat-card">
-                <span>Total Amount</span>
+                <span>Total Purchase Amount</span>
                 <h2 id="purchaseAmount">₹0.00</h2>
             </div>
 
         </div>
 
-        <!-- Toolbar -->
         <div class="toolbar">
 
-            <div class="search-box">
-
-                <i class="fa-solid fa-magnifying-glass"></i>
-
-                <input
-                    type="text"
-                    id="searchPurchase"
-                    placeholder="Search supplier, invoice number..."
-                >
-
-            </div>
+            <input
+                type="text"
+                id="searchPurchase"
+                placeholder="Search supplier or invoice">
 
         </div>
 
-        <!-- Purchase Table -->
         <div class="table-container">
 
-            <table id="purchaseTable">
+            <table>
 
                 <thead>
 
-                    <tr>
+                <tr>
 
-                        <th>Supplier Invoice</th>
+                    <th>Supplier Invoice</th>
+                    <th>Purchase Date</th>
+                    <th>Supplier</th>
+                    <th>Total</th>
+                    <th>Status</th>
+                    <th>Attachment</th>
+                    <th>Action</th>
 
-                        <th>Date</th>
-
-                        <th>Supplier</th>
-
-                        <th>Total</th>
-
-                        <th>Attachment</th>
-
-                        <th>Status</th>
-
-                        <th>Action</th>
-
-                    </tr>
+                </tr>
 
                 </thead>
 
                 <tbody id="purchaseBody">
-
-                    <!-- Loaded by JavaScript -->
 
                 </tbody>
 
@@ -109,8 +88,6 @@
     </main>
 
 </div>
-
-<!-- Delete Modal -->
 
 <div id="deleteModal" class="modal">
 
@@ -124,20 +101,12 @@
 
         <div class="modal-actions">
 
-            <button
-                id="cancelDeleteBtn"
-                class="secondary-btn">
-
+            <button id="cancelDeleteBtn" class="secondary-btn">
                 Cancel
-
             </button>
 
-            <button
-                id="confirmDeleteBtn"
-                class="danger-btn">
-
+            <button id="confirmDeleteBtn" class="danger-btn">
                 Delete
-
             </button>
 
         </div>
@@ -147,7 +116,7 @@
 </div>
 
 <script src="../js/layout.js"></script>
-<script type="module" src="../js/purchase.js"></script>
+<script type="module" src="../js/purchase-register.js"></script>
 
 </body>
 </html>
