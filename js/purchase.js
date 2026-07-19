@@ -1,55 +1,82 @@
 import { supabase } from "./supabase.js";
 
-/* =====================================================
-   PURCHASE MODULE
-   PART 1 - FOUNDATION
-===================================================== */
+/* =========================================================
+   PURCHASE ENTRY
+========================================================= */
 
-let suppliers = [];
-let products = [];
+// -----------------------------
+// DOM Elements
+// -----------------------------
 
-/* =====================================================
-   DOM
-===================================================== */
-
-const supplierSelect = document.getElementById("supplierSelect");
+const supplier = document.getElementById("supplier");
+const supplierInvoiceNo = document.getElementById("supplierInvoiceNo");
 const purchaseDate = document.getElementById("purchaseDate");
-const purchaseTable = document.getElementById("purchaseTable");
+const status = document.getElementById("status");
+const attachment = document.getElementById("attachment");
+const remarks = document.getElementById("remarks");
 
-const addRowBtn = document.getElementById("addRowBtn");
+const productBody = document.getElementById("productBody");
 
 const subtotal = document.getElementById("subtotal");
 const gstTotal = document.getElementById("gstTotal");
 const grandTotal = document.getElementById("grandTotal");
 
-/* =====================================================
-   PAGE LOAD
-===================================================== */
+const addRowBtn = document.getElementById("addRowBtn");
+const savePurchaseBtn = document.getElementById("savePurchaseBtn");
+const cancelBtn = document.getElementById("cancelBtn");
+
+// -----------------------------
+// Global Variables
+// -----------------------------
+
+let suppliers = [];
+let products = [];
+
+let purchaseId = null;
+let editMode = false;
+
+// -----------------------------
+// Page Load
+// -----------------------------
 
 document.addEventListener("DOMContentLoaded", async () => {
 
-    purchaseDate.value = new Date().toISOString().split("T")[0];
+    setToday();
 
     await loadSuppliers();
 
     await loadProducts();
 
-    addPurchaseRow();
+    addProductRow();
+
+    checkEditMode();
 
 });
 
-/* =====================================================
-   LOAD SUPPLIERS
-===================================================== */
+// =========================================================
+// TODAY'S DATE
+// =========================================================
+
+function setToday() {
+
+    if (purchaseDate.value) return;
+
+    const today = new Date();
+
+    purchaseDate.value =
+        today.toISOString().split("T")[0];
+
+}
+
+// =========================================================
+// LOAD SUPPLIERS
+// =========================================================
 
 async function loadSuppliers() {
 
     const { data, error } = await supabase
-
         .from("suppliers")
-
         .select("*")
-
         .order("name");
 
     if (error) {
@@ -62,40 +89,32 @@ async function loadSuppliers() {
 
     suppliers = data || [];
 
-    supplierSelect.innerHTML = `
-        <option value="">
-            Select Supplier
-        </option>
-    `;
+    supplier.innerHTML =
+        `<option value="">Select Supplier</option>`;
 
-    suppliers.forEach(supplier => {
+    suppliers.forEach(item => {
 
-        supplierSelect.innerHTML += `
+        supplier.innerHTML += `
 
-            <option value="${supplier.id}">
+<option value="${item.id}">
+${item.name}
+</option>
 
-                ${supplier.name}
-
-            </option>
-
-        `;
+`;
 
     });
 
 }
 
-/* =====================================================
-   LOAD PRODUCTS
-===================================================== */
+// =========================================================
+// LOAD PRODUCTS
+// =========================================================
 
 async function loadProducts() {
 
     const { data, error } = await supabase
-
         .from("products")
-
         .select("*")
-
         .order("product");
 
     if (error) {
@@ -110,43 +129,110 @@ async function loadProducts() {
 
 }
 
-/* =====================================================
-   ADD PURCHASE ROW
-===================================================== */
+// =========================================================
+// PRODUCT OPTIONS
+// =========================================================
 
-addRowBtn.addEventListener("click", addPurchaseRow);
+function getProductOptions(selected = "") {
 
-function addPurchaseRow() {
-
-    let productOptions = `
-        <option value="">
-            Select Product
-        </option>
-    `;
+    let html =
+        `<option value="">Select Product</option>`;
 
     products.forEach(product => {
 
-        productOptions += `
+        html += `
 
-            <option value="${product.id}">
+<option
+value="${product.id}"
+${selected == product.id ? "selected" : ""}>
 
-                ${product.product}
+${product.product}
 
-            </option>
+</option>
 
-        `;
+`;
 
     });
 
-    purchaseTable.insertAdjacentHTML("beforeend", `
+    return html;
 
-<tr>
+}
+
+// =========================================================
+// FORMAT NUMBER
+// =========================================================
+
+function money(value) {
+
+    return Number(value || 0).toFixed(2);
+
+}
+
+// =========================================================
+// FORMAT DATE
+// =========================================================
+
+function formatDate(date) {
+
+    if (!date) return "";
+
+    return new Date(date)
+        .toISOString()
+        .split("T")[0];
+
+}
+
+// =========================================================
+// CANCEL
+// =========================================================
+
+cancelBtn.addEventListener("click", () => {
+
+    window.location.href = "purchase.html";
+
+});
+
+// =========================================================
+// EDIT MODE
+// =========================================================
+
+function checkEditMode() {
+
+    const params =
+        new URLSearchParams(window.location.search);
+
+    if (!params.has("id"))
+        return;
+
+    purchaseId = Number(params.get("id"));
+
+    editMode = true;
+
+    loadPurchase(purchaseId);
+
+}
+
+/* =========================================================
+   ADD PRODUCT ROW
+========================================================= */
+
+addRowBtn.addEventListener("click", () => {
+
+    addProductRow();
+
+});
+
+function addProductRow(item = {}) {
+
+    const row = document.createElement("tr");
+
+    row.innerHTML = `
 
 <td>
 
-<select class="productSelect">
+<select class="product">
 
-${productOptions}
+${getProductOptions(item.product_id || "")}
 
 </select>
 
@@ -156,7 +242,8 @@ ${productOptions}
 
 <input
 type="text"
-class="batch">
+class="batch"
+value="${item.batch || ""}">
 
 </td>
 
@@ -164,7 +251,8 @@ class="batch">
 
 <input
 type="date"
-class="expiry">
+class="expiry"
+value="${formatDate(item.expiry)}">
 
 </td>
 
@@ -173,8 +261,9 @@ class="expiry">
 <input
 type="number"
 class="qty"
-min="1"
-value="1">
+min="0"
+step="0.01"
+value="${item.qty || 1}">
 
 </td>
 
@@ -183,7 +272,9 @@ value="1">
 <input
 type="number"
 class="rate"
-step="0.01">
+min="0"
+step="0.01"
+value="${item.purchase_rate || 0}">
 
 </td>
 
@@ -192,7 +283,9 @@ step="0.01">
 <input
 type="number"
 class="gst"
-step="0.01">
+min="0"
+step="0.01"
+value="${item.gst || 0}">
 
 </td>
 
@@ -201,468 +294,660 @@ step="0.01">
 <input
 type="number"
 class="amount"
-readonly>
+readonly
+value="${item.amount || 0}">
 
 </td>
 
-<td>
+<td style="text-align:center">
 
 <button
-class="remove-btn">
+type="button"
+class="removeRow danger-btn">
 
-Remove
+<i class="fa-solid fa-trash"></i>
 
 </button>
 
 </td>
 
-</tr>
+`;
 
-`);
+    productBody.appendChild(row);
 
-}
-
-/* =====================================================
-   REMOVE ROW
-===================================================== */
-
-purchaseTable.addEventListener("click", (e) => {
-
-    if (!e.target.classList.contains("remove-btn")) return;
-
-    e.target.closest("tr").remove();
-
-});
-
-/* =====================================================
-   PRODUCT CHANGE
-===================================================== */
-
-purchaseTable.addEventListener("change", (e) => {
-
-    if (!e.target.classList.contains("productSelect")) return;
-
-    const row = e.target.closest("tr");
-
-    const id = Number(e.target.value);
-
-    const product = products.find(p => p.id === id);
-
-    if (!product) return;
-
-    row.querySelector(".rate").value =
-        product.purchase_rate || 0;
-
-    row.querySelector(".gst").value =
-        product.gst || 0;
-
-});
-
-/* =====================================================
-   END PART 1
-===================================================== */
-
-console.log("Purchase Module Part 1 Loaded");
-
-/* =====================================================
-   PURCHASE MODULE
-   PART 2 - CALCULATIONS
-===================================================== */
-
-/* =====================================================
-   INPUT EVENTS
-===================================================== */
-
-purchaseTable.addEventListener("input", (e) => {
-
-    const row = e.target.closest("tr");
-
-    if (!row) return;
+    bindRowEvents(row);
 
     calculateRow(row);
 
-    calculateTotals();
+}
 
-});
+/* =========================================================
+   BIND ROW EVENTS
+========================================================= */
 
-/* =====================================================
-   CALCULATE ROW
-===================================================== */
+function bindRowEvents(row) {
 
-function calculateRow(row) {
+    const product = row.querySelector(".product");
 
-    const qty = Number(
-        row.querySelector(".qty").value || 0
-    );
+    const qty = row.querySelector(".qty");
 
-    const rate = Number(
-        row.querySelector(".rate").value || 0
-    );
+    const rate = row.querySelector(".rate");
 
-    const gst = Number(
-        row.querySelector(".gst").value || 0
-    );
+    const gst = row.querySelector(".gst");
 
-    const basicAmount = qty * rate;
+    const remove = row.querySelector(".removeRow");
 
-    const gstAmount = basicAmount * gst / 100;
+    product.addEventListener("change", () => {
 
-    const totalAmount = basicAmount + gstAmount;
+        productChanged(row);
 
-    row.querySelector(".amount").value =
-        totalAmount.toFixed(2);
+    });
+
+    qty.addEventListener("input", () => {
+
+        calculateRow(row);
+
+    });
+
+    rate.addEventListener("input", () => {
+
+        calculateRow(row);
+
+    });
+
+    gst.addEventListener("input", () => {
+
+        calculateRow(row);
+
+    });
+
+    remove.addEventListener("click", () => {
+
+        removeRow(row);
+
+    });
 
 }
 
-/* =====================================================
-   CALCULATE TOTALS
-===================================================== */
+/* =========================================================
+   PRODUCT SELECTED
+========================================================= */
+
+function productChanged(row) {
+
+    const productSelect =
+        row.querySelector(".product");
+
+    const rate =
+        row.querySelector(".rate");
+
+    const gst =
+        row.querySelector(".gst");
+
+    const selected =
+        products.find(p =>
+            Number(p.id) ===
+            Number(productSelect.value));
+
+    if (!selected)
+        return;
+
+    rate.value =
+        selected.purchase_rate || 0;
+
+    gst.value =
+        selected.gst || 0;
+
+    calculateRow(row);
+
+}
+
+/* =========================================================
+   CALCULATE ROW
+========================================================= */
+
+function calculateRow(row) {
+
+    const qty =
+        Number(
+            row.querySelector(".qty").value
+        );
+
+    const rate =
+        Number(
+            row.querySelector(".rate").value
+        );
+
+    const amount =
+        row.querySelector(".amount");
+
+    amount.value =
+        (qty * rate).toFixed(2);
+
+    calculateTotals();
+
+}
+
+/* =========================================================
+   TOTALS
+========================================================= */
 
 function calculateTotals() {
 
     let sub = 0;
 
-    let gst = 0;
+    let gstValue = 0;
 
-    let grand = 0;
-
-    document.querySelectorAll("#purchaseTable tr")
+    document
+        .querySelectorAll("#productBody tr")
         .forEach(row => {
 
-            const qty = Number(
-                row.querySelector(".qty").value || 0
-            );
+            const amount =
+                Number(
+                    row.querySelector(".amount").value
+                );
 
-            const rate = Number(
-                row.querySelector(".rate").value || 0
-            );
+            const gst =
+                Number(
+                    row.querySelector(".gst").value
+                );
 
-            const gstPercent = Number(
-                row.querySelector(".gst").value || 0
-            );
+            sub += amount;
 
-            const basic = qty * rate;
-
-            const gstValue = basic * gstPercent / 100;
-
-            sub += basic;
-
-            gst += gstValue;
-
-            grand += basic + gstValue;
+            gstValue +=
+                amount * gst / 100;
 
         });
 
-    subtotal.textContent = sub.toFixed(2);
+    subtotal.textContent =
+        "₹" + money(sub);
 
-    gstTotal.textContent = gst.toFixed(2);
+    gstTotal.textContent =
+        "₹" + money(gstValue);
 
-    grandTotal.textContent = grand.toFixed(2);
+    grandTotal.textContent =
+        "₹" + money(sub + gstValue);
 
 }
 
-/* =====================================================
-   PRODUCT CHANGE
-===================================================== */
-
-purchaseTable.addEventListener("change", (e) => {
-
-    if (!e.target.classList.contains("productSelect"))
-        return;
-
-    const row = e.target.closest("tr");
-
-    const productId = Number(e.target.value);
-
-    const product = products.find(p => p.id === productId);
-
-    if (!product) return;
-
-    row.querySelector(".rate").value =
-        product.purchase_rate || 0;
-
-    row.querySelector(".gst").value =
-        product.gst || 0;
-
-    calculateRow(row);
-
-    calculateTotals();
-
-});
-
-/* =====================================================
-   AUTO ADD ROW
-===================================================== */
-
-purchaseTable.addEventListener("keydown", (e) => {
-
-    if (e.key !== "Enter") return;
-
-    const row = e.target.closest("tr");
-
-    if (!row) return;
-
-    const rows = purchaseTable.querySelectorAll("tr");
-
-    if (row !== rows[rows.length - 1]) return;
-
-    e.preventDefault();
-
-    addPurchaseRow();
-
-});
-
-/* =====================================================
+/* =========================================================
    REMOVE ROW
-===================================================== */
+========================================================= */
 
-purchaseTable.addEventListener("click", (e) => {
+function removeRow(row) {
 
-    if (!e.target.classList.contains("remove-btn"))
-        return;
+    if (
+        productBody.querySelectorAll("tr")
+        .length === 1
+    ) {
 
-    const rows = purchaseTable.querySelectorAll("tr");
-
-    if (rows.length === 1) {
-
-        alert("At least one product row is required.");
+        alert(
+            "At least one product is required."
+        );
 
         return;
 
     }
 
-    e.target.closest("tr").remove();
+    row.remove();
 
     calculateTotals();
 
-});
+}
 
-/* =====================================================
-   INITIAL TOTALS
-===================================================== */
-
-calculateTotals();
-
-console.log("Purchase Module Part 2 Loaded");
-
-/* =====================================================
-   PURCHASE MODULE
-   PART 3 - SAVE PURCHASE
-===================================================== */
-
-const savePurchaseBtn = document.getElementById("savePurchaseBtn");
-
-/* =====================================================
+/* =========================================================
    SAVE PURCHASE
-===================================================== */
+========================================================= */
 
-savePurchaseBtn.addEventListener("click", savePurchase);
+savePurchaseBtn.addEventListener("click", async () => {
+
+    await savePurchase();
+
+});
 
 async function savePurchase() {
 
-    if (!supplierSelect.value) {
-        alert("Please select a supplier.");
-        supplierSelect.focus();
-        return;
+    if (!validateForm()) return;
+
+    savePurchaseBtn.disabled = true;
+    savePurchaseBtn.innerHTML = "Saving...";
+
+    try {
+
+        if (editMode) {
+
+            await reverseOldStock();
+
+            await deleteOldItems();
+
+            await updatePurchaseMaster();
+
+        } else {
+
+            purchaseId = await insertPurchaseMaster();
+
+        }
+
+        await savePurchaseItems();
+
+        alert("Purchase saved successfully.");
+
+        window.location.href = "purchase.html";
+
+    }
+    catch (err) {
+
+        console.error(err);
+
+        alert(err.message);
+
+    }
+    finally {
+
+        savePurchaseBtn.disabled = false;
+        savePurchaseBtn.innerHTML = "Save Purchase";
+
     }
 
-    const rows = [...purchaseTable.querySelectorAll("tr")];
+}
+
+/* =========================================================
+   VALIDATION
+========================================================= */
+
+function validateForm() {
+
+    if (!supplier.value) {
+
+        alert("Select supplier.");
+
+        supplier.focus();
+
+        return false;
+
+    }
+
+    if (!supplierInvoiceNo.value.trim()) {
+
+        alert("Enter supplier invoice number.");
+
+        supplierInvoiceNo.focus();
+
+        return false;
+
+    }
+
+    const rows =
+        productBody.querySelectorAll("tr");
 
     if (rows.length === 0) {
-        alert("Please add at least one product.");
-        return;
-    }
 
-    const items = [];
+        alert("Add at least one product.");
+
+        return false;
+
+    }
 
     for (const row of rows) {
 
-        const productId = Number(
-            row.querySelector(".productSelect").value
-        );
+        const product =
+            row.querySelector(".product").value;
 
-        if (!productId) {
-            alert("Please select a product.");
-            return;
+        const qty =
+            Number(row.querySelector(".qty").value);
+
+        const rate =
+            Number(row.querySelector(".rate").value);
+
+        if (!product) {
+
+            alert("Select product.");
+
+            return false;
+
         }
-
-        const qty = Number(
-            row.querySelector(".qty").value || 0
-        );
 
         if (qty <= 0) {
+
             alert("Quantity must be greater than zero.");
-            return;
+
+            return false;
+
         }
 
-        items.push({
+        if (rate <= 0) {
 
-            product_id: productId,
+            alert("Purchase rate must be greater than zero.");
 
-            batch: row.querySelector(".batch").value,
+            return false;
 
-            expiry: row.querySelector(".expiry").value || null,
-
-            qty: qty,
-
-            purchase_rate: Number(
-                row.querySelector(".rate").value || 0
-            ),
-
-            gst: Number(
-                row.querySelector(".gst").value || 0
-            ),
-
-            amount: Number(
-                row.querySelector(".amount").value || 0
-            )
-
-        });
+        }
 
     }
 
-    /* ===========================
-       SAVE MASTER
-    ============================ */
+    return true;
 
-    const { data: master, error: masterError } =
+}
+
+/* =========================================================
+   INSERT PURCHASE MASTER
+========================================================= */
+
+async function insertPurchaseMaster() {
+
+    const { data, error } =
         await supabase
-
             .from("purchase_master")
+            .insert({
 
-            .insert([{
-
-                invoice_no:
-                    document.getElementById("invoiceNo").value,
+                supplier_invoice_no:
+                    supplierInvoiceNo.value,
 
                 supplier_id:
-                    Number(supplierSelect.value),
+                    supplier.value,
 
                 purchase_date:
                     purchaseDate.value,
 
                 subtotal:
-                    Number(subtotal.textContent),
+                    Number(subtotal.textContent.replace(/[₹,]/g, "")),
 
                 gst_total:
-                    Number(gstTotal.textContent),
+                    Number(gstTotal.textContent.replace(/[₹,]/g, "")),
 
                 grand_total:
-                    Number(grandTotal.textContent),
+                    Number(grandTotal.textContent.replace(/[₹,]/g, "")),
 
                 remarks:
-                    document.getElementById("remarks").value
+                    remarks.value,
 
-            }])
+                status:
+                    status.value,
 
-            .select()
-
-            .single();
-
-    if (masterError) {
-
-        console.error(masterError);
-
-        alert(masterError.message);
-
-        return;
-
-    }
-
-    /* ===========================
-       SAVE ITEMS
-    ============================ */
-
-    const purchaseItems = items.map(item => ({
-
-        purchase_id: master.id,
-
-        ...item
-
-    }));
-
-    const { error: itemError } = await supabase
-
-        .from("purchase_items")
-
-        .insert(purchaseItems);
-
-    if (itemError) {
-
-        console.error(itemError);
-
-        alert(itemError.message);
-
-        return;
-
-    }
-
-    /* ===========================
-       UPDATE STOCK
-    ============================ */
-
-    for (const item of items) {
-
-        const product = products.find(
-
-            p => p.id === item.product_id
-
-        );
-
-        if (!product) continue;
-
-        const newQty =
-            Number(product.quantity || 0) +
-            Number(item.qty);
-
-        const { error } = await supabase
-
-            .from("products")
-
-            .update({
-
-                quantity: newQty,
-
-                purchase_rate: item.purchase_rate
+                attachment_url: await uploadAttachment()
 
             })
+            .select()
+            .single();
 
-            .eq("id", item.product_id);
+    if (error)
+        throw error;
 
-        if (error) {
-
-            console.error(error);
-
-        }
-
-    }
-
-    alert("Purchase Saved Successfully.");
-
-    resetPurchaseForm();
+    return data.id;
 
 }
 
-/* =====================================================
-   RESET FORM
-===================================================== */
+/* =========================================================
+   UPDATE PURCHASE MASTER
+========================================================= */
 
-function resetPurchaseForm() {
+async function updatePurchaseMaster() {
 
-    supplierSelect.value = "";
+    const { error } =
+        await supabase
+            .from("purchase_master")
+            .update({
 
-    document.getElementById("invoiceNo").value = "";
+                supplier_invoice_no:
+                    supplierInvoiceNo.value,
 
-    document.getElementById("remarks").value = "";
+                supplier_id:
+                    supplier.value,
 
-    purchaseDate.value =
-        new Date().toISOString().split("T")[0];
+                purchase_date:
+                    purchaseDate.value,
 
-    purchaseTable.innerHTML = "";
+                subtotal:
+                    Number(subtotal.textContent.replace(/[₹,]/g, "")),
 
-    addPurchaseRow();
+                gst_total:
+                    Number(gstTotal.textContent.replace(/[₹,]/g, "")),
+
+                grand_total:
+                    Number(grandTotal.textContent.replace(/[₹,]/g, "")),
+
+                remarks:
+                    remarks.value,
+
+                status:
+                    status.value
+
+            })
+            .eq("id", purchaseId);
+
+    if (error)
+        throw error;
+attachment_url:
+    attachment.files.length
+        ? await uploadAttachment()
+        : undefined
+
+}
+
+/* =========================================================
+   SAVE ITEMS
+========================================================= */
+
+async function savePurchaseItems() {
+
+    const rows =
+        productBody.querySelectorAll("tr");
+
+    for (const row of rows) {
+
+        const item = {
+
+            purchase_id: purchaseId,
+
+            product_id:
+                Number(
+                    row.querySelector(".product").value
+                ),
+
+            batch:
+                row.querySelector(".batch").value,
+
+            expiry:
+                row.querySelector(".expiry").value,
+
+            qty:
+                Number(
+                    row.querySelector(".qty").value
+                ),
+
+            purchase_rate:
+                Number(
+                    row.querySelector(".rate").value
+                ),
+
+            gst:
+                Number(
+                    row.querySelector(".gst").value
+                ),
+
+            amount:
+                Number(
+                    row.querySelector(".amount").value
+                )
+
+        };
+
+        const { error } =
+            await supabase
+                .from("purchase_items")
+                .insert(item);
+
+        if (error)
+            throw error;
+
+        await increaseStock(
+            item.product_id,
+            item.qty
+        );
+
+    }
+
+}
+
+/* =========================================================
+   STOCK UPDATE
+========================================================= */
+
+async function increaseStock(productId, qty) {
+
+    const { data, error } =
+        await supabase
+            .from("products")
+            .select("quantity")
+            .eq("id", productId)
+            .single();
+
+    if (error)
+        throw error;
+
+    const currentQty =
+        Number(data.quantity || 0);
+
+    const { error: updateError } =
+        await supabase
+            .from("products")
+            .update({
+
+                quantity:
+                    currentQty + qty
+
+            })
+            .eq("id", productId);
+
+    if (updateError)
+        throw updateError;
+
+}
+
+/* =========================================================
+   LOAD PURCHASE
+========================================================= */
+
+async function loadPurchase(id) {
+
+    const { data: master, error } = await supabase
+        .from("purchase_master")
+        .select("*")
+        .eq("id", id)
+        .single();
+
+    if (error) {
+        console.error(error);
+        alert("Unable to load purchase.");
+        return;
+    }
+
+    supplier.value = master.supplier_id;
+    supplierInvoiceNo.value = master.supplier_invoice_no;
+    purchaseDate.value = formatDate(master.purchase_date);
+    remarks.value = master.remarks || "";
+    status.value = master.status || "Saved";
+
+    productBody.innerHTML = "";
+
+    const { data: items } = await supabase
+        .from("purchase_items")
+        .select("*")
+        .eq("purchase_id", id);
+
+    items.forEach(item => {
+
+        addProductRow(item);
+
+    });
 
     calculateTotals();
+
+}
+
+/* =========================================================
+   REVERSE OLD STOCK
+========================================================= */
+
+async function reverseOldStock() {
+
+    const { data: items } = await supabase
+        .from("purchase_items")
+        .select("*")
+        .eq("purchase_id", purchaseId);
+
+    for (const item of items || []) {
+
+        const { data: product } = await supabase
+            .from("products")
+            .select("quantity")
+            .eq("id", item.product_id)
+            .single();
+
+        const currentQty =
+            Number(product.quantity || 0);
+
+        await supabase
+            .from("products")
+            .update({
+
+                quantity: Math.max(
+                    0,
+                    currentQty - Number(item.qty)
+                )
+
+            })
+            .eq("id", item.product_id);
+
+    }
+
+}
+
+/* =========================================================
+   DELETE OLD ITEMS
+========================================================= */
+
+async function deleteOldItems() {
+
+    const { error } =
+        await supabase
+            .from("purchase_items")
+            .delete()
+            .eq("purchase_id", purchaseId);
+
+    if (error)
+        throw error;
+
+}
+
+/* =========================================================
+   UPLOAD ATTACHMENT
+========================================================= */
+
+async function uploadAttachment() {
+
+    if (!attachment.files.length)
+        return null;
+
+    const file = attachment.files[0];
+
+    const fileName =
+        Date.now() + "_" + file.name;
+
+    const { error } =
+        await supabase.storage
+            .from("purchase-attachments")
+            .upload(fileName, file);
+
+    if (error)
+        throw error;
+
+    const { data } =
+        supabase.storage
+            .from("purchase-attachments")
+            .getPublicUrl(fileName);
+
+    return data.publicUrl;
 
 }
 
