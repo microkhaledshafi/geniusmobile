@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>New Payment | Genius Scientific ERP</title>
+
+    <link rel="stylesheet" href="../css/app.css">
+    <link rel="stylesheet" href="../css/sidebar.css">
+    <link rel="stylesheet" href="../css/payment-form.css">
+
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+</head>
+
+<body>
+
+<div class="app">
+
+    <!-- Sidebar -->
+
+    <aside id="sidebar"></aside>
+
+    <!-- Main -->
+
+    <main class="main">
+
+        <!-- Navbar -->
+
+        <header id="navbar"></header>
+
+        <!-- Content -->
+
+        <section class="content">
+
+            <div class="page-header">
+
+                <h1>Payment Entry</h1>
+
+            </div>
+
+            <form id="paymentForm">
+
+                <div class="form-grid">
+
+                    <!-- Party Type -->
+
+                    <div class="form-group">
+
+                        <label>Party Type *</label>
+
+                        <select id="partyType" required>
+
+                            <option value="">Select</option>
+
+                            <option value="Customer">Customer</option>
+
+                            <option value="Supplier">Supplier</option>
+
+                        </select>
+
+                    </div>
+
+                    <!-- Party -->
+
+                    <div class="form-group">
+
+                        <label>Party *</label>
+
+                        <select id="partyId" required>
+
+                            <option value="">Select Party</option>
+
+                        </select>
+
+                    </div>
+
+                    <!-- Balance -->
+
+                    <div class="form-group">
+
+                        <label>Current Balance</label>
+
+                        <input
+                            type="text"
+                            id="currentBalance"
+                            readonly>
+
+                    </div>
+
+                    <!-- Payment Type -->
+
+                    <div class="form-group">
+
+                        <label>Payment Type *</label>
+
+                        <select id="paymentType" required>
+
+                            <option value="">Select</option>
+
+                            <option value="Receive">
+                                Receive
+                            </option>
+
+                            <option value="Pay">
+                                Pay
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                    <!-- Amount -->
+
+                    <div class="form-group">
+
+                        <label>Amount *</label>
+
+                        <input
+                            type="number"
+                            step="0.01"
+                            id="amount"
+                            required>
+
+                    </div>
+
+                    <!-- Date -->
+
+                    <div class="form-group">
+
+                        <label>Payment Date *</label>
+
+                        <input
+                            type="date"
+                            id="paymentDate"
+                            required>
+
+                    </div>
+
+                    <!-- Mode -->
+
+                    <div class="form-group">
+
+                        <label>Payment Mode</label>
+
+                        <select id="paymentMode">
+
+                            <option>Cash</option>
+
+                            <option>UPI</option>
+
+                            <option>Bank Transfer</option>
+
+                            <option>Cheque</option>
+
+                            <option>Card</option>
+
+                        </select>
+
+                    </div>
+
+                    <!-- Reference -->
+
+                    <div class="form-group">
+
+                        <label>Reference No.</label>
+
+                        <input
+                            type="text"
+                            id="referenceNo">
+
+                    </div>
+
+                    <!-- Remarks -->
+
+                    <div class="form-group full-width">
+
+                        <label>Remarks</label>
+
+                        <textarea
+                            id="remarks"
+                            rows="4"></textarea>
+
+                    </div>
+
+                </div>
+
+                <div class="form-actions">
+
+                    <button
+                        type="button"
+                        id="cancelBtn"
+                        class="secondary-btn">
+
+                        Cancel
+
+                    </button>
+
+                    <button
+                        type="submit"
+                        class="primary-btn">
+
+                        Save Payment
+
+                    </button>
+
+                </div>
+
+            </form>
+
+        </section>
+
+    </main>
+
+</div>
+
+<script type="module" src="../js/layout.js"></script>
+<script type="module" src="../js/payment-form.js"></script>
+
+</body>
+
+</html>
