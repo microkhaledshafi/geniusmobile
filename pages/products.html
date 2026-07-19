@@ -70,6 +70,111 @@
 
             </table>
 
+            <!-- Product Modal -->
+<div id="productModal" class="modal">
+
+    <div class="modal-content">
+
+        <div class="modal-header">
+
+            <h2 id="modalTitle">Add Product</h2>
+
+            <span class="close" id="closeModal">&times;</span>
+
+        </div>
+
+        <form id="productForm">
+
+            <input type="hidden" id="productId">
+
+            <div class="form-grid">
+
+                <div class="form-group">
+                    <label>Product Code</label>
+                    <input type="text" id="productCode">
+                </div>
+
+                <div class="form-group">
+                    <label>Product Name *</label>
+                    <input type="text" id="productName" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Barcode</label>
+                    <input type="text" id="barcode">
+                </div>
+
+                <div class="form-group">
+                    <label>Category</label>
+                    <select id="category"></select>
+                </div>
+
+                <div class="form-group">
+                    <label>Manufacturer</label>
+                    <select id="manufacturer"></select>
+                </div>
+
+                <div class="form-group">
+                    <label>HSN Code</label>
+                    <input type="text" id="hsn">
+                </div>
+
+                <div class="form-group">
+                    <label>GST %</label>
+                    <input type="number" id="gst">
+                </div>
+
+                <div class="form-group">
+                    <label>MRP</label>
+                    <input type="number" id="mrp" step="0.01">
+                </div>
+
+                <div class="form-group">
+                    <label>Purchase Rate</label>
+                    <input type="number" id="purchaseRate" step="0.01">
+                </div>
+
+                <div class="form-group">
+                    <label>Selling Rate</label>
+                    <input type="number" id="sellingRate" step="0.01">
+                </div>
+
+                <div class="form-group">
+                    <label>Opening Stock</label>
+                    <input type="number" id="quantity">
+                </div>
+
+                <div class="form-group">
+                    <label>Minimum Stock</label>
+                    <input type="number" id="minStock">
+                </div>
+
+                <div class="form-group">
+                    <label>Lot</label>
+                    <input type="text" id="lot">
+                </div>
+
+                <div class="form-group">
+                    <label>Expiry Date</label>
+                    <input type="date" id="expiry">
+                </div>
+
+            </div>
+
+            <div class="modal-footer">
+
+                <button type="submit" id="saveProductBtn">
+                    Save Product
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
         </section>
 
     </main>
