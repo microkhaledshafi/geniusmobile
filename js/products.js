@@ -1,3 +1,4 @@
+console.log("products.js loaded");
 import { supabase } from "./supabase.js";
 
 const table = document.getElementById("productTable");
