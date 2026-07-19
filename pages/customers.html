@@ -1,1 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
 
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customers</title>
+
+    <link rel="stylesheet" href="customers.css">
+</head>
+
+<body>
+
+<div class="container">
+
+    <!-- Header -->
+    <div class="page-header">
+
+        <h2>Customers</h2>
+
+        <button id="addCustomerBtn" class="primary-btn">
+            + Add Customer
+        </button>
+
+    </div>
+
+    <!-- Search -->
+    <div class="toolbar">
+
+        <input
+            type="text"
+            id="searchCustomer"
+            placeholder="Search Name / Phone / GST / Email">
+
+        <div class="customer-count">
+            Total Customers :
+            <span id="customerCount">0</span>
+        </div>
+
+    </div>
+
+    <!-- Table -->
+
+    <div class="table-container">
+
+        <table>
+
+            <thead>
+
+                <tr>
+
+                    <th>Name</th>
+                    <th>Phone</th>
+                    <th>Email</th>
+                    <th>GST</th>
+                    <th>Address</th>
+                    <th>Opening Balance</th>
+                    <th>Created</th>
+                    <th>Action</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody id="customerTable">
+
+                <tr>
+
+                    <td colspan="8" style="text-align:center;">
+                        Loading Customers...
+                    </td>
+
+                </tr>
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+<!-- ===========================
+     CUSTOMER MODAL
+=========================== -->
+
+<div id="customerModal" class="modal">
+
+    <div class="modal-content">
+
+        <div class="modal-header">
+
+            <h3 id="modalTitle">
+                Add Customer
+            </h3>
+
+            <button id="closeModal">&times;</button>
+
+        </div>
+
+        <form id="customerForm">
+
+            <div class="form-group">
+
+                <label>Customer Name *</label>
+
+                <input
+                    type="text"
+                    id="customerName"
+                    required>
+
+            </div>
+
+            <div class="form-group">
+
+                <label>Phone</label>
+
+                <input
+                    type="text"
+                    id="phone">
+
+            </div>
+
+            <div class="form-group">
+
+                <label>Email</label>
+
+                <input
+                    type="email"
+                    id="email">
+
+            </div>
+
+            <div class="form-group">
+
+                <label>GST</label>
+
+                <input
+                    type="text"
+                    id="gst">
+
+            </div>
+
+            <div class="form-group">
+
+                <label>Address</label>
+
+                <textarea
+                    id="address"
+                    rows="3"></textarea>
+
+            </div>
+
+            <div class="form-group">
+
+                <label>Opening Balance</label>
+
+                <input
+                    type="number"
+                    step="0.01"
+                    value="0"
+                    id="openingBalance">
+
+            </div>
+
+            <div class="modal-footer">
+
+                <button
+                    type="button"
+                    id="saveCustomerBtn"
+                    class="primary-btn">
+
+                    Save Customer
+
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+<script type="module" src="customers.js"></script>
+
+</body>
+
+</html>
