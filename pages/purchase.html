@@ -1,1 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
 
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Purchase | Genius Scientific ERP</title>
+
+    <link rel="stylesheet" href="../css/app.css">
+    <link rel="stylesheet" href="../css/sidebar.css">
+    <link rel="stylesheet" href="../css/purchase.css">
+
+</head>
+
+<body>
+
+<div class="app">
+
+    <!-- Sidebar -->
+    <aside id="sidebar"></aside>
+
+    <!-- Main -->
+    <main class="main">
+
+        <!-- Navbar -->
+        <header id="navbar"></header>
+
+        <section class="content">
+
+            <!-- ==========================
+                 PAGE HEADER
+            =========================== -->
+
+            <div class="page-header">
+
+                <h1>Purchase Entry</h1>
+
+                <button id="savePurchaseBtn">
+                    Save Purchase
+                </button>
+
+            </div>
+
+            <!-- ==========================
+                 PURCHASE HEADER
+            =========================== -->
+
+            <div class="purchase-card">
+
+                <div class="form-grid">
+
+                    <div class="form-group">
+
+                        <label>Invoice No.</label>
+
+                        <input
+                            type="text"
+                            id="invoiceNo"
+                            placeholder="Auto / Manual">
+
+                    </div>
+
+                    <div class="form-group">
+
+                        <label>Purchase Date</label>
+
+                        <input
+                            type="date"
+                            id="purchaseDate">
+
+                    </div>
+
+                    <div class="form-group">
+
+                        <label>Supplier</label>
+
+                        <select id="supplierSelect">
+
+                            <option value="">
+                                Select Supplier
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                    <div class="form-group">
+
+                        <label>Remarks</label>
+
+                        <input
+                            type="text"
+                            id="remarks"
+                            placeholder="Optional">
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- ==========================
+                 PURCHASE ITEMS
+            =========================== -->
+
+            <div class="table-card">
+
+                <table class="table">
+
+                    <thead>
+
+                        <tr>
+
+                            <th width="22%">Product</th>
+
+                            <th>Batch</th>
+
+                            <th>Expiry</th>
+
+                            <th>Qty</th>
+
+                            <th>Rate</th>
+
+                            <th>GST %</th>
+
+                            <th>Amount</th>
+
+                            <th>Action</th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody id="purchaseTable">
+
+                    </tbody>
+
+                </table>
+
+                <button
+                    id="addRowBtn"
+                    class="secondary-btn">
+
+                    + Add Product
+
+                </button>
+
+            </div>
+
+            <!-- ==========================
+                 TOTALS
+            =========================== -->
+
+            <div class="totals-card">
+
+                <div class="total-row">
+
+                    <span>Subtotal</span>
+
+                    <strong id="subtotal">
+                        0.00
+                    </strong>
+
+                </div>
+
+                <div class="total-row">
+
+                    <span>GST Total</span>
+
+                    <strong id="gstTotal">
+                        0.00
+                    </strong>
+
+                </div>
+
+                <div class="total-row grand">
+
+                    <span>Grand Total</span>
+
+                    <strong id="grandTotal">
+                        0.00
+                    </strong>
+
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</div>
+
+<script type="module" src="../js/layout.js"></script>
+<script type="module" src="../js/purchase.js"></script>
+
+</body>
+
+</html>
