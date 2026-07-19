@@ -1,6 +1,10 @@
 import { supabase } from "./supabase.js";
 
 const table = document.getElementById("productTable");
+const modal = document.getElementById("productModal");
+const addBtn = document.getElementById("addProductBtn");
+const closeBtn = document.getElementById("closeModal");
+const form = document.getElementById("productForm");
 const searchInput = document.getElementById("searchProduct");
 
 // Load Products
@@ -109,6 +113,37 @@ async function loadProducts(search = "") {
     }
 
 }
+
+// Open modal
+addBtn.onclick = () => {
+
+    form.reset();
+
+    document.getElementById("productId").value = "";
+
+    document.getElementById("modalTitle").textContent = "Add Product";
+
+    modal.style.display = "flex";
+
+};
+
+// Close modal
+closeBtn.onclick = () => {
+
+    modal.style.display = "none";
+
+};
+
+// Close when clicking outside
+window.onclick = function(e){
+
+    if(e.target===modal){
+
+        modal.style.display="none";
+
+    }
+
+};
 
 // Live Search
 searchInput.addEventListener("input", () => {
