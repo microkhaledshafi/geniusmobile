@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Purchase Entry | Genius Scientific ERP</title>
+
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/purchase-form.css">
+
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+</head>
+
+<body>
+
+<div class="layout">
+
+    <div id="sidebar-container"></div>
+
+    <main class="content">
+
+        <div class="page-header">
+
+            <div>
+                <h1>Purchase Entry</h1>
+                <p>Add or Edit Purchase</p>
+            </div>
+
+            <div class="header-buttons">
+
+                <button id="savePurchaseBtn" class="primary-btn">
+                    <i class="fa-solid fa-floppy-disk"></i>
+                    Save Purchase
+                </button>
+
+                <button id="cancelBtn" class="secondary-btn">
+                    Cancel
+                </button>
+
+            </div>
+
+        </div>
+
+        <!-- Purchase Details -->
+
+        <div class="card">
+
+            <h3>Purchase Details</h3>
+
+            <div class="form-grid">
+
+                <div class="form-group">
+                    <label>Supplier *</label>
+                    <select id="supplier">
+                        <option value="">Select Supplier</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Supplier Invoice No *</label>
+                    <input
+                        type="text"
+                        id="supplierInvoiceNo"
+                        placeholder="Supplier Invoice Number">
+                </div>
+
+                <div class="form-group">
+                    <label>Purchase Date *</label>
+                    <input
+                        type="date"
+                        id="purchaseDate">
+                </div>
+
+                <div class="form-group">
+                    <label>Status</label>
+
+                    <select id="status">
+
+                        <option value="Saved">
+                            Saved
+                        </option>
+
+                        <option value="Pending">
+                            Pending
+                        </option>
+
+                        <option value="Cancelled">
+                            Cancelled
+                        </option>
+
+                    </select>
+
+                </div>
+
+                <div class="form-group">
+
+                    <label>Attachment</label>
+
+                    <input
+                        type="file"
+                        id="attachment">
+
+                </div>
+
+                <div class="form-group full-width">
+
+                    <label>Remarks</label>
+
+                    <textarea
+                        id="remarks"
+                        rows="3"
+                        placeholder="Remarks..."></textarea>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- Product Details -->
+
+        <div class="card">
+
+            <div class="section-header">
+
+                <h3>Products</h3>
+
+                <button
+                    id="addRowBtn"
+                    class="primary-btn">
+
+                    <i class="fa-solid fa-plus"></i>
+
+                    Add Product
+
+                </button>
+
+            </div>
+
+            <div class="table-container">
+
+                <table id="productTable">
+
+                    <thead>
+
+                    <tr>
+
+                        <th width="25%">Product</th>
+
+                        <th>Batch</th>
+
+                        <th>Expiry</th>
+
+                        <th>Qty</th>
+
+                        <th>Rate</th>
+
+                        <th>GST %</th>
+
+                        <th>Amount</th>
+
+                        <th>Remove</th>
+
+                    </tr>
+
+                    </thead>
+
+                    <tbody id="productBody">
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+        <!-- Totals -->
+
+        <div class="card totals-card">
+
+            <table class="totals-table">
+
+                <tr>
+
+                    <td>Subtotal</td>
+
+                    <td id="subtotal">
+                        ₹0.00
+                    </td>
+
+                </tr>
+
+                <tr>
+
+                    <td>GST Total</td>
+
+                    <td id="gstTotal">
+                        ₹0.00
+                    </td>
+
+                </tr>
+
+                <tr class="grand-total">
+
+                    <td>Grand Total</td>
+
+                    <td id="grandTotal">
+                        ₹0.00
+                    </td>
+
+                </tr>
+
+            </table>
+
+        </div>
+
+    </main>
+
+</div>
+
+<script src="../js/layout.js"></script>
+<script type="module" src="../js/purchase.js"></script>
+
+</body>
+</html>
