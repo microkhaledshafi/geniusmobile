@@ -1,0 +1,269 @@
+/* ===================================================
+   CUSTOMERS MODULE
+=================================================== */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    background: #f4f6f9;
+    color: #333;
+}
+
+.container {
+    max-width: 1400px;
+    margin: 25px auto;
+    padding: 20px;
+}
+
+/* ===================================================
+   HEADER
+=================================================== */
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.page-header h2 {
+    font-size: 28px;
+    color: #2c3e50;
+}
+
+/* ===================================================
+   BUTTONS
+=================================================== */
+
+.primary-btn {
+    background: #0d6efd;
+    color: #fff;
+    border: none;
+    padding: 11px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 15px;
+    transition: .25s;
+}
+
+.primary-btn:hover {
+    background: #0b5ed7;
+}
+
+.edit-btn {
+    background: #198754;
+    color: #fff;
+    border: none;
+    padding: 7px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-right: 5px;
+}
+
+.edit-btn:hover {
+    background: #157347;
+}
+
+.delete-btn {
+    background: #dc3545;
+    color: #fff;
+    border: none;
+    padding: 7px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.delete-btn:hover {
+    background: #bb2d3b;
+}
+
+/* ===================================================
+   TOOLBAR
+=================================================== */
+
+.toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+#searchCustomer {
+    flex: 1;
+    min-width: 280px;
+    padding: 10px 14px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    outline: none;
+}
+
+#searchCustomer:focus {
+    border-color: #0d6efd;
+}
+
+.customer-count {
+    font-weight: bold;
+    color: #444;
+}
+
+/* ===================================================
+   TABLE
+=================================================== */
+
+.table-container {
+    background: white;
+    border-radius: 8px;
+    overflow-x: auto;
+    box-shadow: 0 3px 10px rgba(0,0,0,.08);
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+thead {
+    background: #0d6efd;
+    color: white;
+}
+
+th,
+td {
+    padding: 13px;
+    border-bottom: 1px solid #eee;
+    text-align: left;
+}
+
+tbody tr:hover {
+    background: #f7f9fc;
+}
+
+/* ===================================================
+   MODAL
+=================================================== */
+
+.modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.45);
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    width: 95%;
+    max-width: 600px;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    animation: popup .25s ease;
+}
+
+@keyframes popup {
+    from {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 18px;
+    background: #0d6efd;
+    color: white;
+}
+
+#closeModal {
+    background: transparent;
+    border: none;
+    color: white;
+    font-size: 26px;
+    cursor: pointer;
+}
+
+/* ===================================================
+   FORM
+=================================================== */
+
+form {
+    padding: 20px;
+}
+
+.form-group {
+    margin-bottom: 18px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: bold;
+}
+
+.form-group input,
+.form-group textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    outline: none;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    border-color: #0d6efd;
+}
+
+textarea {
+    resize: vertical;
+}
+
+.modal-footer {
+    text-align: right;
+    margin-top: 20px;
+}
+
+/* ===================================================
+   RESPONSIVE
+=================================================== */
+
+@media (max-width: 768px) {
+
+    .page-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+    }
+
+    .toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    #searchCustomer {
+        width: 100%;
+    }
+
+    table {
+        min-width: 900px;
+    }
+
+    .modal-content {
+        width: 98%;
+    }
+}
