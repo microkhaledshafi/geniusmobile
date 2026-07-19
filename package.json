@@ -1,1 +1,9 @@
-
+{
+  "name": "genius-scientific-erp",
+  "version": "1.0.0",
+  "description": "Genius Scientific ERP",
+  "private": true,
+  "scripts": {
+    "start": "echo \"Genius Scientific ERP\""
+  }
+}
