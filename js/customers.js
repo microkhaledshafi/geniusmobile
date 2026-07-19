@@ -1,20 +1,21 @@
 import { supabase } from "./supabase.js";
 
-/* ======================================================
+/* =====================================================
    CUSTOMERS MODULE
-   PART 1 OF 4
-====================================================== */
+   PART 1 - FOUNDATION
+===================================================== */
 
 let customers = [];
 let editingId = null;
 
-/* -------------------------
+/* =====================================================
    DOM ELEMENTS
-------------------------- */
+===================================================== */
 
 const customerTable = document.getElementById("customerTable");
-const customerForm = document.getElementById("customerForm");
 const customerModal = document.getElementById("customerModal");
+const customerForm = document.getElementById("customerForm");
+
 const modalTitle = document.getElementById("modalTitle");
 
 const addCustomerBtn = document.getElementById("addCustomerBtn");
@@ -22,6 +23,7 @@ const closeModal = document.getElementById("closeModal");
 const saveCustomerBtn = document.getElementById("saveCustomerBtn");
 
 const searchCustomer = document.getElementById("searchCustomer");
+const customerCount = document.getElementById("customerCount");
 
 const customerName = document.getElementById("customerName");
 const phone = document.getElementById("phone");
@@ -30,19 +32,25 @@ const gst = document.getElementById("gst");
 const address = document.getElementById("address");
 const openingBalance = document.getElementById("openingBalance");
 
-/* -------------------------
+/* =====================================================
    PAGE LOAD
-------------------------- */
+===================================================== */
 
 document.addEventListener("DOMContentLoaded", () => {
 
-    loadCustomers();
+    initializePage();
 
 });
 
-/* -------------------------
+async function initializePage() {
+
+    await loadCustomers();
+
+}
+
+/* =====================================================
    LOAD CUSTOMERS
-------------------------- */
+===================================================== */
 
 async function loadCustomers() {
 
@@ -61,13 +69,12 @@ async function loadCustomers() {
 
     if (error) {
 
-        console.error(error);
+        console.error("Load Error:", error);
 
         customerTable.innerHTML = `
             <tr>
-                <td colspan="8"
-                    style="text-align:center;color:red;">
-                    Error Loading Customers
+                <td colspan="8" style="color:red;text-align:center;">
+                    Failed to load customers.
                 </td>
             </tr>
         `;
@@ -77,28 +84,30 @@ async function loadCustomers() {
 
     customers = data || [];
 
-    sortCustomers();
+    renderCustomers();
 
 }
 
-/* -------------------------
-   RENDER CUSTOMERS
-------------------------- */
+/* =====================================================
+   RENDER TABLE
+===================================================== */
 
-function renderCustomers(list) {
+function renderCustomers(list = customers) {
 
-    if (list.length === 0) {
+    if (!list.length) {
 
         customerTable.innerHTML = `
             <tr>
-                <td colspan="8"
-                    style="text-align:center;">
+                <td colspan="8" style="text-align:center;">
                     No Customers Found
                 </td>
             </tr>
         `;
 
+        updateCustomerCount(0);
+
         return;
+
     }
 
     let html = "";
@@ -106,6 +115,7 @@ function renderCustomers(list) {
     list.forEach(customer => {
 
         html += `
+
         <tr>
 
             <td>${customer.name ?? ""}</td>
@@ -118,41 +128,277 @@ function renderCustomers(list) {
 
             <td>${customer.address ?? ""}</td>
 
-            <td>${formatAmount(customer.opening_balance)}</td>
+            <td>${formatCurrency(customer.opening_balance)}</td>
 
             <td>${formatDate(customer.created_at)}</td>
-                .toLocaleDateString() : ""}</td>
 
             <td>
 
                 <button
                     class="edit-btn"
                     data-id="${customer.id}">
+
                     Edit
+
                 </button>
 
                 <button
                     class="delete-btn"
                     data-id="${customer.id}">
+
                     Delete
+
                 </button>
 
             </td>
 
         </tr>
+
         `;
 
     });
 
     customerTable.innerHTML = html;
 
+    updateCustomerCount(list.length);
+
 }
 
-/* -------------------------
-   SEARCH CUSTOMERS
-------------------------- */
+/* =====================================================
+   CUSTOMER COUNT
+===================================================== */
 
-searchCustomer.addEventListener("keyup", () => {
+function updateCustomerCount(count) {
+
+    if (!customerCount) return;
+
+    customerCount.textContent = count;
+
+}
+
+/* =====================================================
+   UTILITIES
+===================================================== */
+
+function formatCurrency(value) {
+
+    return Number(value || 0).toFixed(2);
+
+}
+
+function formatDate(value) {
+
+    if (!value) return "";
+
+    return new Date(value).toLocaleDateString();
+
+}
+
+/* =====================================================
+   PART 2 - ADD / EDIT / SAVE CUSTOMER
+===================================================== */
+
+/* =====================================================
+   OPEN MODAL
+===================================================== */
+
+addCustomerBtn.addEventListener("click", () => {
+
+    editingId = null;
+
+    customerForm.reset();
+
+    openingBalance.value = 0;
+
+    modalTitle.textContent = "Add Customer";
+
+    customerModal.style.display = "flex";
+
+    customerName.focus();
+
+});
+
+/* =====================================================
+   CLOSE MODAL
+===================================================== */
+
+closeModal.addEventListener("click", closeCustomerModal);
+
+window.addEventListener("click", (e) => {
+
+    if (e.target === customerModal) {
+
+        closeCustomerModal();
+
+    }
+
+});
+
+function closeCustomerModal() {
+
+    customerModal.style.display = "none";
+
+    editingId = null;
+
+    customerForm.reset();
+
+}
+
+/* =====================================================
+   SAVE CUSTOMER
+===================================================== */
+
+customerForm.addEventListener("submit", saveCustomer);
+
+async function saveCustomer(e) {
+
+    e.preventDefault();
+
+    if (customerName.value.trim() === "") {
+
+        alert("Customer Name is required.");
+
+        customerName.focus();
+
+        return;
+
+    }
+
+    const customerData = {
+
+        name: customerName.value.trim(),
+
+        phone: phone.value.trim(),
+
+        email: email.value.trim(),
+
+        gst: gst.value.trim(),
+
+        address: address.value.trim(),
+
+        opening_balance: Number(openingBalance.value || 0)
+
+    };
+
+    let result;
+
+    if (editingId === null) {
+
+        result = await supabase
+            .from("customers")
+            .insert([customerData]);
+
+    } else {
+
+        result = await supabase
+            .from("customers")
+            .update(customerData)
+            .eq("id", editingId);
+
+    }
+
+    if (result.error) {
+
+        console.error(result.error);
+
+        alert(result.error.message);
+
+        return;
+
+    }
+
+    closeCustomerModal();
+
+    await loadCustomers();
+
+}
+
+/* =====================================================
+   EDIT CUSTOMER
+===================================================== */
+
+customerTable.addEventListener("click", (e) => {
+
+    const button = e.target.closest(".edit-btn");
+
+    if (!button) return;
+
+    editingId = Number(button.dataset.id);
+
+    const customer = customers.find(c => c.id === editingId);
+
+    if (!customer) return;
+
+    modalTitle.textContent = "Edit Customer";
+
+    customerName.value = customer.name || "";
+
+    phone.value = customer.phone || "";
+
+    email.value = customer.email || "";
+
+    gst.value = customer.gst || "";
+
+    address.value = customer.address || "";
+
+    openingBalance.value = customer.opening_balance || 0;
+
+    customerModal.style.display = "flex";
+
+    customerName.focus();
+
+});
+
+/* =====================================================
+   PART 3 - DELETE / SEARCH / SHORTCUTS
+===================================================== */
+
+/* =====================================================
+   DELETE CUSTOMER
+===================================================== */
+
+customerTable.addEventListener("click", async (e) => {
+
+    const button = e.target.closest(".delete-btn");
+
+    if (!button) return;
+
+    const id = Number(button.dataset.id);
+
+    const customer = customers.find(c => c.id === id);
+
+    if (!customer) return;
+
+    const ok = confirm(
+        `Delete customer "${customer.name}" ?`
+    );
+
+    if (!ok) return;
+
+    const { error } = await supabase
+        .from("customers")
+        .delete()
+        .eq("id", id);
+
+    if (error) {
+
+        console.error(error);
+
+        alert(error.message);
+
+        return;
+
+    }
+
+    await loadCustomers();
+
+});
+
+/* =====================================================
+   SEARCH
+===================================================== */
+
+searchCustomer.addEventListener("input", () => {
 
     const keyword = searchCustomer.value
         .trim()
@@ -160,7 +406,7 @@ searchCustomer.addEventListener("keyup", () => {
 
     if (keyword === "") {
 
-        renderCustomers(customers);
+        renderCustomers();
 
         return;
 
@@ -190,253 +436,40 @@ searchCustomer.addEventListener("keyup", () => {
             .toLowerCase()
             .includes(keyword)
 
+        ||
+
+        (customer.address || "")
+            .toLowerCase()
+            .includes(keyword)
+
     );
 
     renderCustomers(filtered);
 
 });
 
-/* ======================================================
-   PART 2 OF 4
-   ADD / EDIT / SAVE CUSTOMER
-====================================================== */
-
-/* -------------------------
-   OPEN ADD CUSTOMER
-------------------------- */
-
-addCustomerBtn.addEventListener("click", () => {
-
-    editingId = null;
-
-    modalTitle.textContent = "Add Customer";
-
-    clearForm();
-
-    customerModal.style.display = "flex";
-
-});
-
-/* -------------------------
-   CLOSE MODAL
-------------------------- */
-
-closeModal.addEventListener("click", () => {
-
-    customerModal.style.display = "none";
-
-});
-
-window.addEventListener("click", (e) => {
-
-    if (e.target === customerModal) {
-
-        customerModal.style.display = "none";
-
-    }
-
-});
-
-/* -------------------------
-   CLEAR FORM
-------------------------- */
-
-function clearForm() {
-
-    customerForm.reset();
-
-    customerName.focus();
-
-}
-
-/* -------------------------
-   SAVE CUSTOMER
-------------------------- */
-
-saveCustomerBtn.addEventListener("click", async (e) => {
-
-    e.preventDefault();
-
-    if (customerName.value.trim() === "") {
-
-        alert("Customer Name is required.");
-
-        customerName.focus();
-
-        return;
-
-    }
-
-    const customerData = {
-
-        name: customerName.value.trim(),
-
-        phone: phone.value.trim(),
-
-        email: email.value.trim(),
-
-        gst: gst.value.trim(),
-
-        address: address.value.trim(),
-
-        opening_balance:
-            Number(openingBalance.value) || 0
-
-    };
-
-    let error;
-
-    if (editingId === null) {
-
-        ({ error } = await supabase
-
-            .from("customers")
-
-            .insert([customerData]));
-
-    } else {
-
-        ({ error } = await supabase
-
-            .from("customers")
-
-            .update(customerData)
-
-            .eq("id", editingId));
-
-    }
-
-    if (error) {
-
-        console.error(error);
-
-        alert(error.message);
-
-        return;
-
-    }
-
-    customerModal.style.display = "none";
-
-    clearForm();
-
-    await loadCustomers();
-
-});
-
-/* -------------------------
-   EDIT CUSTOMER
-------------------------- */
-
-customerTable.addEventListener("click", (e) => {
-
-    const editButton = e.target.closest(".edit-btn");
-
-    if (!editButton) return;
-
-    editingId = editButton.dataset.id;
-
-    const customer = customers.find(c => c.id == editingId);
-
-    if (!customer) return;
-
-    modalTitle.textContent = "Edit Customer";
-
-    customerName.value = customer.name || "";
-
-    phone.value = customer.phone || "";
-
-    email.value = customer.email || "";
-
-    gst.value = customer.gst || "";
-
-    address.value = customer.address || "";
-
-    openingBalance.value =
-        customer.opening_balance || 0;
-
-    customerModal.style.display = "flex";
-
-});
-
-/* ======================================================
-   PART 3 OF 4
-   DELETE / SHORTCUTS / UTILITIES
-====================================================== */
-
-/* -------------------------
-   DELETE CUSTOMER
-------------------------- */
-
-customerTable.addEventListener("click", async (e) => {
-
-    const deleteButton = e.target.closest(".delete-btn");
-
-    if (!deleteButton) return;
-
-    const id = deleteButton.dataset.id;
-
-    const confirmDelete = confirm(
-        "Are you sure you want to delete this customer?"
-    );
-
-    if (!confirmDelete) return;
-
-    const { error } = await supabase
-        .from("customers")
-        .delete()
-        .eq("id", id);
-
-    if (error) {
-
-        console.error(error);
-
-        alert(error.message);
-
-        return;
-
-    }
-
-    await loadCustomers();
-
-});
-
-/* -------------------------
+/* =====================================================
    KEYBOARD SHORTCUTS
-------------------------- */
+===================================================== */
 
 document.addEventListener("keydown", (e) => {
 
     // ESC closes modal
+
     if (
         e.key === "Escape" &&
         customerModal.style.display === "flex"
     ) {
 
-        customerModal.style.display = "none";
-
-    }
-
-    // CTRL + N opens Add Customer
-    if (e.ctrlKey && e.key.toLowerCase() === "n") {
-
-        e.preventDefault();
-
-        editingId = null;
-
-        clearForm();
-
-        modalTitle.textContent = "Add Customer";
-
-        customerModal.style.display = "flex";
+        closeCustomerModal();
 
     }
 
 });
 
-/* -------------------------
-   REFRESH CUSTOMER LIST
-------------------------- */
+/* =====================================================
+   REFRESH
+===================================================== */
 
 async function refreshCustomers() {
 
@@ -444,149 +477,49 @@ async function refreshCustomers() {
 
 }
 
-/* -------------------------
+/* =====================================================
    RESET SEARCH
-------------------------- */
+===================================================== */
 
 function resetCustomerSearch() {
 
-    if (!searchCustomer) return;
-
     searchCustomer.value = "";
 
-    renderCustomers(customers);
+    renderCustomers();
 
 }
 
-/* -------------------------
-   FORMAT NUMBER
-------------------------- */
+/* =====================================================
+   SORT
+===================================================== */
 
-function formatAmount(value) {
+function sortCustomers() {
 
-    return Number(value || 0).toFixed(2);
+    customers.sort((a, b) =>
 
-}
+        (a.name || "")
+            .localeCompare(b.name || "")
 
-/* -------------------------
-   FORMAT DATE
-------------------------- */
-
-function formatDate(date) {
-
-    if (!date) return "";
-
-    return new Date(date).toLocaleDateString();
+    );
 
 }
 
-/* ======================================================
-   PART 4 OF 4
-   FINAL HELPERS / SORTING / COUNT / PROTECTION
-====================================================== */
-
-let savingCustomer = false;
-
-/* -------------------------
+/* =====================================================
    RELOAD
-------------------------- */
+===================================================== */
 
-async function reloadCustomers() {
+async function reloadModule() {
 
     await loadCustomers();
 
 }
 
-/* -------------------------
-   CLOSE CUSTOMER MODAL
-------------------------- */
+/* =====================================================
+   INITIALIZE
+===================================================== */
 
-function closeCustomerModal() {
+sortCustomers();
+updateCustomerCount(customers.length);
 
-    customerModal.style.display = "none";
-
-    editingId = null;
-
-    clearForm();
-
-}
-
-/* -------------------------
-   PREVENT DOUBLE SAVE
-------------------------- */
-
-const originalSaveHandler = saveCustomerBtn.onclick;
-
-saveCustomerBtn.addEventListener("click", () => {
-
-    if (savingCustomer) return;
-
-    savingCustomer = true;
-
-    setTimeout(() => {
-
-        savingCustomer = false;
-
-    }, 1000);
-
-});
-
-/* -------------------------
-   CUSTOMER COUNT
-------------------------- */
-
-function updateCustomerCount() {
-
-    const element = document.getElementById("customerCount");
-
-    if (!element) return;
-
-    element.textContent = customers.length;
-
-}
-
-/* -------------------------
-   SORT BY NAME
-------------------------- */
-
-function sortCustomers() {
-
-    customers.sort((a, b) => {
-
-        return (a.name || "")
-            .localeCompare(b.name || "");
-
-    });
-
-    renderCustomers(customers);
-
-}
-
-/* -------------------------
-   REFRESH MODULE
-------------------------- */
-
-async function refreshModule() {
-
-    await reloadCustomers();
-
-    sortCustomers();
-
-    updateCustomerCount();
-
-}
-
-/* -------------------------
-   UPDATE COUNT AFTER RENDER
-------------------------- */
-
-const originalRenderCustomers = renderCustomers;
-
-renderCustomers = function(list) {
-
-    originalRenderCustomers(list);
-
-    updateCustomerCount();
-
-};
+console.log("Customers Module Loaded Successfully");
 
