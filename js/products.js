@@ -7,10 +7,11 @@ const closeBtn = document.getElementById("closeModal");
 const form = document.getElementById("productForm");
 const searchInput = document.getElementById("searchProduct");
 
+// ============================
 // Load Products
+// ============================
 async function loadProducts(search = "") {
 
-    // Loading message
     table.innerHTML = `
         <tr>
             <td colspan="8" style="text-align:center;padding:20px;">
@@ -23,35 +24,20 @@ async function loadProducts(search = "") {
 
         let query = supabase
             .from("products")
-            .select(`
-                id,
-                product_code,
-                product_name,
-                barcode,
-                mrp,
-                selling_rate,
-                quantity,
-                gst,
-                categories(category_name)
-            `)
-            .order("product_name", { ascending: true });
+            .select("*")
+            .order("product", { ascending: true });
 
-        // Search
-        if (search !== "") {
-
+        if (search) {
             query = query.or(
-                `product_name.ilike.%${search}%,product_code.ilike.%${search}%,barcode.ilike.%${search}%`
+                `product.ilike.%${search}%,manufacturer.ilike.%${search}%,category.ilike.%${search}%`
             );
-
         }
 
         const { data, error } = await query;
 
         if (error) throw error;
 
-        // No Records
         if (!data || data.length === 0) {
-
             table.innerHTML = `
                 <tr>
                     <td colspan="8" style="text-align:center;padding:20px;">
@@ -59,9 +45,7 @@ async function loadProducts(search = "") {
                     </td>
                 </tr>
             `;
-
             return;
-
         }
 
         table.innerHTML = "";
@@ -71,11 +55,11 @@ async function loadProducts(search = "") {
             table.innerHTML += `
                 <tr>
 
-                    <td>${product.product_code ?? ""}</td>
+                    <td>${product.product ?? ""}</td>
 
-                    <td>${product.product_name ?? ""}</td>
+                    <td>${product.manufacturer ?? ""}</td>
 
-                    <td>${product.categories?.category_name ?? "-"}</td>
+                    <td>${product.category ?? ""}</td>
 
                     <td>₹ ${Number(product.mrp ?? 0).toFixed(2)}</td>
 
@@ -86,11 +70,9 @@ async function loadProducts(search = "") {
                     <td>${product.gst ?? 0}%</td>
 
                     <td>
-
                         <button class="btn-edit" onclick="editProduct(${product.id})">
                             Edit
                         </button>
-
                     </td>
 
                 </tr>
@@ -100,7 +82,7 @@ async function loadProducts(search = "") {
 
     } catch (err) {
 
-        console.error(err);
+        console.error("Products Error:", err);
 
         table.innerHTML = `
             <tr>
@@ -114,7 +96,9 @@ async function loadProducts(search = "") {
 
 }
 
-// Open modal
+// ============================
+// Open Modal
+// ============================
 addBtn.onclick = () => {
 
     form.reset();
@@ -127,37 +111,42 @@ addBtn.onclick = () => {
 
 };
 
-// Close modal
+// ============================
+// Close Modal
+// ============================
 closeBtn.onclick = () => {
 
     modal.style.display = "none";
 
 };
 
-// Close when clicking outside
-window.onclick = function(e){
+window.onclick = function(e) {
 
-    if(e.target===modal){
-
-        modal.style.display="none";
-
+    if (e.target === modal) {
+        modal.style.display = "none";
     }
 
 };
 
-// Live Search
+// ============================
+// Search
+// ============================
 searchInput.addEventListener("input", () => {
 
     loadProducts(searchInput.value.trim());
 
 });
 
-// Placeholder Edit Function
+// ============================
+// Edit (Placeholder)
+// ============================
 window.editProduct = function(id) {
 
     alert("Edit Product ID : " + id);
 
 };
 
+// ============================
 // Initial Load
+// ============================
 loadProducts();
