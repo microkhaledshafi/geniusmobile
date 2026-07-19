@@ -1,1 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
 
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Payments | Genius Scientific ERP</title>
+
+    <link rel="stylesheet" href="../css/app.css">
+    <link rel="stylesheet" href="../css/sidebar.css">
+    <link rel="stylesheet" href="../css/payments.css">
+
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+</head>
+
+<body>
+
+<div class="app">
+
+    <!-- Sidebar -->
+
+    <aside id="sidebar"></aside>
+
+    <!-- Main -->
+
+    <main class="main">
+
+        <!-- Navbar -->
+
+        <header id="navbar"></header>
+
+        <!-- Content -->
+
+        <section class="content">
+
+            <div class="page-header">
+
+                <h1>Payments</h1>
+
+                <button
+                    id="newPaymentBtn"
+                    class="primary-btn">
+
+                    <i class="fa-solid fa-plus"></i>
+
+                    New Payment
+
+                </button>
+
+            </div>
+
+            <!-- Dashboard -->
+
+            <div class="stats-grid">
+
+                <div class="stat-card">
+
+                    <h3>Total Entries</h3>
+
+                    <span id="totalEntries">0</span>
+
+                </div>
+
+                <div class="stat-card">
+
+                    <h3>Total Received</h3>
+
+                    <span id="totalReceived">
+
+                        ₹0.00
+
+                    </span>
+
+                </div>
+
+                <div class="stat-card">
+
+                    <h3>Total Paid</h3>
+
+                    <span id="totalPaid">
+
+                        ₹0.00
+
+                    </span>
+
+                </div>
+
+            </div>
+
+            <!-- Toolbar -->
+
+            <div class="toolbar">
+
+                <input
+                    type="text"
+                    id="searchPayment"
+                    placeholder="Search Party / Reference">
+
+                <select id="filterPartyType">
+
+                    <option value="">
+
+                        All Parties
+
+                    </option>
+
+                    <option value="Customer">
+
+                        Customers
+
+                    </option>
+
+                    <option value="Supplier">
+
+                        Suppliers
+
+                    </option>
+
+                </select>
+
+            </div>
+
+            <!-- Table -->
+
+            <div class="table-container">
+
+                <table class="table">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>Date</th>
+
+                            <th>Party</th>
+
+                            <th>Party Type</th>
+
+                            <th>Payment Type</th>
+
+                            <th>Amount</th>
+
+                            <th>Mode</th>
+
+                            <th>Reference</th>
+
+                            <th>Remarks</th>
+
+                            <th>Action</th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody id="paymentBody">
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</div>
+
+<!-- Delete Modal -->
+
+<div
+    id="deleteModal"
+    class="modal">
+
+    <div class="modal-content">
+
+        <h3>
+
+            Delete Payment?
+
+        </h3>
+
+        <p>
+
+            This action cannot be undone.
+
+        </p>
+
+        <div class="modal-actions">
+
+            <button id="cancelDelete">
+
+                Cancel
+
+            </button>
+
+            <button
+                id="confirmDelete"
+                class="danger-btn">
+
+                Delete
+
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script type="module" src="../js/layout.js"></script>
+<script type="module" src="../js/payments.js"></script>
+
+</body>
+
+</html>
