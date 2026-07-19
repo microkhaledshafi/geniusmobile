@@ -36,6 +36,9 @@ async function loadProducts(search = "") {
 
         const { data, error } = await query;
 
+console.log("DATA:", data);
+console.log("ERROR:", error);
+
         if (error) throw error;
 
         if (!data || data.length === 0) {
