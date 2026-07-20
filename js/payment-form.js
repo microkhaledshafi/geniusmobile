@@ -22,19 +22,16 @@ const referenceNo = document.getElementById("referenceNo");
 
 const remarks = document.getElementById("remarks");
 
-const currentBalance =
-    document.getElementById("currentBalance");
+const currentBalance = document.getElementById("currentBalance");
 
-const cancelBtn =
-    document.getElementById("cancelBtn");
+const cancelBtn = document.getElementById("cancelBtn");
 
 
 /* =====================================================
    Variables
 ===================================================== */
 
-const params =
-    new URLSearchParams(window.location.search);
+const params = new URLSearchParams(window.location.search);
 
 const paymentId = params.get("id");
 
@@ -45,14 +42,14 @@ const editMode = paymentId !== null;
    Initialize
 ===================================================== */
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
 
     paymentDate.value =
         new Date().toISOString().split("T")[0];
 
     if (editMode) {
 
-        loadPayment();
+        await loadPayment();
 
     }
 
@@ -75,98 +72,229 @@ partyType.addEventListener("change", async () => {
 
 });
 
-partyId.addEventListener("change", () => {
+partyId.addEventListener("change", async () => {
 
-    loadCurrentBalance();
+    await loadCurrentBalance();
 
 });
 
 form.addEventListener("submit", savePayment);
 
-import { supabase } from "./supabase.js";
-
 /* =====================================================
-   Elements
+   Load Parties
 ===================================================== */
 
-const form = document.getElementById("paymentForm");
+async function loadParties() {
 
-const partyType = document.getElementById("partyType");
+    partyId.innerHTML =
+        '<option value="">Select Party</option>';
 
-const partyId = document.getElementById("partyId");
+    currentBalance.value = "";
 
-const paymentType = document.getElementById("paymentType");
+    if (!partyType.value)
+        return;
 
-const paymentDate = document.getElementById("paymentDate");
+    try {
 
-const paymentMode = document.getElementById("paymentMode");
+        let table = "";
+        let nameColumn = "";
 
-const amount = document.getElementById("amount");
+        if (partyType.value === "Customer") {
 
-const referenceNo = document.getElementById("referenceNo");
+            table = "customers";
+            nameColumn = "customer_name";
 
-const remarks = document.getElementById("remarks");
+        } else {
 
-const currentBalance =
-    document.getElementById("currentBalance");
+            table = "suppliers";
+            nameColumn = "supplier_name";
 
-const cancelBtn =
-    document.getElementById("cancelBtn");
+        }
 
+        const { data, error } = await supabase
 
-/* =====================================================
-   Variables
-===================================================== */
+            .from(table)
 
-const params =
-    new URLSearchParams(window.location.search);
+            .select(`id, ${nameColumn}`)
 
-const paymentId = params.get("id");
+            .order(nameColumn);
 
-const editMode = paymentId !== null;
+        if (error)
+            throw error;
 
+        data.forEach(row => {
 
-/* =====================================================
-   Initialize
-===================================================== */
+            const option =
+                document.createElement("option");
 
-document.addEventListener("DOMContentLoaded", () => {
+            option.value = row.id;
 
-    paymentDate.value =
-        new Date().toISOString().split("T")[0];
+            option.textContent =
+                row[nameColumn];
 
-    if (editMode) {
+            partyId.appendChild(option);
 
-        loadPayment();
+        });
 
     }
 
-});
+    catch (err) {
+
+        console.error(err);
+
+        alert(err.message);
+
+    }
+
+}
 
 
 /* =====================================================
-   Events
+   Current Balance
 ===================================================== */
 
-cancelBtn.addEventListener("click", () => {
+async function loadCurrentBalance() {
 
-    window.location.href = "payments.html";
+    currentBalance.value = "";
 
-});
+    if (!partyType.value || !partyId.value)
+        return;
 
-partyType.addEventListener("change", async () => {
+    try {
 
-    await loadParties();
+        let balance = 0;
 
-});
+        if (partyType.value === "Customer") {
 
-partyId.addEventListener("change", () => {
+            /* Opening Balance */
 
-    loadCurrentBalance();
+            const { data: customer } =
+                await supabase
 
-});
+                    .from("customers")
 
-form.addEventListener("submit", savePayment);
+                    .select("opening_balance")
+
+                    .eq("id", partyId.value)
+
+                    .single();
+
+            balance =
+                Number(customer?.opening_balance || 0);
+
+            /* Sales */
+
+            const { data: sales } =
+                await supabase
+
+                    .from("sales")
+
+                    .select("grand_total")
+
+                    .eq("customer_id", partyId.value);
+
+            (sales || []).forEach(row => {
+
+                balance += Number(row.grand_total);
+
+            });
+
+            /* Payments Received */
+
+            const { data: received } =
+                await supabase
+
+                    .from("payments")
+
+                    .select("amount")
+
+                    .eq("party_type", "Customer")
+
+                    .eq("party_id", partyId.value)
+
+                    .eq("payment_type", "Receive");
+
+            (received || []).forEach(row => {
+
+                balance -= Number(row.amount);
+
+            });
+
+        }
+
+        else {
+
+            /* Opening Balance */
+
+            const { data: supplier } =
+                await supabase
+
+                    .from("suppliers")
+
+                    .select("opening_balance")
+
+                    .eq("id", partyId.value)
+
+                    .single();
+
+            balance =
+                Number(supplier?.opening_balance || 0);
+
+            /* Purchases */
+
+            const { data: purchases } =
+                await supabase
+
+                    .from("purchase_master")
+
+                    .select("grand_total")
+
+                    .eq("supplier_id", partyId.value);
+
+            (purchases || []).forEach(row => {
+
+                balance += Number(row.grand_total);
+
+            });
+
+            /* Payments Made */
+
+            const { data: paid } =
+                await supabase
+
+                    .from("payments")
+
+                    .select("amount")
+
+                    .eq("party_type", "Supplier")
+
+                    .eq("party_id", partyId.value)
+
+                    .eq("payment_type", "Pay");
+
+            (paid || []).forEach(row => {
+
+                balance -= Number(row.amount);
+
+            });
+
+        }
+
+        currentBalance.value =
+            "₹ " + balance.toFixed(2);
+
+    }
+
+    catch (err) {
+
+        console.error(err);
+
+        currentBalance.value =
+            "Unable to calculate";
+
+    }
+
+}
 
 /* =====================================================
    Save Payment
@@ -197,33 +325,11 @@ async function savePayment(e) {
     }
 
     if (!amount.value || Number(amount.value) <= 0) {
-        alert("Enter a valid Amount.");
+        alert("Please enter a valid Amount.");
         return;
     }
 
     try {
-
-        /* ----------------------------------------
-           Verify Login Session
-        ---------------------------------------- */
-
-        const {
-            data: { session }
-        } = await supabase.auth.getSession();
-
-        if (!session) {
-
-            alert("Your login session has expired.");
-
-            window.location.href = "../login.html";
-
-            return;
-
-        }
-
-        /* ----------------------------------------
-           Payment Object
-        ---------------------------------------- */
 
         const payment = {
 
@@ -245,10 +351,6 @@ async function savePayment(e) {
 
         };
 
-        /* ----------------------------------------
-           Edit
-        ---------------------------------------- */
-
         if (editMode) {
 
             const { error } = await supabase
@@ -265,10 +367,6 @@ async function savePayment(e) {
             alert("Payment updated successfully.");
 
         }
-
-        /* ----------------------------------------
-           New Payment
-        ---------------------------------------- */
 
         else {
 
@@ -299,6 +397,7 @@ async function savePayment(e) {
 
 }
 
+
 /* =====================================================
    Load Payment (Edit Mode)
 ===================================================== */
@@ -320,23 +419,7 @@ async function loadPayment() {
         if (error)
             throw error;
 
-        /* -----------------------------
-           Party Type
-        ----------------------------- */
-
-        partyType.value = data.party_type;
-
-        await loadParties();
-
-        /* -----------------------------
-           Party
-        ----------------------------- */
-
-        partyId.value = data.party_id;
-
-        /* -----------------------------
-           Payment Details
-        ----------------------------- */
+        /* Payment Details */
 
         paymentType.value = data.payment_type;
 
@@ -349,6 +432,14 @@ async function loadPayment() {
         referenceNo.value = data.reference_no || "";
 
         remarks.value = data.remarks || "";
+
+        /* Party */
+
+        partyType.value = data.party_type;
+
+        await loadParties();
+
+        partyId.value = data.party_id;
 
         await loadCurrentBalance();
 
@@ -364,7 +455,6 @@ async function loadPayment() {
 
 }
 
-
 /* =====================================================
    Reset Form
 ===================================================== */
@@ -376,10 +466,10 @@ function resetForm() {
     paymentDate.value =
         new Date().toISOString().split("T")[0];
 
-    currentBalance.value = "";
-
     partyId.innerHTML =
-        `<option value="">Select Party</option>`;
+        '<option value="">Select Party</option>';
+
+    currentBalance.value = "";
 
 }
 
@@ -398,6 +488,35 @@ function showError(error) {
 
     console.error(error);
 
-    alert(error.message || error);
+    alert(error.message || "Something went wrong.");
+
+}
+
+
+/* =====================================================
+   Clear Form (Optional)
+===================================================== */
+
+function clearForm() {
+
+    partyType.value = "";
+
+    partyId.innerHTML =
+        '<option value="">Select Party</option>';
+
+    paymentType.value = "";
+
+    paymentMode.value = "Cash";
+
+    amount.value = "";
+
+    referenceNo.value = "";
+
+    remarks.value = "";
+
+    currentBalance.value = "";
+
+    paymentDate.value =
+        new Date().toISOString().split("T")[0];
 
 }
