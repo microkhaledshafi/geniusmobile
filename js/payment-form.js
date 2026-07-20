@@ -319,11 +319,18 @@ async function savePayment(e) {
 
         } else {
 
-            const { error } = await supabase
-                .from("payments")
-                .insert(payment);
+            const { data, error } = await supabase
+    .from("payments")
+    .insert(payment)
+    .select();
 
-            if (error) throw error;
+console.log("Payment Data:", data);
+console.log("Payment Error:", error);
+
+if (error) {
+    alert(JSON.stringify(error, null, 2));
+    throw error;
+}
 
             alert("Payment saved successfully.");
 
