@@ -151,15 +151,7 @@ function filterPayments() {
     renderPayments(filtered);
 
 }
-/* =====================================================
-   Part 2
-===================================================== */
 
-function renderPayments(data) {
-
-    // Part 2
-
-}
 
 /* =====================================================
    Render Payments
