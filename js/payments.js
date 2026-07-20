@@ -53,9 +53,17 @@ async function loadPayments() {
 console.log(payment);
 
 alert(JSON.stringify(payment, null, 2));
-   const { data, error } = await supabase
-        .from("payments")
-        .select("*")
+   console.log(payment);
+
+// STOP HERE
+alert(JSON.stringify(payment, null, 2));
+return;
+
+// BELOW SHOULD NOT RUN
+const { data, error } = await supabase
+    .from("payments")
+    .insert(payment)
+    .select();
         .order("payment_date", { ascending: false });
 
     if (error) {
