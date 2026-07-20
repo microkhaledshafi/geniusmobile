@@ -148,10 +148,15 @@ async function loadParties() {
 
     console.log("Loading table:", table);
 
-    const { data, error } = await supabase
-        .from(table)
-        .select("id,name")
-        .order("name");
+    const column =
+    partyType.value === "Customer"
+        ? "customer_name"
+        : "supplier_name";
+
+const { data, error } = await supabase
+    .from(table)
+    .select(`id,${column}`)
+    .order(column);
 
     console.log("Data:", data);
     console.log("Error:", error);
