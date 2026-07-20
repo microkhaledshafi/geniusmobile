@@ -49,7 +49,11 @@ newPaymentBtn.addEventListener("click", () => {
 
 async function loadPayments() {
 
-    const { data, error } = await supabase
+    console.log("Payment Object");
+console.log(payment);
+
+alert(JSON.stringify(payment, null, 2));
+   const { data, error } = await supabase
         .from("payments")
         .select("*")
         .order("payment_date", { ascending: false });
