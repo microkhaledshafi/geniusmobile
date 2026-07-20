@@ -18,20 +18,36 @@ const totalReceived = document.getElementById("totalReceived");
 
 const totalPaid = document.getElementById("totalPaid");
 
+const deleteModal = document.getElementById("deleteModal");
+
+const cancelDelete = document.getElementById("cancelDelete");
+
+const confirmDelete = document.getElementById("confirmDelete");
+
+
 /* =====================================================
    Variables
 ===================================================== */
 
 let payments = [];
+
 let customerMap = {};
 
 let supplierMap = {};
+
+let deleteId = null;
+
 
 /* =====================================================
    Initialize
 ===================================================== */
 
-loadPayments();
+document.addEventListener("DOMContentLoaded", () => {
+
+    loadPayments();
+
+});
+
 
 /* =====================================================
    Buttons
@@ -43,46 +59,132 @@ newPaymentBtn.addEventListener("click", () => {
 
 });
 
+searchPayment.addEventListener("input", filterPayments);
+
+filterPartyType.addEventListener("change", filterPayments);
+
+cancelDelete.addEventListener("click", () => {
+
+    deleteModal.style.display = "none";
+
+    deleteId = null;
+
+});
+
+confirmDelete.addEventListener("click", deletePayment);
+
+window.addEventListener("click", (e) => {
+
+    if (e.target === deleteModal) {
+
+        deleteModal.style.display = "none";
+
+        deleteId = null;
+
+    }
+
+});
+
+
 /* =====================================================
    Load Payments
 ===================================================== */
 
 async function loadPayments() {
 
-    console.log("Payment Object");
-console.log(payment);
+    try {
 
-alert(JSON.stringify(payment, null, 2));
-   console.log(payment);
+        const { data, error } = await supabase
 
-// STOP HERE
-alert(JSON.stringify(payment, null, 2));
-return;
+            .from("payments")
 
-// BELOW SHOULD NOT RUN
-const { data, error } = await supabase
-    .from("payments")
-    .insert(payment)
-    .select();
-        .order("payment_date", { ascending: false });
+            .select("*")
 
-    if (error) {
+            .order("payment_date", {
 
-        console.error(error);
+                ascending: false
 
-        alert(error.message);
+            });
 
-        return;
+        if (error) throw error;
+
+        payments = data || [];
+
+        await loadPartyMaps();
+
+        updateDashboard();
+
+        renderPayments(payments);
 
     }
 
-    payments = data || [];
+    catch (err) {
 
-    updateDashboard();
+        console.error(err);
 
-    renderPayments(payments);
+        alert(err.message);
+
+    }
 
 }
+
+/* =====================================================
+   Load Customer & Supplier Maps
+===================================================== */
+
+async function loadPartyMaps() {
+
+    customerMap = {};
+    supplierMap = {};
+
+    /* -----------------------------
+       Customers
+    ----------------------------- */
+
+    const { data: customers, error: customerError } =
+        await supabase
+            .from("customers")
+            .select("id,name");
+
+    if (customerError) {
+
+        console.error(customerError);
+
+    } else {
+
+        (customers || []).forEach(customer => {
+
+            customerMap[customer.id] = customer.name;
+
+        });
+
+    }
+
+    /* -----------------------------
+       Suppliers
+    ----------------------------- */
+
+    const { data: suppliers, error: supplierError } =
+        await supabase
+            .from("suppliers")
+            .select("id,name");
+
+    if (supplierError) {
+
+        console.error(supplierError);
+
+    } else {
+
+        (suppliers || []).forEach(supplier => {
+
+            supplierMap[supplier.id] = supplier.name;
+
+        });
+
+    }
+
+}
+
 
 /* =====================================================
    Dashboard
@@ -100,13 +202,13 @@ function updateDashboard() {
 
         if (payment.payment_type === "Receive") {
 
-            received += Number(payment.amount);
+            received += Number(payment.amount || 0);
 
         }
 
         if (payment.payment_type === "Pay") {
 
-            paid += Number(payment.amount);
+            paid += Number(payment.amount || 0);
 
         }
 
@@ -124,23 +226,26 @@ function updateDashboard() {
    Search & Filter
 ===================================================== */
 
-searchPayment.addEventListener("input", filterPayments);
-
-filterPartyType.addEventListener("change", filterPayments);
-
 function filterPayments() {
 
-    const keyword = searchPayment.value.trim().toLowerCase();
+    const keyword = searchPayment.value
+        .trim()
+        .toLowerCase();
 
     const type = filterPartyType.value;
 
     const filtered = payments.filter(payment => {
 
-        const partyName = getPartyName(payment).toLowerCase();
+        const partyName =
+            getPartyName(payment).toLowerCase();
 
-        const reference = (payment.reference_no || "").toLowerCase();
+        const reference =
+            (payment.reference_no || "")
+            .toLowerCase();
 
-        const remarks = (payment.remarks || "").toLowerCase();
+        const remarks =
+            (payment.remarks || "")
+            .toLowerCase();
 
         const matchesSearch =
 
@@ -169,81 +274,48 @@ function filterPayments() {
    Render Payments
 ===================================================== */
 
-async function renderPayments(data) {
+function renderPayments(data) {
 
     paymentBody.innerHTML = "";
-
-    /* -----------------------------
-       Load Customers
-    ----------------------------- */
-
-    const { data: customers } = await supabase
-        .from("customers")
-        .select("id,name");
-
-    customerMap = {};
-
-    (customers || []).forEach(c => {
-
-        customerMap[c.id] = c.name;
-
-    });
-
-    /* -----------------------------
-       Load Suppliers
-    ----------------------------- */
-
-    const { data: suppliers } = await supabase
-        .from("suppliers")
-        .select("id,name");
-
-    supplierMap = {};
-
-    (suppliers || []).forEach(s => {
-
-        supplierMap[s.id] = s.name;
-
-    });
-
-    /* -----------------------------
-       Empty
-    ----------------------------- */
 
     if (!data.length) {
 
         paymentBody.innerHTML = `
-            <tr>
-                <td colspan="9" style="text-align:center">
-                    No payments found
-                </td>
-            </tr>
-        `;
+
+<tr>
+
+    <td colspan="9" style="text-align:center;padding:30px;">
+
+        No payments found.
+
+    </td>
+
+</tr>
+
+`;
 
         return;
 
     }
 
-    /* -----------------------------
-       Rows
-    ----------------------------- */
-
     data.forEach(payment => {
 
-        const partyName =
-            payment.party_type === "Customer"
-                ? customerMap[payment.party_id] || "-"
-                : supplierMap[payment.party_id] || "-";
+        const partyName = getPartyName(payment);
 
         paymentBody.innerHTML += `
 
 <tr>
 
     <td>
+
         ${formatDate(payment.payment_date)}
+
     </td>
 
     <td>
+
         ${partyName}
+
     </td>
 
     <td>
@@ -322,17 +394,6 @@ async function renderPayments(data) {
 
 }
 
-/* =====================================================
-   Delete Modal
-===================================================== */
-
-const deleteModal = document.getElementById("deleteModal");
-
-const cancelDelete = document.getElementById("cancelDelete");
-
-const confirmDelete = document.getElementById("confirmDelete");
-
-let deleteId = null;
 
 /* =====================================================
    Table Actions
@@ -344,10 +405,8 @@ paymentBody.addEventListener("click", (e) => {
 
     if (editBtn) {
 
-        const id = editBtn.dataset.id;
-
         window.location.href =
-            `payment-form.html?id=${id}`;
+            `payment-form.html?id=${editBtn.dataset.id}`;
 
         return;
 
@@ -366,38 +425,8 @@ paymentBody.addEventListener("click", (e) => {
 });
 
 /* =====================================================
-   Cancel Delete
+   Delete Payment
 ===================================================== */
-
-cancelDelete.addEventListener("click", () => {
-
-    deleteModal.style.display = "none";
-
-    deleteId = null;
-
-});
-
-/* =====================================================
-   Close on Outside Click
-===================================================== */
-
-window.addEventListener("click", (e) => {
-
-    if (e.target === deleteModal) {
-
-        deleteModal.style.display = "none";
-
-        deleteId = null;
-
-    }
-
-});
-
-/* =====================================================
-   Confirm Delete
-===================================================== */
-
-confirmDelete.addEventListener("click", deletePayment);
 
 async function deletePayment() {
 
@@ -407,8 +436,11 @@ async function deletePayment() {
     try {
 
         const { error } = await supabase
+
             .from("payments")
+
             .delete()
+
             .eq("id", deleteId);
 
         if (error)
@@ -418,7 +450,9 @@ async function deletePayment() {
 
         deleteId = null;
 
-        loadPayments();
+        await loadPayments();
+
+        alert("Payment deleted successfully.");
 
     }
 
@@ -432,6 +466,7 @@ async function deletePayment() {
 
 }
 
+
 /* =====================================================
    Helpers
 ===================================================== */
@@ -440,15 +475,25 @@ function getPartyName(payment) {
 
     if (payment.party_type === "Customer") {
 
-        return customerMap[payment.party_id] || "";
+        return customerMap[payment.party_id] || "-";
 
     }
 
-    return supplierMap[payment.party_id] || "";
+    if (payment.party_type === "Supplier") {
+
+        return supplierMap[payment.party_id] || "-";
+
+    }
+
+    return "-";
 
 }
 
+
 function formatDate(date) {
+
+    if (!date)
+        return "-";
 
     return new Date(date).toLocaleDateString("en-IN", {
 
