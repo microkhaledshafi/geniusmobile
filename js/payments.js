@@ -1,6 +1,10 @@
 import { supabase } from "./supabase.js";
 
 /* =====================================================
+   Payments Module
+===================================================== */
+
+/* =====================================================
    Elements
 ===================================================== */
 
@@ -42,15 +46,17 @@ let deleteId = null;
    Initialize
 ===================================================== */
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
 
-    loadPayments();
+    await loadMasters();
+
+    await loadPayments();
 
 });
 
 
 /* =====================================================
-   Buttons
+   Events
 ===================================================== */
 
 newPaymentBtn.addEventListener("click", () => {
@@ -87,6 +93,64 @@ window.addEventListener("click", (e) => {
 
 
 /* =====================================================
+   Load Masters
+===================================================== */
+
+async function loadMasters() {
+
+    customerMap = {};
+
+    supplierMap = {};
+
+    try {
+
+        const { data: customers, error: customerError } =
+            await supabase
+                .from("customers")
+                .select("id,customer_name")
+                .order("customer_name");
+
+        if (customerError)
+            throw customerError;
+
+        customers.forEach(customer => {
+
+            customerMap[customer.id] =
+                customer.customer_name;
+
+        });
+
+
+        const { data: suppliers, error: supplierError } =
+            await supabase
+                .from("suppliers")
+                .select("id,supplier_name")
+                .order("supplier_name");
+
+        if (supplierError)
+            throw supplierError;
+
+        suppliers.forEach(supplier => {
+
+            supplierMap[supplier.id] =
+                supplier.supplier_name;
+
+        });
+
+    }
+
+    catch (err) {
+
+        console.error(err);
+
+        alert(err.message);
+
+    }
+
+}
+
+
+/* =====================================================
    Load Payments
 ===================================================== */
 
@@ -106,11 +170,10 @@ async function loadPayments() {
 
             });
 
-        if (error) throw error;
+        if (error)
+            throw error;
 
         payments = data || [];
-
-        await loadPartyMaps();
 
         updateDashboard();
 
@@ -129,82 +192,6 @@ async function loadPayments() {
 }
 
 /* =====================================================
-   Load Customer & Supplier Maps
-===================================================== */
-
-async function loadParties() {
-
-    console.log("Party Type:", partyType.value);
-
-    partyId.innerHTML =
-        '<option value="">Loading...</option>';
-
-    if (!partyType.value) return;
-
-    const table =
-        partyType.value === "Customer"
-            ? "customers"
-            : "suppliers";
-
-    console.log("Loading table:", table);
-
-    const column =
-    partyType.value === "Customer"
-        ? "customer_name"
-        : "supplier_name";
-
-const { data, error } = await supabase
-    .from(table)
-    .select(`id,${column}`)
-    .order(column);
-
-    console.log("Data:", data);
-    console.log("Error:", error);
-
-    if (error) {
-        alert(error.message);
-        return;
-    }
-
-    partyId.innerHTML =
-        '<option value="">Select Party</option>';
-
-    data.forEach(row => {
-
-        partyId.innerHTML +=
-            `<option value="${row.id}">${row.name}</option>`;
-
-    });
-
-}
-
-    /* -----------------------------
-       Suppliers
-    ----------------------------- */
-
-    const { data: suppliers, error: supplierError } =
-        await supabase
-            .from("suppliers")
-            .select("id,name");
-
-    if (supplierError) {
-
-        console.error(supplierError);
-
-    } else {
-
-        (suppliers || []).forEach(supplier => {
-
-            supplierMap[supplier.id] = supplier.name;
-
-        });
-
-    }
-
-}
-
-
-/* =====================================================
    Dashboard
 ===================================================== */
 
@@ -213,20 +200,20 @@ function updateDashboard() {
     totalEntries.textContent = payments.length;
 
     let received = 0;
-
     let paid = 0;
 
     payments.forEach(payment => {
 
+        const amount = Number(payment.amount || 0);
+
         if (payment.payment_type === "Receive") {
 
-            received += Number(payment.amount || 0);
+            received += amount;
 
         }
+        else if (payment.payment_type === "Pay") {
 
-        if (payment.payment_type === "Pay") {
-
-            paid += Number(payment.amount || 0);
+            paid += amount;
 
         }
 
@@ -240,17 +227,18 @@ function updateDashboard() {
 
 }
 
+
 /* =====================================================
    Search & Filter
 ===================================================== */
 
 function filterPayments() {
 
-    const keyword = searchPayment.value
-        .trim()
-        .toLowerCase();
+    const keyword =
+        searchPayment.value.trim().toLowerCase();
 
-    const type = filterPartyType.value;
+    const type =
+        filterPartyType.value;
 
     const filtered = payments.filter(payment => {
 
@@ -289,6 +277,28 @@ function filterPayments() {
 
 
 /* =====================================================
+   Party Name
+===================================================== */
+
+function getPartyName(payment) {
+
+    if (payment.party_type === "Customer") {
+
+        return customerMap[payment.party_id] || "-";
+
+    }
+
+    if (payment.party_type === "Supplier") {
+
+        return supplierMap[payment.party_id] || "-";
+
+    }
+
+    return "-";
+
+}
+
+/* =====================================================
    Render Payments
 ===================================================== */
 
@@ -296,49 +306,38 @@ function renderPayments(data) {
 
     paymentBody.innerHTML = "";
 
-    if (!data.length) {
+    if (!data || data.length === 0) {
 
         paymentBody.innerHTML = `
-
-<tr>
-
-    <td colspan="9" style="text-align:center;padding:30px;">
-
-        No payments found.
-
-    </td>
-
-</tr>
-
-`;
+            <tr>
+                <td colspan="9" style="text-align:center;padding:30px;">
+                    No payments found.
+                </td>
+            </tr>
+        `;
 
         return;
-
     }
 
     data.forEach(payment => {
 
         const partyName = getPartyName(payment);
 
+        const amount = Number(payment.amount || 0).toFixed(2);
+
         paymentBody.innerHTML += `
 
 <tr>
 
-    <td>
+    <td>${formatDate(payment.payment_date)}</td>
 
-        ${formatDate(payment.payment_date)}
-
-    </td>
+    <td>${partyName}</td>
 
     <td>
 
-        ${partyName}
-
-    </td>
-
-    <td>
-
-        <span class="badge ${payment.party_type.toLowerCase()}">
+        <span class="badge ${payment.party_type === "Customer"
+            ? "success"
+            : "warning"}">
 
             ${payment.party_type}
 
@@ -349,8 +348,8 @@ function renderPayments(data) {
     <td>
 
         <span class="badge ${payment.payment_type === "Receive"
-                ? "success"
-                : "warning"}">
+            ? "success"
+            : "warning"}">
 
             ${payment.payment_type}
 
@@ -358,29 +357,13 @@ function renderPayments(data) {
 
     </td>
 
-    <td>
+    <td>₹ ${amount}</td>
 
-        ₹ ${Number(payment.amount).toFixed(2)}
+    <td>${payment.payment_mode || "-"}</td>
 
-    </td>
+    <td>${payment.reference_no || "-"}</td>
 
-    <td>
-
-        ${payment.payment_mode || "-"}
-
-    </td>
-
-    <td>
-
-        ${payment.reference_no || "-"}
-
-    </td>
-
-    <td>
-
-        ${payment.remarks || "-"}
-
-    </td>
+    <td>${payment.remarks || "-"}</td>
 
     <td>
 
@@ -419,22 +402,24 @@ function renderPayments(data) {
 
 paymentBody.addEventListener("click", (e) => {
 
-    const editBtn = e.target.closest(".edit-btn");
+    const editButton = e.target.closest(".edit-btn");
 
-    if (editBtn) {
+    if (editButton) {
+
+        const id = editButton.dataset.id;
 
         window.location.href =
-            `payment-form.html?id=${editBtn.dataset.id}`;
+            `payment-form.html?id=${id}`;
 
         return;
 
     }
 
-    const deleteBtn = e.target.closest(".delete-btn");
+    const deleteButton = e.target.closest(".delete-btn");
 
-    if (deleteBtn) {
+    if (deleteButton) {
 
-        deleteId = deleteBtn.dataset.id;
+        deleteId = deleteButton.dataset.id;
 
         deleteModal.style.display = "flex";
 
@@ -448,21 +433,16 @@ paymentBody.addEventListener("click", (e) => {
 
 async function deletePayment() {
 
-    if (!deleteId)
-        return;
+    if (!deleteId) return;
 
     try {
 
         const { error } = await supabase
-
             .from("payments")
-
             .delete()
-
             .eq("id", deleteId);
 
-        if (error)
-            throw error;
+        if (error) throw error;
 
         deleteModal.style.display = "none";
 
@@ -489,31 +469,13 @@ async function deletePayment() {
    Helpers
 ===================================================== */
 
-function getPartyName(payment) {
-
-    if (payment.party_type === "Customer") {
-
-        return customerMap[payment.party_id] || "-";
-
-    }
-
-    if (payment.party_type === "Supplier") {
-
-        return supplierMap[payment.party_id] || "-";
-
-    }
-
-    return "-";
-
-}
-
-
 function formatDate(date) {
 
-    if (!date)
-        return "-";
+    if (!date) return "-";
 
-    return new Date(date).toLocaleDateString("en-IN", {
+    const d = new Date(date);
+
+    return d.toLocaleDateString("en-IN", {
 
         day: "2-digit",
 
@@ -525,3 +487,31 @@ function formatDate(date) {
 
 }
 
+
+function formatCurrency(value) {
+
+    return "₹ " + Number(value || 0).toFixed(2);
+
+}
+
+
+function showError(error) {
+
+    console.error(error);
+
+    alert(error.message || error);
+
+}
+
+
+/* =====================================================
+   Refresh
+===================================================== */
+
+async function refreshPayments() {
+
+    await loadMasters();
+
+    await loadPayments();
+
+}
