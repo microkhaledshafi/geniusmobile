@@ -132,33 +132,46 @@ async function loadPayments() {
    Load Customer & Supplier Maps
 ===================================================== */
 
-async function loadPartyMaps() {
+async function loadParties() {
 
-    customerMap = {};
-    supplierMap = {};
+    console.log("Party Type:", partyType.value);
 
-    /* -----------------------------
-       Customers
-    ----------------------------- */
+    partyId.innerHTML =
+        '<option value="">Loading...</option>';
 
-    const { data: customers, error: customerError } =
-        await supabase
-            .from("customers")
-            .select("id,name");
+    if (!partyType.value) return;
 
-    if (customerError) {
+    const table =
+        partyType.value === "Customer"
+            ? "customers"
+            : "suppliers";
 
-        console.error(customerError);
+    console.log("Loading table:", table);
 
-    } else {
+    const { data, error } = await supabase
+        .from(table)
+        .select("id,name")
+        .order("name");
 
-        (customers || []).forEach(customer => {
+    console.log("Data:", data);
+    console.log("Error:", error);
 
-            customerMap[customer.id] = customer.name;
-
-        });
-
+    if (error) {
+        alert(error.message);
+        return;
     }
+
+    partyId.innerHTML =
+        '<option value="">Select Party</option>';
+
+    data.forEach(row => {
+
+        partyId.innerHTML +=
+            `<option value="${row.id}">${row.name}</option>`;
+
+    });
+
+}
 
     /* -----------------------------
        Suppliers
