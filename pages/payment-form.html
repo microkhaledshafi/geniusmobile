@@ -4,16 +4,24 @@
 <head>
 
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>New Payment | Genius Scientific ERP</title>
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Payment Entry | Genius Scientific ERP</title>
+
+    <!-- Core CSS -->
 
     <link rel="stylesheet" href="../css/app.css">
+
     <link rel="stylesheet" href="../css/sidebar.css">
+
     <link rel="stylesheet" href="../css/payment-form.css">
 
+    <!-- Font Awesome -->
+
     <link rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 
 </head>
 
@@ -37,180 +45,217 @@
 
         <section class="content">
 
+            <!-- Page Header -->
+
             <div class="page-header">
 
-                <h1>Payment Entry</h1>
+                <div>
+
+                    <h1>Payment Entry</h1>
+
+                    <p class="page-subtitle">
+
+                        Record customer receipts and supplier payments.
+
+                    </p>
+
+                </div>
 
             </div>
 
-            <form id="paymentForm">
+            <!-- Form Card -->
 
-                <div class="form-grid">
+            <div class="form-card">
 
-                    <!-- Party Type -->
+                <form id="paymentForm">
 
-                    <div class="form-group">
+                    <div class="form-grid">
 
-                        <label>Party Type *</label>
+                        <!-- Party Type -->
 
-                        <select id="partyType" required>
+                        <div class="form-group">
 
-                            <option value="">Select</option>
+                            <label>Party Type <span>*</span></label>
 
-                            <option value="Customer">Customer</option>
+                            <select id="partyType" required>
 
-                            <option value="Supplier">Supplier</option>
+                                <option value="">
+                                    Select Party Type
+                                </option>
 
-                        </select>
+                                <option value="Customer">
+                                    Customer
+                                </option>
+
+                                <option value="Supplier">
+                                    Supplier
+                                </option>
+
+                            </select>
+
+                        </div>
+
+                        <!-- Party -->
+
+                        <div class="form-group">
+
+                            <label>Party <span>*</span></label>
+
+                            <select id="partyId" required>
+
+                                <option value="">
+                                    Select Party
+                                </option>
+
+                            </select>
+
+                        </div>
+
+                        <!-- Balance -->
+
+                        <div class="form-group">
+
+                            <label>Current Balance</label>
+
+                            <input
+                                type="text"
+                                id="currentBalance"
+                                readonly>
+
+                        </div>
+
+                        <!-- Payment Type -->
+
+                        <div class="form-group">
+
+                            <label>Payment Type <span>*</span></label>
+
+                            <select id="paymentType" required>
+
+                                <option value="">
+                                    Select
+                                </option>
+
+                                <option value="Receive">
+                                    Receive
+                                </option>
+
+                                <option value="Pay">
+                                    Pay
+                                </option>
+
+                            </select>
+
+                        </div>
+
+                        <!-- Amount -->
+
+                        <div class="form-group">
+
+                            <label>Amount <span>*</span></label>
+
+                            <input
+                                type="number"
+                                step="0.01"
+                                id="amount"
+                                placeholder="0.00"
+                                required>
+
+                        </div>
+
+                        <!-- Date -->
+
+                        <div class="form-group">
+
+                            <label>Payment Date <span>*</span></label>
+
+                            <input
+                                type="date"
+                                id="paymentDate"
+                                required>
+
+                        </div>
+
+                        <!-- Payment Mode -->
+
+                        <div class="form-group">
+
+                            <label>Payment Mode</label>
+
+                            <select id="paymentMode">
+
+                                <option>Cash</option>
+
+                                <option>UPI</option>
+
+                                <option>Bank Transfer</option>
+
+                                <option>Cheque</option>
+
+                                <option>Card</option>
+
+                            </select>
+
+                        </div>
+
+                        <!-- Reference -->
+
+                        <div class="form-group">
+
+                            <label>Reference No.</label>
+
+                            <input
+                                type="text"
+                                id="referenceNo"
+                                placeholder="Reference Number">
+
+                        </div>
+
+                        <!-- Remarks -->
+
+                        <div class="form-group full-width">
+
+                            <label>Remarks</label>
+
+                            <textarea
+                                id="remarks"
+                                rows="5"
+                                placeholder="Enter remarks if any"></textarea>
+
+                        </div>
 
                     </div>
 
-                    <!-- Party -->
+                    <!-- Buttons -->
 
-                    <div class="form-group">
+                    <div class="form-actions">
 
-                        <label>Party *</label>
+                        <button
+                            type="button"
+                            id="cancelBtn"
+                            class="secondary-btn">
 
-                        <select id="partyId" required>
+                            <i class="fa-solid fa-arrow-left"></i>
 
-                            <option value="">Select Party</option>
+                            Cancel
 
-                        </select>
+                        </button>
 
-                    </div>
+                        <button
+                            type="submit"
+                            class="primary-btn">
 
-                    <!-- Balance -->
+                            <i class="fa-solid fa-floppy-disk"></i>
 
-                    <div class="form-group">
+                            Save Payment
 
-                        <label>Current Balance</label>
-
-                        <input
-                            type="text"
-                            id="currentBalance"
-                            readonly>
-
-                    </div>
-
-                    <!-- Payment Type -->
-
-                    <div class="form-group">
-
-                        <label>Payment Type *</label>
-
-                        <select id="paymentType" required>
-
-                            <option value="">Select</option>
-
-                            <option value="Receive">
-                                Receive
-                            </option>
-
-                            <option value="Pay">
-                                Pay
-                            </option>
-
-                        </select>
+                        </button>
 
                     </div>
 
-                    <!-- Amount -->
+                </form>
 
-                    <div class="form-group">
-
-                        <label>Amount *</label>
-
-                        <input
-                            type="number"
-                            step="0.01"
-                            id="amount"
-                            required>
-
-                    </div>
-
-                    <!-- Date -->
-
-                    <div class="form-group">
-
-                        <label>Payment Date *</label>
-
-                        <input
-                            type="date"
-                            id="paymentDate"
-                            required>
-
-                    </div>
-
-                    <!-- Mode -->
-
-                    <div class="form-group">
-
-                        <label>Payment Mode</label>
-
-                        <select id="paymentMode">
-
-                            <option>Cash</option>
-
-                            <option>UPI</option>
-
-                            <option>Bank Transfer</option>
-
-                            <option>Cheque</option>
-
-                            <option>Card</option>
-
-                        </select>
-
-                    </div>
-
-                    <!-- Reference -->
-
-                    <div class="form-group">
-
-                        <label>Reference No.</label>
-
-                        <input
-                            type="text"
-                            id="referenceNo">
-
-                    </div>
-
-                    <!-- Remarks -->
-
-                    <div class="form-group full-width">
-
-                        <label>Remarks</label>
-
-                        <textarea
-                            id="remarks"
-                            rows="4"></textarea>
-
-                    </div>
-
-                </div>
-
-                <div class="form-actions">
-
-                    <button
-                        type="button"
-                        id="cancelBtn"
-                        class="secondary-btn">
-
-                        Cancel
-
-                    </button>
-
-                    <button
-                        type="submit"
-                        class="primary-btn">
-
-                        Save Payment
-
-                    </button>
-
-                </div>
-
-            </form>
+            </div>
 
         </section>
 
@@ -218,7 +263,10 @@
 
 </div>
 
+<!-- Scripts -->
+
 <script type="module" src="../js/layout.js"></script>
+
 <script type="module" src="../js/payment-form.js"></script>
 
 </body>
