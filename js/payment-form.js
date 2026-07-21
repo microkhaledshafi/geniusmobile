@@ -96,21 +96,19 @@ async function loadParties() {
 
     try {
 
-        let table = "";
-        let nameColumn = "";
+       let table = "";
 
-        if (partyType.value === "Customer") {
+const nameColumn = "name";
 
-            table = "customers";
-            nameColumn = "customer_name";
+if (partyType.value === "Customer") {
 
-        } else {
+    table = "customers";
 
-            table = "suppliers";
-            nameColumn = "supplier_name";
+} else {
 
-        }
+    table = "suppliers";
 
+}
         const { data, error } = await supabase
 
             .from(table)
