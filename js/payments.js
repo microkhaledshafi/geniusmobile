@@ -107,8 +107,8 @@ async function loadMasters() {
         const { data: customers, error: customerError } =
             await supabase
                 .from("customers")
-                .select("id,customer_name")
-                .order("customer_name");
+                .select("id,name")
+.order("name")
 
         if (customerError)
             throw customerError;
@@ -116,16 +116,15 @@ async function loadMasters() {
         customers.forEach(customer => {
 
             customerMap[customer.id] =
-                customer.customer_name;
-
+    customer.name;
         });
 
 
         const { data: suppliers, error: supplierError } =
             await supabase
                 .from("suppliers")
-                .select("id,supplier_name")
-                .order("supplier_name");
+                .select("id,name")
+                .order("name")
 
         if (supplierError)
             throw supplierError;
@@ -133,7 +132,7 @@ async function loadMasters() {
         suppliers.forEach(supplier => {
 
             supplierMap[supplier.id] =
-                supplier.supplier_name;
+    supplier.name;
 
         });
 
