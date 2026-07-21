@@ -24,6 +24,7 @@ const saveProductBtn = document.getElementById("saveProductBtn");
 const searchProduct = document.getElementById("searchProduct");
 
 const productName = document.getElementById("productName");
+const packSize = document.getElementById("packSize");
 const manufacturer = document.getElementById("manufacturer");
 const category = document.getElementById("category");
 const hsn = document.getElementById("hsn");
@@ -121,7 +122,8 @@ function renderProducts(list) {
         <tr>
 
             <td>${item.product ?? ""}</td>
-            <td>${item.manufacturer ?? ""}</td>
+<td>${item.pack_size ?? ""}</td>
+<td>${item.manufacturer ?? ""}</td>
             <td>${item.category ?? ""}</td>
 
             <td>${formatNumber(item.mrp)}</td>
@@ -281,6 +283,8 @@ saveProductBtn.addEventListener("click", async (e) => {
 
         product: productName.value.trim(),
 
+       pack_size: packSize.value.trim(),
+
         manufacturer: manufacturer.value.trim(),
 
         category: category.value.trim(),
@@ -361,6 +365,8 @@ productTable.addEventListener("click", async (e) => {
     modalTitle.textContent = "Edit Product";
 
     productName.value = product.product || "";
+
+   packSize.value = product.pack_size || "";
 
     manufacturer.value = product.manufacturer || "";
 
