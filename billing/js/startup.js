@@ -236,7 +236,7 @@ export async function initBilling() {
 
         initializeModules();
 
-        await loadNextInvoiceNumber();
+        await runStartupLoaders();
 
         console.log(
             "[Startup] Billing initialized successfully."
