@@ -27,10 +27,9 @@ API
 
 import {
 
-    searchProducts
+    searchProducts as searchProductsApi
 
 } from "./api.js";
-
 /*==========================================================
 State
 ==========================================================*/
@@ -174,7 +173,7 @@ async function fetchProducts(keyword) {
 
     try {
 
-        const products = await searchProducts(searchText);
+        const products = await searchProductsApi(searchText);
 
         setSearchResults(products);
 
@@ -553,11 +552,11 @@ export function closeProductSearch() {
 /**
  * Search Products
  */
-import {
-    searchProducts as searchProductsApi
-} from "./api.js"; {
+export async function searchProducts(keyword) {
 
     await fetchProducts(keyword);
+
+}
 
 }
 
