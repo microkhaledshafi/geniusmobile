@@ -4,7 +4,107 @@
 
 <main id="billingApp">
 
-    <section id="invoiceHeader"></section>
+    <section id="invoiceHeader">
+        <section id="invoiceHeader" class="card shadow-sm mb-3">
+
+    <div class="card-header bg-primary text-white">
+        <h4 class="mb-0">🧾 Billing Invoice</h4>
+    </div>
+
+    <div class="card-body">
+
+        <div class="row g-3">
+
+            <div class="col-md-3">
+                <label class="form-label">Invoice No</label>
+                <input
+                    type="text"
+                    id="invoiceNo"
+                    class="form-control"
+                    readonly>
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label">Invoice Date</label>
+                <input
+                    type="date"
+                    id="invoiceDate"
+                    class="form-control">
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">Customer</label>
+
+                <div class="input-group">
+
+                    <input
+                        type="text"
+                        id="customerSearch"
+                        class="form-control"
+                        placeholder="Search customer">
+
+                    <button
+                        class="btn btn-success"
+                        id="btnNewCustomer">
+
+                        New
+
+                    </button>
+
+                </div>
+
+            </div>
+
+            <div class="col-md-4">
+
+                <label class="form-label">GSTIN</label>
+
+                <input
+                    id="customerGST"
+                    class="form-control"
+                    readonly>
+
+            </div>
+
+            <div class="col-md-4">
+
+                <label class="form-label">Phone</label>
+
+                <input
+                    id="customerPhone"
+                    class="form-control"
+                    readonly>
+
+            </div>
+
+            <div class="col-md-4">
+
+                <label class="form-label">Salesman</label>
+
+                <input
+                    id="salesman"
+                    class="form-control">
+
+            </div>
+
+            <div class="col-12">
+
+                <label class="form-label">Address</label>
+
+                <textarea
+                    id="customerAddress"
+                    rows="2"
+                    class="form-control"
+                    readonly></textarea>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+    </section>
 
     <section id="invoiceTable"></section>
 
