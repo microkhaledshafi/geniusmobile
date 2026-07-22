@@ -1,150 +1,456 @@
 /* ==========================================================
    Genius Scientific ERP
-   Billing Module Styles
+   Billing Module
+   billing.css
    Version : 2.0
-   ========================================================== */
+========================================================== */
 
-/* ---------- Global ---------- */
+/* ==========================================================
+   RESET
+========================================================== */
 
 *,
 *::before,
-*::after {
-    box-sizing: border-box;
+*::after{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
 }
 
-body {
-    margin: 0;
-    padding: 0;
-    background: #f4f6f9;
-    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-    color: #212529;
+/* ==========================================================
+   BODY
+========================================================== */
+
+body{
+
+    background:#f5f7fa;
+
+    color:#212529;
+
+    font-family:
+        "Segoe UI",
+        Tahoma,
+        Geneva,
+        Verdana,
+        sans-serif;
+
+    font-size:14px;
+
+    overflow-x:hidden;
+
 }
 
-#billingApp {
-    min-height: 100vh;
+/* ==========================================================
+   APP
+========================================================== */
+
+#billingApp{
+
+    min-height:100vh;
+
 }
 
-/* ---------- Bootstrap Overrides ---------- */
+/* ==========================================================
+   NAVBAR
+========================================================== */
 
-.card {
-    border: none;
-    border-radius: 12px;
-    overflow: hidden;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+.navbar{
+
+    box-shadow:0 2px 8px rgba(0,0,0,.08);
+
 }
 
-.card-header {
-    border-bottom: none;
-    padding: 15px 20px;
+.navbar-brand{
+
+    font-size:22px;
+
+    font-weight:600;
+
 }
 
-.card-header h4 {
-    margin: 0;
-    font-size: 22px;
-    font-weight: 600;
+/* ==========================================================
+   CARD
+========================================================== */
+
+.card{
+
+    border:none;
+
+    border-radius:12px;
+
+    box-shadow:0 2px 10px rgba(0,0,0,.08);
+
 }
 
-.card-header small {
-    display: block;
-    font-size: 13px;
-    opacity: .85;
+.card-header{
+
+    border-bottom:none;
+
 }
 
-/* ---------- Form Controls ---------- */
+.card-title{
 
-.form-label {
-    font-weight: 600;
-    color: #495057;
-    margin-bottom: 5px;
+    font-weight:600;
+
 }
+
+/* ==========================================================
+   LABELS
+========================================================== */
+
+.form-label{
+
+    font-weight:600;
+
+    color:#495057;
+
+    margin-bottom:6px;
+
+}
+
+/* ==========================================================
+   INPUTS
+========================================================== */
 
 .form-control,
-.form-select {
-    border-radius: 8px;
-    min-height: 42px;
+.form-select{
+
+    height:42px;
+
+    border-radius:8px;
+
+    border:1px solid #ced4da;
+
 }
 
 .form-control:focus,
-.form-select:focus {
-    box-shadow: none;
-    border-color: #0d6efd;
+.form-select:focus{
+
+    box-shadow:none;
+
+    border-color:#0d6efd;
+
 }
 
-textarea.form-control {
-    resize: none;
+textarea.form-control{
+
+    height:auto;
+
+    resize:none;
+
 }
 
-/* ---------- Input Group ---------- */
+/* ==========================================================
+   INPUT GROUP
+========================================================== */
 
-.input-group .btn {
-    min-width: 50px;
+.input-group .btn{
+
+    min-width:48px;
+
 }
 
-/* ---------- Buttons ---------- */
+/* ==========================================================
+   BUTTONS
+========================================================== */
 
-.btn {
-    border-radius: 8px;
-    font-weight: 500;
+.btn{
+
+    border-radius:8px;
+
+    font-weight:500;
+
 }
 
-.btn-sm {
-    padding-left: 15px;
-    padding-right: 15px;
+.btn i{
+
+    margin-right:4px;
+
 }
 
-/* ---------- Sections ---------- */
+/* ==========================================================
+   PLACEHOLDER SECTIONS
+========================================================== */
 
-section {
-    margin-bottom: 20px;
+#invoiceHeader{
+
+    margin-bottom:20px;
+
 }
 
-/* ---------- Placeholder Sections ---------- */
+#invoiceTable{
 
-#invoiceTable,
-#invoiceTotals,
-#paymentSection {
-    min-height: 60px;
+    margin-bottom:20px;
+
 }
 
-/* ---------- Responsive ---------- */
+#invoiceTotals{
 
-@media (max-width: 992px) {
+    margin-bottom:20px;
 
-    .card-header {
-        text-align: center;
+}
+
+#paymentSection{
+
+    margin-bottom:20px;
+
+}
+
+/* ==========================================================
+   MODALS
+========================================================== */
+
+.modal-content{
+
+    border:none;
+
+    border-radius:12px;
+
+}
+
+.modal-header{
+
+    border-bottom:1px solid #eee;
+
+}
+
+.modal-footer{
+
+    border-top:1px solid #eee;
+
+}
+
+/* ==========================================================
+   TABLE
+========================================================== */
+
+.table{
+
+    margin-bottom:0;
+
+}
+
+.table th{
+
+    white-space:nowrap;
+
+    font-size:13px;
+
+    vertical-align:middle;
+
+}
+
+.table td{
+
+    vertical-align:middle;
+
+}
+
+/* ==========================================================
+   DROPDOWN SEARCH
+========================================================== */
+
+.search-results{
+
+    position:absolute;
+
+    left:0;
+
+    right:0;
+
+    top:100%;
+
+    z-index:1050;
+
+    background:#fff;
+
+    border:1px solid #dee2e6;
+
+    border-radius:8px;
+
+    display:none;
+
+    max-height:300px;
+
+    overflow-y:auto;
+
+    box-shadow:0 5px 15px rgba(0,0,0,.08);
+
+}
+
+.search-item{
+
+    padding:10px 14px;
+
+    cursor:pointer;
+
+    border-bottom:1px solid #f1f1f1;
+
+}
+
+.search-item:last-child{
+
+    border-bottom:none;
+
+}
+
+.search-item:hover{
+
+    background:#f8f9fa;
+
+}
+
+.search-item.active{
+
+    background:#0d6efd;
+
+    color:#fff;
+
+}
+
+/* ==========================================================
+   LOADING OVERLAY
+========================================================== */
+
+#loadingOverlay{
+
+    position:fixed;
+
+    inset:0;
+
+    background:rgba(255,255,255,.75);
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    z-index:99999;
+
+}
+
+/* ==========================================================
+   TOAST
+========================================================== */
+
+#toastContainer{
+
+    position:fixed;
+
+    right:20px;
+
+    bottom:20px;
+
+    z-index:99999;
+
+}
+
+/* ==========================================================
+   HELPERS
+========================================================== */
+
+.cursor-pointer{
+
+    cursor:pointer;
+
+}
+
+.text-small{
+
+    font-size:12px;
+
+}
+
+.text-medium{
+
+    font-size:14px;
+
+}
+
+.text-large{
+
+    font-size:18px;
+
+}
+
+.fw-600{
+
+    font-weight:600;
+
+}
+
+.rounded-10{
+
+    border-radius:10px;
+
+}
+
+.rounded-12{
+
+    border-radius:12px;
+
+}
+
+.shadow-soft{
+
+    box-shadow:0 2px 10px rgba(0,0,0,.08);
+
+}
+
+/* ==========================================================
+   RESPONSIVE
+========================================================== */
+
+@media(max-width:992px){
+
+    .navbar-brand{
+
+        font-size:18px;
+
     }
 
 }
 
-@media (max-width: 768px) {
+@media(max-width:768px){
 
-    .card-header {
-        display: block !important;
+    body{
+
+        font-size:13px;
+
     }
 
-    .card-header > div:last-child {
-        margin-top: 15px;
+    .btn{
+
+        width:100%;
+
+        margin-top:6px;
+
     }
 
-    .btn {
-        width: 100%;
+    .navbar .d-flex{
+
+        width:100%;
+
+        margin-top:10px;
+
     }
 
 }
 
-@media (max-width: 576px) {
+@media(max-width:576px){
 
-    body {
-        font-size: 14px;
-    }
+    .card{
 
-    .card-header h4 {
-        font-size: 18px;
+        border-radius:8px;
+
     }
 
     .form-control,
-    .form-select {
-        min-height: 40px;
+    .form-select{
+
+        height:40px;
+
     }
 
 }
