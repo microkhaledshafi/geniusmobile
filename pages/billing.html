@@ -4,138 +4,62 @@
 <head>
 
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0">
+    <title>Billing | Genius Scientific ERP</title>
 
-    <title>Sales Invoice | Genius Scientific ERP</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
-    <link rel="stylesheet" href="../css/app.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 
-    <link rel="stylesheet" href="../css/sidebar.css">
-
-    <link rel="stylesheet" href="../css/billing.css">
+    <link rel="stylesheet" href="billing.css">
 
 </head>
 
 <body>
 
-<div class="app">
+<div class="container-fluid py-3">
 
-    <aside id="sidebar"></aside>
+    <!-- ================================================= -->
+    <!-- COMPANY HEADER -->
+    <!-- ================================================= -->
 
-    <main class="main">
+    <div class="card shadow-sm mb-3">
 
-        <header id="navbar"></header>
+        <div class="card-body">
 
-        <section class="content">
+            <div class="row align-items-center">
 
-            <div class="page-header">
+                <div class="col-md-8">
 
-                <div>
+                    <h2 class="fw-bold text-primary mb-1">
+                        Genius Scientific
+                    </h2>
 
-                    <h1>Sales Invoice</h1>
+                    <div>
+                        Diagnostic Equipment • Laboratory Reagents • Medical Devices
+                    </div>
 
-                    <p>Create GST Sales Invoice</p>
+                    <small class="text-muted">
+
+                        Srinagar, Jammu & Kashmir
+
+                    </small>
 
                 </div>
 
-                <button
-                    id="newInvoiceBtn"
-                    class="primary-btn">
+                <div class="col-md-4 text-end">
 
-                    New Invoice
+                    <h3 class="fw-bold">
 
-                </button>
+                        TAX INVOICE
 
-            </div>
+                    </h3>
 
-            <!-- Invoice Header -->
+                    <div>
 
-            <div class="invoice-card">
-
-                <div class="invoice-grid">
-
-                    <div class="form-group">
-
-                        <label>Invoice No</label>
-
-                        <input
-                            type="text"
-                            id="invoiceNo"
-                            readonly>
-
-                    </div>
-
-                    <div class="form-group">
-
-                        <label>Invoice Date</label>
-
-                        <input
-                            type="date"
-                            id="invoiceDate">
-
-                    </div>
-
-                    <div class="form-group">
-
-                        <label>Customer</label>
-
-                        <select id="customer"></select>
-
-                    </div>
-
-                    <div class="form-group">
-
-                        <label>Payment Mode</label>
-
-                        <select id="paymentMode">
-
-                            <option>Cash</option>
-
-                            <option>Credit</option>
-
-                            <option>UPI</option>
-
-                            <option>Cheque</option>
-
-                            <option>Bank Transfer</option>
-
-                        </select>
-
-                    </div>
-
-                    <div class="form-group">
-
-                        <label>GST Number</label>
-
-                        <input
-                            type="text"
-                            id="customerGST"
-                            readonly>
-
-                    </div>
-
-                    <div class="form-group">
-
-                        <label>Phone</label>
-
-                        <input
-                            type="text"
-                            id="customerPhone"
-                            readonly>
-
-                    </div>
-
-                    <div class="form-group full-width">
-
-                        <label>Address</label>
-
-                        <textarea
-                            id="customerAddress"
-                            rows="2"
-                            readonly></textarea>
+                        GSTIN :
+                        <strong>XXXXXXXXXXXXX</strong>
 
                     </div>
 
@@ -143,139 +67,376 @@
 
             </div>
 
-            <!-- ==========================================
-                 PRODUCT ENTRY
-            =========================================== -->
+        </div>
 
-            <div class="invoice-card">
+    </div>
 
-                <div class="table-header">
+    <!-- ================================================= -->
+    <!-- INVOICE DETAILS -->
+    <!-- ================================================= -->
 
-                    <h2>Products</h2>
+    <div class="card shadow-sm mb-3">
 
-                    <button
-                        type="button"
-                        id="addRowBtn"
-                        class="primary-btn">
+        <div class="card-header">
 
-                        + Add Product
+            Invoice Details
 
-                    </button>
+        </div>
+
+        <div class="card-body">
+
+            <div class="row g-3">
+
+                <div class="col-md-3">
+
+                    <label class="form-label">
+
+                        Invoice Number
+
+                    </label>
+
+                    <input
+                        type="text"
+                        id="invoiceNumber"
+                        class="form-control"
+                        readonly>
 
                 </div>
 
-                <div class="table-wrapper">
+                <div class="col-md-3">
 
-                    <table id="billingTable" class="table">
+                    <label class="form-label">
 
-                        <thead>
+                        Invoice Date
 
-                            <tr>
+                    </label>
 
-                                <th width="50">#</th>
+                    <input
+                        type="date"
+                        id="invoiceDate"
+                        class="form-control">
 
-                                <th width="280">Product</th>
+                </div>
 
-                                <th width="120">Pack</th>
+                <div class="col-md-3">
 
-                                <th width="120">Batch</th>
+                    <label class="form-label">
 
-                                <th width="120">Expiry</th>
+                        Payment Mode
 
-                                <th width="100">HSN</th>
+                    </label>
 
-                                <th width="70">GST%</th>
+                    <select
+                        id="paymentMode"
+                        class="form-select">
 
-                                <th width="80">Qty</th>
+                        <option>Cash</option>
+                        <option>Card</option>
+                        <option>UPI</option>
+                        <option>Bank Transfer</option>
+                        <option>Credit</option>
 
-                                <th width="80">Unit</th>
+                    </select>
 
-                                <th width="110">MRP</th>
+                </div>
 
-                                <th width="120">Rate</th>
+                <div class="col-md-3">
 
-                                <th width="90">Disc %</th>
+                    <label class="form-label">
 
-                                <th width="120">Disc Amt</th>
+                        Payment Status
 
-                                <th width="140">Amount</th>
+                    </label>
 
-                                <th width="70">Action</th>
+                    <select
+                        id="paymentStatus"
+                        class="form-select">
 
-                            </tr>
+                        <option>Paid</option>
+                        <option>Partial</option>
+                        <option>Pending</option>
 
-                        </thead>
-
-                        <tbody id="invoiceItems">
-
-                            <tr class="empty-row">
-
-                                <td colspan="15">
-
-                                    Click <strong>+ Add Product</strong> to start creating the invoice.
-
-                                </td>
-
-                            </tr>
-
-                        </tbody>
-
-                    </table>
+                    </select>
 
                 </div>
 
             </div>
 
-            <!-- ==========================================
-                 INVOICE TOTALS
-            =========================================== -->
+        </div>
 
-            <div class="invoice-summary">
+    </div>
 
-                <!-- Left Side -->
+    <!-- ================================================= -->
+    <!-- CUSTOMER DETAILS -->
+    <!-- ================================================= -->
 
-                <div class="summary-left">
+    <div class="card shadow-sm mb-3">
 
-                    <div class="form-group">
+        <div class="card-header">
 
-                        <label>Remarks</label>
+            Customer Details
 
-                        <textarea
-                            id="remarks"
-                            rows="5"
-                            placeholder="Remarks / Delivery Instructions"></textarea>
+        </div>
 
-                    </div>
+        <div class="card-body">
 
-                    <div class="form-group">
+            <div class="row g-3">
 
-                        <label>Amount in Words</label>
+                <div class="col-md-6">
 
-                        <textarea
-                            id="amountWords"
-                            rows="3"
-                            readonly></textarea>
+                    <label class="form-label">
 
-                    </div>
+                        Customer
+
+                    </label>
+
+                    <select
+                        id="customer"
+                        class="form-select">
+
+                        <option value="">
+
+                            Select Customer
+
+                        </option>
+
+                    </select>
 
                 </div>
 
-                <!-- Right Side -->
+                <div class="col-md-3">
 
-                <div class="summary-right">
+                    <label class="form-label">
 
-                    <table class="totals-table">
+                        GSTIN
+
+                    </label>
+
+                    <input
+                        type="text"
+                        id="customerGST"
+                        class="form-control"
+                        readonly>
+
+                </div>
+
+                <div class="col-md-3">
+
+                    <label class="form-label">
+
+                        Phone
+
+                    </label>
+
+                    <input
+                        type="text"
+                        id="customerPhone"
+                        class="form-control"
+                        readonly>
+
+                </div>
+
+                <div class="col-md-12">
+
+                    <label class="form-label">
+
+                        Address
+
+                    </label>
+
+                    <textarea
+                        id="customerAddress"
+                        rows="2"
+                        class="form-control"
+                        readonly></textarea>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- ================================================= -->
+    <!-- PRODUCTS -->
+    <!-- ================================================= -->
+
+    <div class="card shadow-sm">
+
+        <div class="card-header d-flex justify-content-between align-items-center">
+
+            <strong>
+
+                Invoice Items
+
+            </strong>
+
+            <button
+                id="addRowBtn"
+                class="btn btn-primary">
+
+                <i class="bi bi-plus-circle"></i>
+
+                Add Product
+
+            </button>
+
+        </div>
+
+        <div class="card-body p-0">
+
+            <div class="table-responsive">
+
+                <table class="table table-bordered table-hover align-middle mb-0">
+
+                    <thead class="table-light">
 
                         <tr>
 
-                            <td>Taxable Value</td>
+                            <th style="width:50px;">#</th>
+
+                            <th>Product</th>
+
+                            <th>Pack</th>
+
+                            <th>Batch</th>
+
+                            <th>Expiry</th>
+
+                            <th>HSN</th>
+
+                            <th>GST%</th>
+
+                            <th>Qty</th>
+
+                            <th>Unit</th>
+
+                            <th>MRP</th>
+
+                            <th>Rate</th>
+
+                            <th>Disc%</th>
+
+                            <th>Disc Amt</th>
+
+                            <th>Taxable</th>
+
+                            <th>GST Amt</th>
+
+                            <th>Total</th>
+
+                            <th>Action</th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody id="invoiceItems">
+
+                        <tr class="empty-row">
+
+                            <td colspan="17" class="text-center py-4">
+
+                                Click <strong>Add Product</strong> to start billing
+
+                            </td>
+
+                        </tr>
+
+                    </tbody>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- ============================================== -->
+    <!-- INVOICE SUMMARY -->
+    <!-- ============================================== -->
+
+    <div class="row mt-4">
+
+        <!-- LEFT SIDE -->
+
+        <div class="col-lg-6">
+
+            <div class="card shadow-sm mb-3">
+
+                <div class="card-header">
+
+                    Remarks
+
+                </div>
+
+                <div class="card-body">
+
+                    <textarea
+                        id="remarks"
+                        class="form-control"
+                        rows="5"
+                        placeholder="Enter remarks..."></textarea>
+
+                </div>
+
+            </div>
+
+            <div class="card shadow-sm">
+
+                <div class="card-header">
+
+                    Amount in Words
+
+                </div>
+
+                <div class="card-body">
+
+                    <h5
+                        id="amountWords"
+                        class="text-primary mb-0">
+
+                        Zero Rupees Only
+
+                    </h5>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- RIGHT SIDE -->
+
+        <div class="col-lg-6">
+
+            <div class="card shadow-sm">
+
+                <div class="card-header">
+
+                    Invoice Summary
+
+                </div>
+
+                <div class="card-body">
+
+                    <table class="table table-borderless align-middle">
+
+                        <tr>
+
+                            <th width="55%">
+                                Taxable Value
+                            </th>
 
                             <td>
 
                                 <input
-                                    type="text"
                                     id="taxableValue"
-                                    value="0.00"
+                                    class="form-control text-end"
                                     readonly>
 
                             </td>
@@ -284,14 +445,15 @@
 
                         <tr>
 
-                            <td>Discount</td>
+                            <th>
+                                Discount
+                            </th>
 
                             <td>
 
                                 <input
-                                    type="text"
                                     id="discountTotal"
-                                    value="0.00"
+                                    class="form-control text-end"
                                     readonly>
 
                             </td>
@@ -300,14 +462,15 @@
 
                         <tr>
 
-                            <td>CGST</td>
+                            <th>
+                                CGST
+                            </th>
 
                             <td>
 
                                 <input
-                                    type="text"
                                     id="cgstTotal"
-                                    value="0.00"
+                                    class="form-control text-end"
                                     readonly>
 
                             </td>
@@ -316,14 +479,15 @@
 
                         <tr>
 
-                            <td>SGST</td>
+                            <th>
+                                SGST
+                            </th>
 
                             <td>
 
                                 <input
-                                    type="text"
                                     id="sgstTotal"
-                                    value="0.00"
+                                    class="form-control text-end"
                                     readonly>
 
                             </td>
@@ -332,14 +496,15 @@
 
                         <tr>
 
-                            <td>IGST</td>
+                            <th>
+                                IGST
+                            </th>
 
                             <td>
 
                                 <input
-                                    type="text"
                                     id="igstTotal"
-                                    value="0.00"
+                                    class="form-control text-end"
                                     readonly>
 
                             </td>
@@ -348,34 +513,67 @@
 
                         <tr>
 
-                            <td>Round Off</td>
+                            <th>
+                                Round Off
+                            </th>
+
+                            <td>
+
+                                <input
+                                    id="roundOff"
+                                    class="form-control text-end"
+                                    readonly>
+
+                            </td>
+
+                        </tr>
+
+                        <tr class="table-primary">
+
+                            <th class="fs-5">
+                                Grand Total
+                            </th>
+
+                            <td>
+
+                                <input
+                                    id="grandTotal"
+                                    class="form-control fw-bold fs-5 text-end"
+                                    readonly>
+
+                            </td>
+
+                        </tr>
+
+                        <tr>
+
+                            <th>
+                                Received Amount
+                            </th>
 
                             <td>
 
                                 <input
                                     type="number"
-                                    id="roundOff"
-                                    value="0.00"
-                                    step="0.01">
+                                    id="receivedAmount"
+                                    class="form-control text-end"
+                                    value="0">
 
                             </td>
 
                         </tr>
 
-                        <tr class="grand-total">
+                        <tr>
 
-                            <td>
-
-                                <strong>Grand Total</strong>
-
-                            </td>
+                            <th>
+                                Balance
+                            </th>
 
                             <td>
 
                                 <input
-                                    type="text"
-                                    id="grandTotal"
-                                    value="0.00"
+                                    id="balanceAmount"
+                                    class="form-control text-end"
                                     readonly>
 
                             </td>
@@ -388,512 +586,235 @@
 
             </div>
 
-            <!-- ==========================================
-                 ACTION BUTTONS
-            =========================================== -->
+        </div>
 
-            <div class="invoice-actions">
+    </div>
+
+    <!-- ============================================== -->
+    <!-- ACTION BUTTONS -->
+    <!-- ============================================== -->
+
+    <div class="card shadow-sm mt-4">
+
+        <div class="card-body">
+
+            <div class="d-flex flex-wrap gap-2 justify-content-center">
 
                 <button
-                    type="button"
                     id="saveInvoiceBtn"
-                    class="primary-btn">
+                    class="btn btn-success">
 
-                    💾 Save Invoice
+                    <i class="bi bi-check-circle"></i>
+
+                    Save Invoice
 
                 </button>
 
                 <button
-                    type="button"
                     id="printInvoiceBtn"
-                    class="secondary-btn">
+                    class="btn btn-primary">
 
-                    🖨 Print Invoice
+                    <i class="bi bi-printer"></i>
+
+                    Print
 
                 </button>
 
                 <button
-                    type="button"
                     id="pdfInvoiceBtn"
-                    class="secondary-btn">
+                    class="btn btn-danger">
 
-                    📄 Export PDF
+                    <i class="bi bi-file-earmark-pdf"></i>
 
-                </button>
-
-                <button
-                    type="button"
-                    id="newInvoiceBtn2"
-                    class="secondary-btn">
-
-                    ➕ New Invoice
+                    PDF
 
                 </button>
 
                 <button
-                    type="button"
+                    id="newInvoiceBtn"
+                    class="btn btn-warning">
+
+                    <i class="bi bi-plus-circle"></i>
+
+                    New Invoice
+
+                </button>
+
+                <button
                     id="cancelInvoiceBtn"
-                    class="danger-btn">
+                    class="btn btn-secondary">
 
-                    ❌ Cancel Invoice
+                    <i class="bi bi-x-circle"></i>
+
+                    Cancel
 
                 </button>
 
             </div>
 
-            <!-- ==========================================
-                 BILLING DASHBOARD
-            =========================================== -->
+        </div>
 
-            <div class="billing-dashboard">
+    </div>
 
-                <!-- Today's Sales -->
+    <!-- ============================================== -->
+    <!-- BILLING DASHBOARD -->
+    <!-- ============================================== -->
 
-                <div class="dashboard-card">
+    <div class="row mt-4">
 
-                    <h3>Today's Sales</h3>
+        <div class="col-md-3">
 
-                    <h2 id="todaySales">
+            <div class="card text-bg-primary shadow-sm">
 
-                        ₹0.00
+                <div class="card-body text-center">
 
-                    </h2>
+                    <h6>Today's Sales</h6>
 
-                </div>
-
-                <!-- Today's Invoices -->
-
-                <div class="dashboard-card">
-
-                    <h3>Invoices Today</h3>
-
-                    <h2 id="todayInvoices">
-
-                        0
-
-                    </h2>
-
-                </div>
-
-                <!-- Items Sold -->
-
-                <div class="dashboard-card">
-
-                    <h3>Items Sold</h3>
-
-                    <h2 id="todayItems">
-
-                        0
-
-                    </h2>
-
-                </div>
-
-                <!-- Pending Payments -->
-
-                <div class="dashboard-card">
-
-                    <h3>Pending Amount</h3>
-
-                    <h2 id="pendingAmount">
-
-                        ₹0.00
-
-                    </h2>
+                    <h3 id="todaySales">₹0.00</h3>
 
                 </div>
 
             </div>
-
-            <!-- ==========================================
-                 RECENT INVOICES
-            =========================================== -->
-
-            <div class="invoice-card">
-
-                <div class="table-header">
-
-                    <h2>
-
-                        Recent Invoices
-
-                    </h2>
-
-                </div>
-
-                <div class="table-wrapper">
-
-                    <table class="table">
-
-                        <thead>
-
-                            <tr>
-
-                                <th>Invoice</th>
-
-                                <th>Date</th>
-
-                                <th>Customer</th>
-
-                                <th>Amount</th>
-
-                                <th>Status</th>
-
-                                <th>Action</th>
-
-                            </tr>
-
-                        </thead>
-
-                        <tbody id="invoiceHistory">
-
-                            <tr>
-
-                                <td colspan="6">
-
-                                    No invoices available.
-
-                                </td>
-
-                            </tr>
-
-                        </tbody>
-
-                    </table>
-
-                </div>
-
-            </div>
-
-            <!-- ==========================================
-                 GST SUMMARY
-            =========================================== -->
-
-            <div class="invoice-card">
-
-                <div class="table-header">
-
-                    <h2>GST Summary</h2>
-
-                </div>
-
-                <div class="table-wrapper">
-
-                    <table class="table">
-
-                        <thead>
-
-                            <tr>
-
-                                <th>GST %</th>
-
-                                <th>Taxable Value</th>
-
-                                <th>CGST</th>
-
-                                <th>SGST</th>
-
-                                <th>IGST</th>
-
-                                <th>Total Tax</th>
-
-                            </tr>
-
-                        </thead>
-
-                        <tbody id="gstSummary">
-
-                            <tr>
-
-                                <td colspan="6">
-
-                                    GST Summary will appear automatically.
-
-                                </td>
-
-                            </tr>
-
-                        </tbody>
-
-                    </table>
-
-                </div>
-
-            </div>
-
-            <!-- ==========================================
-                 PAYMENT DETAILS
-            =========================================== -->
-
-            <div class="invoice-card">
-
-                <div class="table-header">
-
-                    <h2>Payment Details</h2>
-
-                </div>
-
-                <div class="invoice-grid">
-
-                    <div class="form-group">
-
-                        <label>Payment Status</label>
-
-                        <select id="paymentStatus">
-
-                            <option value="Paid">Paid</option>
-
-                            <option value="Partial">Partial</option>
-
-                            <option value="Credit">Credit</option>
-
-                        </select>
-
-                    </div>
-
-                    <div class="form-group">
-
-                        <label>Received Amount</label>
-
-                        <input
-                            type="number"
-                            id="receivedAmount"
-                            step="0.01"
-                            value="0">
-
-                    </div>
-
-                    <div class="form-group">
-
-                        <label>Balance Amount</label>
-
-                        <input
-                            type="text"
-                            id="balanceAmount"
-                            readonly
-                            value="0.00">
-
-                    </div>
-
-                    <div class="form-group">
-
-                        <label>Reference No.</label>
-
-                        <input
-                            type="text"
-                            id="referenceNo"
-                            placeholder="Cheque / UPI / Transaction No.">
-
-                    </div>
-
-                </div>
-
-            </div>
-
-            <!-- ==========================================
-                 STOCK INFORMATION
-            =========================================== -->
-
-            <div class="invoice-card">
-
-                <div class="table-header">
-
-                    <h2>Invoice Information</h2>
-
-                </div>
-
-                <div class="invoice-grid">
-
-                    <div class="form-group">
-
-                        <label>Total Products</label>
-
-                        <input
-                            type="text"
-                            id="totalProducts"
-                            readonly
-                            value="0">
-
-                    </div>
-
-                    <div class="form-group">
-
-                        <label>Total Quantity</label>
-
-                        <input
-                            type="text"
-                            id="totalQuantity"
-                            readonly
-                            value="0">
-
-                    </div>
-
-                    <div class="form-group">
-
-                        <label>Total Discount</label>
-
-                        <input
-                            type="text"
-                            id="invoiceDiscount"
-                            readonly
-                            value="0.00">
-
-                    </div>
-
-                    <div class="form-group">
-
-                        <label>Total GST</label>
-
-                        <input
-                            type="text"
-                            id="invoiceGST"
-                            readonly
-                            value="0.00">
-
-                    </div>
-
-                </div>
-
-            </div>
-
-            <!-- ==========================================
-                 CUSTOMER INFORMATION PANEL
-            =========================================== -->
-
-            <div class="customer-dashboard">
-
-                <div class="dashboard-card">
-
-                    <h3>Customer Information</h3>
-
-                    <table class="info-table">
-
-                        <tr>
-                            <td>Outstanding</td>
-                            <td id="customerOutstanding">
-                                ₹0.00
-                            </td>
-                        </tr>
-
-                        <tr>
-                            <td>Last Invoice</td>
-                            <td id="lastInvoiceDate">
-                                -
-                            </td>
-                        </tr>
-
-                        <tr>
-                            <td>Total Business</td>
-                            <td id="customerBusiness">
-                                ₹0.00
-                            </td>
-                        </tr>
-
-                        <tr>
-                            <td>Last Payment</td>
-                            <td id="lastPayment">
-                                -
-                            </td>
-                        </tr>
-
-                    </table>
-
-                </div>
-
-                <div class="dashboard-card">
-
-                    <h3>Low Stock Alerts</h3>
-
-                    <div id="lowStockProducts">
-
-                        No low stock products.
-
-                    </div>
-
-                </div>
-
-                <div class="dashboard-card">
-
-                    <h3>Expiring Products</h3>
-
-                    <div id="expiryAlerts">
-
-                        No expiry alerts.
-
-                    </div>
-
-                </div>
-
-            </div>
-
-        </section>
-
-    </main>
-
-</div>
-
-<!-- ==========================================
-     Loading Overlay
-========================================== -->
-
-<div
-    id="loadingOverlay"
-    class="loading-overlay"
-    style="display:none;">
-
-    <div class="loader"></div>
-
-    <p>Processing...</p>
-
-</div>
-
-<!-- ==========================================
-     Toast Notification
-========================================== -->
-
-<div id="toastContainer"></div>
-
-<!-- ==========================================
-     Product Search Popup
-========================================== -->
-
-<div
-    id="productSearchModal"
-    class="modal">
-
-    <div
-        class="modal-content search-modal">
-
-        <div class="modal-header">
-
-            <h2>
-
-                Search Product
-
-            </h2>
-
-            <span
-                class="close"
-                id="closeProductSearch">
-
-                &times;
-
-            </span>
 
         </div>
 
-        <div class="search-box">
+        <div class="col-md-3">
 
-            <input
-                type="text"
-                id="productSearchInput"
-                placeholder="Type product name, batch, HSN or manufacturer...">
+            <div class="card text-bg-success shadow-sm">
+
+                <div class="card-body text-center">
+
+                    <h6>Invoices</h6>
+
+                    <h3 id="todayInvoices">0</h3>
+
+                </div>
+
+            </div>
 
         </div>
 
-        <div
-            id="productSearchResults"
-            class="search-results">
+        <div class="col-md-3">
+
+            <div class="card text-bg-warning shadow-sm">
+
+                <div class="card-body text-center">
+
+                    <h6>Items Sold</h6>
+
+                    <h3 id="todayItems">0</h3>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-md-3">
+
+            <div class="card text-bg-danger shadow-sm">
+
+                <div class="card-body text-center">
+
+                    <h6>Pending Amount</h6>
+
+                    <h3 id="pendingAmount">₹0.00</h3>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- ============================================== -->
+    <!-- INVOICE HISTORY -->
+    <!-- ============================================== -->
+
+    <div class="card shadow-sm mt-4">
+
+        <div class="card-header d-flex justify-content-between align-items-center">
+
+            <h5 class="mb-0">
+
+                Invoice History
+
+            </h5>
+
+            <div class="d-flex gap-2">
+
+                <input
+                    type="text"
+                    id="invoiceSearch"
+                    class="form-control"
+                    placeholder="Search Invoice...">
+
+                <button
+                    class="btn btn-outline-primary"
+                    id="refreshHistoryBtn">
+
+                    <i class="bi bi-arrow-clockwise"></i>
+
+                </button>
+
+            </div>
+
+        </div>
+
+        <div class="card-body p-0">
+
+            <div class="table-responsive">
+
+                <table
+                    class="table table-striped table-hover align-middle mb-0">
+
+                    <thead class="table-dark">
+
+                        <tr>
+
+                            <th>Invoice</th>
+
+                            <th>Date</th>
+
+                            <th>Customer</th>
+
+                            <th>Payment</th>
+
+                            <th>Total</th>
+
+                            <th>Received</th>
+
+                            <th>Balance</th>
+
+                            <th width="160">
+
+                                Action
+
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody id="invoiceHistory">
+
+                        <tr>
+
+                            <td colspan="8"
+                                class="text-center py-4">
+
+                                No invoices available.
+
+                            </td>
+
+                        </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
 
         </div>
 
@@ -901,14 +822,144 @@
 
 </div>
 
-<!-- ==========================================
-     Scripts
-========================================== -->
+<!-- ============================================== -->
+<!-- LOADING -->
+<!-- ============================================== -->
 
-<script type="module" src="../js/layout.js"></script>
+<div
+    id="loadingOverlay"
+    class="loading-overlay"
+    style="display:none;">
 
-<script type="module" src="../js/billing.js"></script>
+    <div class="text-center">
+
+        <div
+            class="spinner-border text-primary"
+            role="status">
+
+        </div>
+
+        <div class="mt-3">
+
+            Loading...
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- ============================================== -->
+<!-- TOAST -->
+<!-- ============================================== -->
+
+<div
+    id="toastContainer"
+    class="toast-container position-fixed
+           top-0 end-0 p-3">
+
+</div>
+
+<!-- ============================================== -->
+<!-- PRINT AREA -->
+<!-- ============================================== -->
+
+<div
+    id="printArea"
+    style="display:none;">
+
+</div>
+
+<!-- ============================================== -->
+<!-- MODAL -->
+<!-- ============================================== -->
+
+<div
+    class="modal fade"
+    id="invoiceModal"
+    tabindex="-1">
+
+    <div class="modal-dialog modal-xl">
+
+        <div class="modal-content">
+
+            <div class="modal-header">
+
+                <h5 class="modal-title">
+
+                    Invoice Preview
+
+                </h5>
+
+                <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="modal">
+
+                </button>
+
+            </div>
+
+            <div
+                class="modal-body"
+                id="invoicePreview">
+
+            </div>
+
+            <div class="modal-footer">
+
+                <button
+                    class="btn btn-secondary"
+                    data-bs-dismiss="modal">
+
+                    Close
+
+                </button>
+
+                <button
+                    id="modalPrintBtn"
+                    class="btn btn-primary">
+
+                    <i class="bi bi-printer"></i>
+
+                    Print
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- ============================================== -->
+<!-- FOOTER -->
+<!-- ============================================== -->
+
+<footer
+    class="text-center text-muted py-4">
+
+    <small>
+
+        Genius Scientific ERP
+        © 2026
+        All Rights Reserved
+
+    </small>
+
+</footer>
+
+<!-- ============================================== -->
+<!-- JS -->
+<!-- ============================================== -->
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script type="module" src="billing.js"></script>
 
 </body>
 
 </html>
+
