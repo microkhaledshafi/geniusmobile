@@ -14,6 +14,8 @@ export const state = {
 
     history: [],
 
-    editMode: false
+    editMode: false,
+
+    invoiceDate: null
 
 };
