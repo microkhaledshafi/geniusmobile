@@ -2,168 +2,133 @@
 <html lang="en">
 
 <head>
-
     <meta charset="UTF-8">
-
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>Billing | Genius Scientific ERP</title>
 
-    <link
-        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-        rel="stylesheet">
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
-    <link
-        rel="stylesheet"
-        href="../billing/billing.css">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
 
+    <!-- Billing CSS -->
+    <link rel="stylesheet" href="../billing/billing.css">
 </head>
 
 <body>
 
-<div id="billingApp">
+    <div id="billingApp">
 
-    <header id="appHeader"></header>
+        <!-- =====================================================
+             PAGE HEADER
+        ====================================================== -->
 
-    <main class="container-fluid py-3">
+        <header id="appHeader">
 
-        <section id="invoiceHeader">
-            <section id="invoiceHeader" class="card shadow-sm mb-3">
+            <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
 
-    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <div class="container-fluid">
 
-        <div>
+                    <a class="navbar-brand fw-bold" href="#">
+                        <i class="bi bi-receipt"></i>
+                        Genius Scientific ERP
+                    </a>
 
-            <h4 class="mb-0">Genius Scientific ERP</h4>
+                    <div class="d-flex align-items-center gap-2">
 
-            <small>Sales Invoice</small>
+                        <button
+                            id="btnHistory"
+                            class="btn btn-light btn-sm">
 
-        </div>
+                            <i class="bi bi-clock-history"></i>
+                            History
 
-        <div>
+                        </button>
 
-            <button id="btnNewInvoice" class="btn btn-light btn-sm">
-                New Invoice
-            </button>
+                        <button
+                            id="btnDashboard"
+                            class="btn btn-warning btn-sm">
 
-        </div>
+                            <i class="bi bi-speedometer2"></i>
+                            Dashboard
 
-    </div>
+                        </button>
 
-    <div class="card-body">
-
-        <div class="row g-3">
-
-            <div class="col-md-3">
-                <label class="form-label">Invoice No</label>
-
-                <input
-                    id="invoiceNo"
-                    class="form-control"
-                    readonly>
-            </div>
-
-            <div class="col-md-3">
-
-                <label class="form-label">Invoice Date</label>
-
-                <input
-                    type="date"
-                    id="invoiceDate"
-                    class="form-control">
-
-            </div>
-
-            <div class="col-md-6">
-
-                <label class="form-label">Customer</label>
-
-                <div class="input-group">
-
-                    <input
-                        id="customerSearch"
-                        class="form-control"
-                        placeholder="Search customer...">
-
-                    <button
-                        class="btn btn-success"
-                        id="btnCustomer">
-
-                        +
-
-                    </button>
+                    </div>
 
                 </div>
 
-            </div>
+            </nav>
 
-            <div class="col-md-4">
+        </header>
 
-                <label class="form-label">GSTIN</label>
+        <!-- =====================================================
+             MAIN CONTAINER
+        ====================================================== -->
 
-                <input
-                    id="customerGST"
-                    class="form-control"
-                    readonly>
+        <main class="container-fluid py-3">
 
-            </div>
+            <!-- Invoice Header -->
+            <section id="invoiceHeader"></section>
 
-            <div class="col-md-4">
+            <!-- Invoice Items -->
+            <section id="invoiceTable"></section>
 
-                <label class="form-label">Phone</label>
+            <!-- Totals -->
+            <section id="invoiceTotals"></section>
 
-                <input
-                    id="customerPhone"
-                    class="form-control"
-                    readonly>
+            <!-- Payment -->
+            <section id="paymentSection"></section>
 
-            </div>
-
-            <div class="col-md-4">
-
-                <label class="form-label">Salesman</label>
-
-                <input
-                    id="salesman"
-                    class="form-control"
-                    placeholder="Salesman">
-
-            </div>
-
-            <div class="col-12">
-
-                <label class="form-label">Address</label>
-
-                <textarea
-                    id="customerAddress"
-                    rows="2"
-                    class="form-control"
-                    readonly></textarea>
-
-            </div>
-
-        </div>
+        </main>
 
     </div>
 
-</section>
-        </section>
+    <!-- =====================================================
+         MODALS
+    ====================================================== -->
 
-        <section id="invoiceTable"></section>
+    <div id="modalContainer">
 
-        <section id="invoiceTotals"></section>
+        <!-- Customer Modal -->
 
-        <section id="paymentSection"></section>
+        <div id="customerModalContainer"></div>
 
-    </main>
+        <!-- Product Search -->
 
-</div>
+        <div id="productModalContainer"></div>
 
-<div id="modalContainer"></div>
+        <!-- History -->
 
-<script
-type="module"
-src="../billing/billing.js"></script>
+        <div id="historyModalContainer"></div>
+
+    </div>
+
+    <!-- =====================================================
+         LOADING
+    ====================================================== -->
+
+    <div id="loadingOverlay" class="d-none">
+
+        <div class="spinner-border text-primary"></div>
+
+    </div>
+
+    <!-- =====================================================
+         TOAST
+    ====================================================== -->
+
+    <div id="toastContainer"></div>
+
+    <!-- Bootstrap JS -->
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Billing Loader -->
+
+    <script type="module" src="../billing/billing.js"></script>
 
 </body>
 
