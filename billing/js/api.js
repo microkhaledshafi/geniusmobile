@@ -1,21 +1,153 @@
+/*
+==========================================================
+Genius Scientific ERP
+Billing Module
+
+File:
+api.js
+
+Purpose:
+Centralized Data Access Layer (DAL)
+
+Responsibilities:
+• Supabase communication
+• CRUD operations
+• Error handling
+• Response normalization
+
+Every database request must pass through this file.
+
+==========================================================
+*/
+
 import { supabase } from "../supabase.js";
 
-export const api = {
+/*==========================================================
+Constants
+==========================================================*/
 
-    async getCustomers() {
+const DEFAULT_LIMIT = 10;
 
-        return await supabase
-            .from("customers")
-            .select("*");
+/*==========================================================
+Execute Query
+==========================================================*/
 
-    },
+async function execute(queryPromise) {
 
-    async getProducts() {
+    try {
 
-        return await supabase
-            .from("products")
-            .select("*");
+        const { data, error } = await queryPromise;
+
+        if (error) {
+
+            throw error;
+
+        }
+
+        return data;
 
     }
+
+    catch (error) {
+
+        console.error(
+
+            "[API]",
+
+            error
+
+        );
+
+        throw error;
+
+    }
+
+}
+
+/*==========================================================
+Return First Row
+==========================================================*/
+
+function first(data) {
+
+    if (!Array.isArray(data)) {
+
+        return null;
+
+    }
+
+    return data.length > 0
+        ? data[0]
+        : null;
+
+}
+
+/*==========================================================
+Return Safe Array
+==========================================================*/
+
+function safeArray(data) {
+
+    if (!Array.isArray(data)) {
+
+        return [];
+
+    }
+
+    return data;
+
+}
+
+/*==========================================================
+Validate ID
+==========================================================*/
+
+function validateId(id) {
+
+    if (id === null || id === undefined) {
+
+        throw new Error("Invalid ID.");
+
+    }
+
+}
+
+/*==========================================================
+Validate Object
+==========================================================*/
+
+function validateObject(value) {
+
+    if (
+
+        typeof value !== "object" ||
+
+        value === null
+
+    ) {
+
+        throw new Error("Invalid object.");
+
+    }
+
+}
+
+/*==========================================================
+Export Helpers
+==========================================================*/
+
+export {
+
+    execute,
+
+    first,
+
+    safeArray,
+
+    validateId,
+
+    validateObject,
+
+    DEFAULT_LIMIT
 
 };
