@@ -1,1 +1,3 @@
-import "./js/startup.js";
+import { initBillingApp } from "./js/startup.js";
+
+initBillingApp();
