@@ -134,11 +134,7 @@ Input Event
 Keyboard Event
 ==========================================================*/
 
-function handleKeyboard(event) {
 
-    // Part 4
-
-}
 
 /*==========================================================
 Focus Event
