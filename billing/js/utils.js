@@ -169,3 +169,12 @@ export function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 
 }
+/*----------------------------------------------------------
+Format Number
+----------------------------------------------------------*/
+
+export function formatNumber(value, decimals = 2) {
+
+    return toNumber(value).toFixed(decimals);
+
+}
