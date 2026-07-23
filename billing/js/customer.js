@@ -129,11 +129,6 @@ function registerEvents() {
 Input Event
 ==========================================================*/
 
-function handleCustomerInput(event) {
-
-    // Part 2
-
-}
 
 /*==========================================================
 Keyboard Event
@@ -149,35 +144,19 @@ function handleKeyboard(event) {
 Focus Event
 ==========================================================*/
 
-function handleFocus() {
 
-    // Part 3
-
-}
 
 /*==========================================================
 Blur Event
 ==========================================================*/
 
-function handleBlur() {
 
-    // Part 3
-
-}
 
 /*==========================================================
 Reset Customer State
 ==========================================================*/
 
-function resetCustomerState() {
 
-    state.customer = null;
-
-    searchResults = [];
-
-    selectedIndex = -1;
-
-}
 
 /*==========================================================
 Input Event
