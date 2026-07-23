@@ -23,7 +23,7 @@ Genius Scientific ERP
 ==========================================================
 */
 
-import state from "./state.js";
+import { state } from "./state.js";
 import * as api from "./api.js";
 import * as utils from "./utils.js";
 
