@@ -30,6 +30,11 @@ import {
 
 } from "./invoiceTable.js";
 
+import {
+
+    updatePayment
+
+} from "./payment.js";
 /*==========================================================
 Constants
 ==========================================================*/
@@ -452,6 +457,8 @@ function refreshInvoiceCalculations() {
 
     updateTotalsUI();
 
+    updatePayment();
+
 }
 /*==========================================================
 Event Registration
@@ -559,8 +566,9 @@ export function recalculateRow(
 
     updateTotalsUI();
 
-}
+    updatePayment();
 
+}
 /**
  * Recalculate complete invoice.
  */
@@ -589,5 +597,7 @@ export function clearTotals() {
     resetTotals();
 
     updateTotalsUI();
+
+    updatePayment();
 
 }
