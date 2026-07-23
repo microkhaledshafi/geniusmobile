@@ -558,7 +558,7 @@ export async function searchProducts(keyword) {
 
 }
 
-}
+
 
 /**
  * Select Product
