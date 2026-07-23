@@ -263,7 +263,120 @@
 </template>
 
             <!-- Totals -->
-            <section id="invoiceTotals"></section>
+           <!-- =====================================================
+     INVOICE TOTALS
+====================================================== -->
+
+<section id="invoiceTotals" class="mt-4">
+
+    <div class="card shadow-sm">
+
+        <div class="card-header bg-light">
+
+            <h5 class="mb-0">
+                <i class="bi bi-calculator"></i>
+                Invoice Totals
+            </h5>
+
+        </div>
+
+        <div class="card-body">
+
+            <div class="row justify-content-end">
+
+                <div class="col-lg-5 col-md-6">
+
+                    <table class="table table-borderless table-sm mb-0">
+
+                        <tbody>
+
+                            <tr>
+
+                                <th>Subtotal</th>
+
+                                <td
+                                    id="subtotal"
+                                    class="text-end fw-semibold">
+
+                                    0.00
+
+                                </td>
+
+                            </tr>
+
+                            <tr>
+
+                                <th>Discount</th>
+
+                                <td
+                                    id="discountTotal"
+                                    class="text-end text-danger">
+
+                                    0.00
+
+                                </td>
+
+                            </tr>
+
+                            <tr>
+
+                                <th>Taxable Amount</th>
+
+                                <td
+                                    id="taxableAmount"
+                                    class="text-end">
+
+                                    0.00
+
+                                </td>
+
+                            </tr>
+
+                            <tr>
+
+                                <th>GST</th>
+
+                                <td
+                                    id="gstTotal"
+                                    class="text-end">
+
+                                    0.00
+
+                                </td>
+
+                            </tr>
+
+                            <tr class="border-top">
+
+                                <th class="fs-5">
+
+                                    Grand Total
+
+                                </th>
+
+                                <td
+                                    id="grandTotal"
+                                    class="text-end fw-bold fs-4 text-primary">
+
+                                    0.00
+
+                                </td>
+
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
 
             <!-- Payment -->
             <section id="paymentSection"></section>
