@@ -370,3 +370,180 @@ function refreshPayment() {
     updatePaymentUI();
 
 }
+/*==========================================================
+Event Registration
+==========================================================*/
+
+/**
+ * Update payment mode.
+ */
+function updatePaymentMode() {
+
+    const element =
+        document.getElementById(
+            "paymentMode"
+        );
+
+    if (!element) {
+
+        return;
+
+    }
+
+    paymentState.paymentMode =
+        element.value;
+
+}
+
+/**
+ * Update amount received.
+ */
+function updateAmountReceived() {
+
+    const element =
+        document.getElementById(
+            "amountReceived"
+        );
+
+    if (!element) {
+
+        return;
+
+    }
+
+    paymentState.amountReceived =
+
+        roundValue(
+
+            parseNumber(
+                element.value
+            )
+
+        );
+
+}
+
+/**
+ * Register payment events.
+ */
+function registerPaymentEvents() {
+
+    const paymentMode =
+
+        document.getElementById(
+            "paymentMode"
+        );
+
+    const amountReceived =
+
+        document.getElementById(
+            "amountReceived"
+        );
+
+    if (paymentMode) {
+
+        paymentMode.addEventListener(
+
+            "change",
+
+            () => {
+
+                updatePaymentMode();
+
+                refreshPayment();
+
+            }
+
+        );
+
+    }
+
+    if (amountReceived) {
+
+        amountReceived.addEventListener(
+
+            "input",
+
+            () => {
+
+                updateAmountReceived();
+
+                refreshPayment();
+
+            }
+
+        );
+
+    }
+
+}
+
+/*==========================================================
+Public API
+==========================================================*/
+
+/**
+ * Initialize payment module.
+ */
+export function initPayment() {
+
+    registerPaymentEvents();
+
+    refreshPayment();
+
+    console.log(
+
+        "[Payment] Module initialized."
+
+    );
+
+}
+
+/**
+ * Refresh payment values.
+ */
+export function updatePayment() {
+
+    refreshPayment();
+
+}
+
+/**
+ * Get payment details.
+ *
+ * @returns {Object}
+ */
+export function getPaymentDetails() {
+
+    return clonePaymentState();
+
+}
+
+/**
+ * Reset payment module.
+ */
+export function clearPayment() {
+
+    resetPaymentState();
+
+    refreshPayment();
+
+}
+
+/**
+ * Validate payment.
+ *
+ * @returns {boolean}
+ */
+export function validatePayment() {
+
+    return (
+
+        paymentState.amountPayable >= 0 &&
+
+        paymentState.amountReceived >= 0
+
+    );
+
+}
+
