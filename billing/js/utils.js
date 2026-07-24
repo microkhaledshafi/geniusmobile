@@ -188,3 +188,36 @@ export function parseNumber(value) {
     return isNaN(number) ? 0 : number;
 
 }
+export function round2(value) {
+    return Math.round((Number(value) + Number.EPSILON) * 100) / 100;
+}
+
+export function money(value) {
+    return round2(value).toFixed(2);
+}
+
+export function today() {
+    return new Date().toISOString().split("T")[0];
+}
+
+export function uuid() {
+    return crypto.randomUUID();
+}
+
+export function isEmpty(value) {
+    return value === null || value === undefined || value === "";
+}
+
+export function sanitizeString(value) {
+    return String(value ?? "").trim();
+}
+
+export function parseNumber(value) {
+
+    if (value === null || value === undefined || value === "")
+        return 0;
+
+    const number = Number(String(value).replace(/,/g, ""));
+
+    return isNaN(number) ? 0 : number;
+}
