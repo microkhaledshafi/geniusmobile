@@ -1,717 +1,401 @@
 /*
-==========================================================
+=========================================================
 Genius Scientific ERP
-Billing Module
-
-File:
 invoice.js
-
-Purpose:
-Manage invoice header.
-
-Responsibilities
-
-• Invoice Number
-• Invoice Date
-• Invoice Type
-• GST Type
-• Salesman
-• Doctor Reference
-• Due Date
-• Remarks
-• Header Validation
-• Header Reset
-
-==========================================================
+=========================================================
+Invoice Header Module
+=========================================================
 */
 
-/*==========================================================
-API
-==========================================================*/
+import { supabase } from "../supabase.js";
+
+import { state } from "./state.js";
 
 import {
-
-    getNextInvoiceNumber
-
-} from "./api.js";
-
-/*==========================================================
-State
-==========================================================*/
+    qs,
+    today,
+    sanitizeString
+} from "./utils.js";
 
 import {
-
-    state
-
-} from "./state.js";
-
-/*==========================================================
-Notifications
-==========================================================*/
-
-import {
-
-    showError,
-    showSuccess,
-    showWarning
-
+    showError
 } from "./notifications.js";
 
-/*==========================================================
-Utilities
-==========================================================*/
+/*=========================================================
+DOM REFERENCES
+=========================================================*/
 
-import {
+const invoiceNumberInput = () => qs("#invoiceNumber");
 
-    formatDate,
-    today,
-    isEmpty,
-    sanitizeString
+const invoiceDateInput = () => qs("#invoiceDate");
 
-} from "./utils.js";
-/*==========================================================
-Private Variables
-==========================================================*/
+/*=========================================================
+INITIALIZE
+=========================================================*/
 
-let elements = {
+export async function initializeInvoice() {
 
-    invoiceNumber: null,
+    try {
 
-    invoiceDate: null,
+        setInvoiceDate();
 
-    invoiceType: null,
+        await loadLastInvoice();
 
-    gstType: null,
-
-    salesman: null,
-
-    doctor: null,
-
-    dueDate: null,
-
-    remarks: null
-
-};
-
-/*==========================================================
-Cache DOM
-==========================================================*/
-
-function cacheDom() {
-
-    elements.invoiceNumber =
-        document.getElementById("invoiceNumber");
-
-    elements.invoiceDate =
-        document.getElementById("invoiceDate");
-
-    elements.invoiceType =
-        document.getElementById("invoiceType");
-
-    elements.gstType =
-        document.getElementById("gstType");
-
-    elements.salesman =
-        document.getElementById("salesman");
-
-    elements.doctor =
-        document.getElementById("doctor");
-
-    elements.dueDate =
-        document.getElementById("dueDate");
-
-    elements.remarks =
-        document.getElementById("remarks");
-
-}
-
-/*==========================================================
-Private Getters
-==========================================================*/
-
-function getElements() {
-
-    return elements;
-
-}
-
-function hasCachedDom() {
-
-    return Object
-        .values(elements)
-        .every(element => element !== null);
-
-}
-/*==========================================================
-Header Helpers
-==========================================================*/
-
-/**
- * Load next invoice number
- */
-async function loadInvoiceNumber() {
-
-    const invoiceNumber = await getNextInvoiceNumber();
-
-    if (elements.invoiceNumber) {
-
-        elements.invoiceNumber.value = invoiceNumber;
+        registerInvoiceEvents();
 
     }
 
-    state.invoiceNumber = invoiceNumber;
+    catch (error) {
 
-}
+        console.error(error);
 
-/**
- * Load today's date
- */
-function loadInvoiceDate() {
-
-    const currentDate = today();
-
-    if (elements.invoiceDate) {
-
-        elements.invoiceDate.value = currentDate;
+        if (typeof showError === "function")
+            showError(error.message);
 
     }
 
-    state.invoiceDate = currentDate;
+}
+
+/*=========================================================
+CURRENT INVOICE
+=========================================================*/
+
+export function getCurrentInvoice() {
+
+    return state.currentInvoice;
 
 }
 
-/**
- * Calculate due date
- */
-function calculateDueDate(days = 0) {
+export function setCurrentInvoice(invoice) {
 
-    const date = new Date();
+    state.currentInvoice = invoice;
 
-    date.setDate(
+}
 
-        date.getDate() + Number(days)
+/*=========================================================
+INVOICE DATE
+=========================================================*/
+
+export function setInvoiceDate(date = today()) {
+
+    state.invoiceDate = date;
+
+    const input = invoiceDateInput();
+
+    if (input)
+        input.value = date;
+
+}
+
+export function getInvoiceDate() {
+
+    const input = invoiceDateInput();
+
+    if (!input)
+        return state.invoiceDate;
+
+    return sanitizeString(input.value);
+
+}
+
+/*=========================================================
+CLEAR HEADER
+=========================================================*/
+
+export function clearInvoiceHeader() {
+
+    const number = invoiceNumberInput();
+
+    const date = invoiceDateInput();
+
+    if (number)
+        number.value = "";
+
+    if (date)
+        date.value = today();
+
+    state.currentInvoice = null;
+
+    state.invoiceNumber = "";
+
+    state.invoiceDate = today();
+
+}
+
+/*=========================================================
+REGISTER EVENTS
+=========================================================*/
+
+function registerInvoiceEvents() {
+
+    invoiceDateInput()?.addEventListener(
+
+        "change",
+
+        e => {
+
+            state.invoiceDate = e.target.value;
+
+        }
 
     );
 
-    const dueDate = formatDate(date);
-
-    if (elements.dueDate) {
-
-        elements.dueDate.value = dueDate;
-
-    }
-
-    state.dueDate = dueDate;
-
 }
 
-/**
- * Load default values
- */
-function loadDefaultValues() {
+/* ============================================================
+   Load Last Invoice
+============================================================ */
 
-    if (elements.invoiceType) {
+async function loadLastInvoice() {
 
-        state.invoiceType = elements.invoiceType.value;
+    try {
+
+        const { data, error } = await supabase
+            .from("invoices")
+            .select("invoice_no")
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+        if (error) throw error;
+
+        if (!data) {
+
+            document.getElementById("invoiceNumber").value =
+                generateInvoiceNumber();
+
+            return;
+
+        }
+
+        state.lastInvoiceNumber = data.invoice_no;
+
+        const invoiceInput =
+            document.getElementById("invoiceNumber");
+
+        if (!invoiceInput.value.trim()) {
+
+            invoiceInput.value = getNextInvoiceNumber(
+                data.invoice_no
+            );
+
+        }
 
     }
 
-    if (elements.gstType) {
+    catch (error) {
 
-        state.gstType = elements.gstType.value;
+        console.error("Unable to load last invoice.", error);
 
-    }
-
-    if (elements.salesman) {
-
-        state.salesman = sanitizeString(
-
-            elements.salesman.value
-
-        );
-
-    }
-
-    if (elements.doctor) {
-
-        state.doctor = sanitizeString(
-
-            elements.doctor.value
-
-        );
-
-    }
-
-    if (elements.remarks) {
-
-        state.remarks = sanitizeString(
-
-            elements.remarks.value
-
-        );
+        document.getElementById("invoiceNumber").value =
+            generateInvoiceNumber();
 
     }
 
 }
 
-/**
- * Read invoice header
- */
-function readHeader() {
+/* ============================================================
+   Generate Invoice Number
+============================================================ */
 
-    return {
+function generateInvoiceNumber() {
 
-        invoiceNumber: elements.invoiceNumber
-            ? elements.invoiceNumber.value
-            : "",
-
-        invoiceDate: elements.invoiceDate
-            ? elements.invoiceDate.value
-            : "",
-
-        invoiceType: elements.invoiceType
-            ? elements.invoiceType.value
-            : "",
-
-        gstType: elements.gstType
-            ? elements.gstType.value
-            : "",
-
-        salesman: elements.salesman
-            ? sanitizeString(elements.salesman.value)
-            : "",
-
-        doctor: elements.doctor
-            ? sanitizeString(elements.doctor.value)
-            : "",
-
-        dueDate: elements.dueDate
-            ? elements.dueDate.value
-            : "",
-
-        remarks: elements.remarks
-            ? sanitizeString(elements.remarks.value)
-            : ""
-
-    };
+    return "GST/JK/000001";
 
 }
 
-/**
- * Write invoice header
- */
-function writeHeader(header) {
+/* ============================================================
+   Get Next Invoice Number
+============================================================ */
 
-    if (!header) {
+function getNextInvoiceNumber(lastInvoice) {
 
-        return;
+    if (!lastInvoice)
+        return generateInvoiceNumber();
 
-    }
+    const match = lastInvoice.match(/(\d+)$/);
 
-    if (elements.invoiceNumber) {
+    if (!match)
+        return generateInvoiceNumber();
 
-        elements.invoiceNumber.value =
-            header.invoiceNumber ?? "";
+    const lastNumber =
+        parseInt(match[1], 10);
 
-    }
+    const nextNumber =
+        String(lastNumber + 1)
+            .padStart(match[1].length, "0");
 
-    if (elements.invoiceDate) {
-
-        elements.invoiceDate.value =
-            header.invoiceDate ?? "";
-
-    }
-
-    if (elements.invoiceType) {
-
-        elements.invoiceType.value =
-            header.invoiceType ?? "";
-
-    }
-
-    if (elements.gstType) {
-
-        elements.gstType.value =
-            header.gstType ?? "";
-
-    }
-
-    if (elements.salesman) {
-
-        elements.salesman.value =
-            header.salesman ?? "";
-
-    }
-
-    if (elements.doctor) {
-
-        elements.doctor.value =
-            header.doctor ?? "";
-
-    }
-
-    if (elements.dueDate) {
-
-        elements.dueDate.value =
-            header.dueDate ?? "";
-
-    }
-
-    if (elements.remarks) {
-
-        elements.remarks.value =
-            header.remarks ?? "";
-
-    }
+    return lastInvoice.replace(/\d+$/, nextNumber);
 
 }
 
-/**
- * Reset invoice header
- */
-function resetHeader() {
+/* ============================================================
+   Validate Invoice Number
+============================================================ */
 
-    writeHeader({
+export async function validateInvoiceNumber(invoiceNumber) {
 
-        invoiceNumber: "",
-        invoiceDate: "",
-        invoiceType: "",
-        gstType: "",
-        salesman: "",
-        doctor: "",
-        dueDate: "",
-        remarks: ""
+    invoiceNumber = invoiceNumber.trim();
+
+    if (!invoiceNumber.length) {
+
+        showError("Invoice number cannot be empty.");
+
+        return false;
+
+    }
+
+    const { data, error } = await supabase
+        .from("invoices")
+        .select("id")
+        .eq("invoice_no", invoiceNumber)
+        .limit(1);
+
+    if (error) {
+
+        console.error(error);
+
+        showError("Unable to validate invoice number.");
+
+        return false;
+
+    }
+
+    if (
+        data &&
+        data.length > 0 &&
+        data[0].id !== state.currentInvoice?.id
+    ) {
+
+        showError("Invoice number already exists.");
+
+        return false;
+
+    }
+
+    return true;
+
+}
+
+/* ============================================================
+   Create New Invoice
+============================================================ */
+
+export function createNewInvoice() {
+
+    state.currentInvoice = null;
+
+    clearInvoiceHeader();
+
+    document.getElementById("invoiceNumber").value =
+        getNextInvoiceNumber(state.lastInvoiceNumber);
+
+    setInvoiceDate();
+
+}
+
+/* ============================================================
+   Reset Invoice Header
+============================================================ */
+
+export function resetInvoiceHeader() {
+
+    clearInvoiceHeader();
+
+    document.getElementById("invoiceNumber").value =
+        getNextInvoiceNumber(state.lastInvoiceNumber);
+
+    setInvoiceDate();
+
+}
+
+/* ============================================================
+   Invoice Number Events
+============================================================ */
+
+function registerInvoiceEvents() {
+
+    const invoiceInput =
+        document.getElementById("invoiceNumber");
+
+    invoiceInput.addEventListener("blur", async () => {
+
+        const value =
+            invoiceInput.value.trim();
+
+        if (!value.length) {
+
+            invoiceInput.value =
+                getNextInvoiceNumber(state.lastInvoiceNumber);
+
+            return;
+
+        }
+
+        await validateInvoiceNumber(value);
 
     });
 
-}
-/*==========================================================
-Event Handlers
-==========================================================*/
-
-/**
- * Handle invoice date change
- */
-function handleInvoiceDateChange() {
-
-    if (!elements.invoiceDate) {
-
-        return;
-
-    }
-
-    state.invoiceDate = elements.invoiceDate.value;
-
-}
-
-/**
- * Handle invoice type change
- */
-function handleInvoiceTypeChange() {
-
-    if (!elements.invoiceType) {
-
-        return;
-
-    }
-
-    state.invoiceType = elements.invoiceType.value;
-
-}
-
-/**
- * Handle GST type change
- */
-function handleGstTypeChange() {
-
-    if (!elements.gstType) {
-
-        return;
-
-    }
-
-    state.gstType = elements.gstType.value;
-
-}
-
-/**
- * Handle salesman change
- */
-function handleSalesmanChange() {
-
-    if (!elements.salesman) {
-
-        return;
-
-    }
-
-    state.salesman = sanitizeString(
-
-        elements.salesman.value
-
-    );
-
-}
-
-/**
- * Handle doctor change
- */
-function handleDoctorChange() {
-
-    if (!elements.doctor) {
-
-        return;
-
-    }
-
-    state.doctor = sanitizeString(
-
-        elements.doctor.value
-
-    );
-
-}
-
-/**
- * Handle due date change
- */
-function handleDueDateChange() {
-
-    if (!elements.dueDate) {
-
-        return;
-
-    }
-
-    state.dueDate = elements.dueDate.value;
-
-}
-
-/**
- * Handle remarks change
- */
-function handleRemarksChange() {
-
-    if (!elements.remarks) {
-
-        return;
-
-    }
-
-    state.remarks = sanitizeString(
-
-        elements.remarks.value
-
-    );
-
-}
-
-/**
- * Register all events
- */
-function registerEvents() {
-
-    if (elements.invoiceDate) {
-
-        elements.invoiceDate.addEventListener(
-
-            "change",
-
-            handleInvoiceDateChange
-
+    document
+        .getElementById("btnNewInvoice")
+        .addEventListener(
+            "click",
+            createNewInvoice
         );
 
-    }
+}
 
-    if (elements.invoiceType) {
+/* ============================================================
+   Current Invoice Helpers
+============================================================ */
 
-        elements.invoiceType.addEventListener(
+export function getInvoiceNumber() {
 
-            "change",
-
-            handleInvoiceTypeChange
-
-        );
-
-    }
-
-    if (elements.gstType) {
-
-        elements.gstType.addEventListener(
-
-            "change",
-
-            handleGstTypeChange
-
-        );
-
-    }
-
-    if (elements.salesman) {
-
-        elements.salesman.addEventListener(
-
-            "input",
-
-            handleSalesmanChange
-
-        );
-
-    }
-
-    if (elements.doctor) {
-
-        elements.doctor.addEventListener(
-
-            "input",
-
-            handleDoctorChange
-
-        );
-
-    }
-
-    if (elements.dueDate) {
-
-        elements.dueDate.addEventListener(
-
-            "change",
-
-            handleDueDateChange
-
-        );
-
-    }
-
-    if (elements.remarks) {
-
-        elements.remarks.addEventListener(
-
-            "input",
-
-            handleRemarksChange
-
-        );
-
-    }
+    return document
+        .getElementById("invoiceNumber")
+        .value
+        .trim();
 
 }
 
-/**
- * Validate invoice header
- */
-function validateHeader() {
+export function setInvoiceNumber(number) {
 
-    const header = readHeader();
-
-    if (isEmpty(header.invoiceDate)) {
-
-        showError(
-
-            "Invoice date is required."
-
-        );
-
-        return false;
-
-    }
-
-    if (isEmpty(header.invoiceType)) {
-
-        showError(
-
-            "Invoice type is required."
-
-        );
-
-        return false;
-
-    }
-
-    return true;
-
-}
-/*==========================================================
-Public API
-==========================================================*/
-
-/**
- * Initialize Invoice Module
- */
-export async function initInvoice() {
-
-    cacheDom();
-
-    if (!hasCachedDom()) {
-
-        console.warn(
-
-            "[Invoice] Invoice header elements not found."
-
-        );
-
-        return false;
-
-    }
-
-    registerEvents();
-
-    await loadInvoiceNumber();
-
-    loadInvoiceDate();
-
-    calculateDueDate();
-
-    loadDefaultValues();
-
-    console.log(
-
-        "[Invoice] Module initialized."
-
-    );
-
-    return true;
+    document
+        .getElementById("invoiceNumber")
+        .value = number ?? "";
 
 }
 
-/**
- * Get Invoice Header
- */
-export function getInvoiceHeader() {
+/* ============================================================
+   Load Invoice Header
+============================================================ */
 
-    return readHeader();
+export function loadInvoiceHeader(invoice) {
 
-}
+    if (!invoice) return;
 
-/**
- * Set Invoice Header
- */
-export function setInvoiceHeader(header) {
+    state.currentInvoice = invoice;
 
-    writeHeader(header);
+    setInvoiceNumber(invoice.invoice_no);
 
-}
-
-/**
- * Clear Invoice Header
- */
-export async function clearInvoiceHeader() {
-
-    resetHeader();
-
-    await loadInvoiceNumber();
-
-    loadInvoiceDate();
-
-    calculateDueDate();
+    if (invoice.invoice_date)
+        setInvoiceDate(invoice.invoice_date);
 
 }
 
-/**
- * Validate Invoice Header
- */
-export function validateInvoiceHeader() {
+/* ============================================================
+   Save Header To State
+============================================================ */
 
-    return validateHeader();
+export function syncInvoiceHeader() {
+
+    if (!state.currentInvoice)
+        state.currentInvoice = {};
+
+    state.currentInvoice.invoice_no =
+        getInvoiceNumber();
+
+    state.currentInvoice.invoice_date =
+        getInvoiceDate();
 
 }
