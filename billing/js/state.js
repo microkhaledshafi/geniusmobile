@@ -51,10 +51,11 @@ export const state = {
     INVOICE
     ----------------------------------------------------*/
 
-    currentInvoice: null,
-    invoiceNumber: "",
-    invoiceDate: "",
-    invoiceItems: [],
+   currentInvoice: null,
+lastInvoiceNumber: "",
+invoiceNumber: "",
+invoiceDate: "",
+invoiceItems: [],
 
     /*----------------------------------------------------
     PAYMENT
@@ -171,6 +172,8 @@ RESET INVOICE STATE
 export function resetInvoiceState() {
 
     state.currentInvoice = null;
+
+    state.lastInvoiceNumber = "";
 
     state.selectedProduct = null;
 
