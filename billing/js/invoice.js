@@ -1,64 +1,122 @@
-/*
-=========================================================
-Genius Scientific ERP
-invoice.js
-=========================================================
-Invoice Header Module
-=========================================================
-*/
+/* ============================================================
+   invoice.js
+   Handles invoice header only
+============================================================ */
 
 import { supabase } from "../supabase.js";
 
-import { state } from "./state.js";
+import {
+    state,
+    markInvoiceChanged,
+    clearInvoiceChanged
+} from "./state.js";
 
 import {
     qs,
-    today,
-    sanitizeString
+    today
 } from "./utils.js";
 
 import {
     showError
 } from "./notifications.js";
 
-/*=========================================================
-DOM REFERENCES
-=========================================================*/
+/* ============================================================
+   Private Variables
+============================================================ */
 
-const invoiceNumberInput = () => qs("#invoiceNumber");
+let initialized = false;
 
-const invoiceDateInput = () => qs("#invoiceDate");
-
-/*=========================================================
-INITIALIZE
-=========================================================*/
+/* ============================================================
+   Initialize
+============================================================ */
 
 export async function initializeInvoice() {
 
-    try {
+    if (initialized)
+        return;
 
-        setInvoiceDate();
+    initialized = true;
 
-        await loadLastInvoice();
+    setInvoiceDate();
 
-        registerInvoiceEvents();
+    registerInvoiceEvents();
 
-    }
-
-    catch (error) {
-
-        console.error(error);
-
-        if (typeof showError === "function")
-            showError(error.message);
-
-    }
+    await loadLastInvoice();
 
 }
 
-/*=========================================================
-CURRENT INVOICE
-=========================================================*/
+/* ============================================================
+   Event Registration
+============================================================ */
+
+function registerInvoiceEvents() {
+
+    const invoiceNumber = qs("#invoiceNumber");
+    const invoiceDate = qs("#invoiceDate");
+    const btnNewInvoice = qs("#btnNewInvoice");
+
+    invoiceNumber?.addEventListener("blur", onInvoiceNumberBlur);
+
+    invoiceNumber?.addEventListener("input", () => {
+
+        markInvoiceChanged();
+
+    });
+
+    invoiceDate?.addEventListener("change", () => {
+
+        markInvoiceChanged();
+
+    });
+
+    btnNewInvoice?.addEventListener(
+        "click",
+        createNewInvoice
+    );
+
+}
+
+/* ============================================================
+   Invoice Date
+============================================================ */
+
+export function setInvoiceDate(date = today()) {
+
+    const input = qs("#invoiceDate");
+
+    if (input)
+        input.value = date;
+
+}
+
+export function getInvoiceDate() {
+
+    return qs("#invoiceDate")?.value || "";
+
+}
+
+/* ============================================================
+   Invoice Number
+============================================================ */
+
+export function setInvoiceNumber(number) {
+
+    const input = qs("#invoiceNumber");
+
+    if (input)
+        input.value = number || "";
+
+}
+
+export function getInvoiceNumber() {
+
+    return qs("#invoiceNumber")?.value.trim() || "";
+
+}
+
+/* ============================================================
+   Current Invoice
+============================================================ */
 
 export function getCurrentInvoice() {
 
@@ -72,73 +130,37 @@ export function setCurrentInvoice(invoice) {
 
 }
 
-/*=========================================================
-INVOICE DATE
-=========================================================*/
-
-export function setInvoiceDate(date = today()) {
-
-    state.invoiceDate = date;
-
-    const input = invoiceDateInput();
-
-    if (input)
-        input.value = date;
-
-}
-
-export function getInvoiceDate() {
-
-    const input = invoiceDateInput();
-
-    if (!input)
-        return state.invoiceDate;
-
-    return sanitizeString(input.value);
-
-}
-
-/*=========================================================
-CLEAR HEADER
-=========================================================*/
+/* ============================================================
+   Header Helpers
+============================================================ */
 
 export function clearInvoiceHeader() {
 
-    const number = invoiceNumberInput();
+    setInvoiceNumber("");
 
-    const date = invoiceDateInput();
-
-    if (number)
-        number.value = "";
-
-    if (date)
-        date.value = today();
-
-    state.currentInvoice = null;
-
-    state.invoiceNumber = "";
-
-    state.invoiceDate = today();
+    setInvoiceDate();
 
 }
 
-/*=========================================================
-REGISTER EVENTS
-=========================================================*/
+/* ============================================================
+   Invoice Blur Validation
+============================================================ */
 
-function registerInvoiceEvents() {
+async function onInvoiceNumberBlur() {
 
-    invoiceDateInput()?.addEventListener(
+    const value = getInvoiceNumber();
 
-        "change",
+    if (!value.length) {
 
-        e => {
+        setInvoiceNumber(
+            getNextInvoiceNumber(state.lastInvoiceNumber)
+        );
 
-            state.invoiceDate = e.target.value;
+        return;
 
-        }
+    }
 
-    );
+    await validateInvoiceNumber(value);
 
 }
 
@@ -157,26 +179,30 @@ async function loadLastInvoice() {
             .limit(1)
             .maybeSingle();
 
-        if (error) throw error;
+        if (error)
+            throw error;
 
         if (!data) {
 
-            document.getElementById("invoiceNumber").value =
-                generateInvoiceNumber();
+            state.lastInvoiceNumber = null;
+
+            setInvoiceNumber(
+                generateInvoiceNumber()
+            );
 
             return;
 
         }
 
-        state.lastInvoiceNumber = data.invoice_no;
+        state.lastInvoiceNumber =
+            data.invoice_no;
 
-        const invoiceInput =
-            document.getElementById("invoiceNumber");
+        if (!getInvoiceNumber()) {
 
-        if (!invoiceInput.value.trim()) {
-
-            invoiceInput.value = getNextInvoiceNumber(
-                data.invoice_no
+            setInvoiceNumber(
+                getNextInvoiceNumber(
+                    state.lastInvoiceNumber
+                )
             );
 
         }
@@ -185,17 +211,22 @@ async function loadLastInvoice() {
 
     catch (error) {
 
-        console.error("Unable to load last invoice.", error);
+        console.error(error);
 
-        document.getElementById("invoiceNumber").value =
-            generateInvoiceNumber();
+        showError(
+            "Unable to load last invoice."
+        );
+
+        setInvoiceNumber(
+            generateInvoiceNumber()
+        );
 
     }
 
 }
 
 /* ============================================================
-   Generate Invoice Number
+   Default Invoice Number
 ============================================================ */
 
 function generateInvoiceNumber() {
@@ -205,7 +236,7 @@ function generateInvoiceNumber() {
 }
 
 /* ============================================================
-   Get Next Invoice Number
+   Next Invoice Number
 ============================================================ */
 
 function getNextInvoiceNumber(lastInvoice) {
@@ -213,19 +244,26 @@ function getNextInvoiceNumber(lastInvoice) {
     if (!lastInvoice)
         return generateInvoiceNumber();
 
-    const match = lastInvoice.match(/(\d+)$/);
+    const match =
+        lastInvoice.match(/(\d+)$/);
 
     if (!match)
         return generateInvoiceNumber();
 
-    const lastNumber =
+    const last =
         parseInt(match[1], 10);
 
-    const nextNumber =
-        String(lastNumber + 1)
-            .padStart(match[1].length, "0");
+    const next =
+        String(last + 1)
+            .padStart(
+                match[1].length,
+                "0"
+            );
 
-    return lastInvoice.replace(/\d+$/, nextNumber);
+    return lastInvoice.replace(
+        /\d+$/,
+        next
+    );
 
 }
 
@@ -235,156 +273,90 @@ function getNextInvoiceNumber(lastInvoice) {
 
 export async function validateInvoiceNumber(invoiceNumber) {
 
-    invoiceNumber = invoiceNumber.trim();
+    invoiceNumber =
+        invoiceNumber.trim();
 
     if (!invoiceNumber.length) {
 
-        showError("Invoice number cannot be empty.");
+        showError(
+            "Invoice number is required."
+        );
 
         return false;
 
     }
 
-    const { data, error } = await supabase
-        .from("invoices")
-        .select("id")
-        .eq("invoice_no", invoiceNumber)
-        .limit(1);
+    try {
 
-    if (error) {
+        const { data, error } = await supabase
+            .from("invoices")
+            .select("id")
+            .eq(
+                "invoice_no",
+                invoiceNumber
+            )
+            .maybeSingle();
+
+        if (error)
+            throw error;
+
+        if (
+            data &&
+            data.id !== state.currentInvoice?.id
+        ) {
+
+            showError(
+                "Invoice number already exists."
+            );
+
+            return false;
+
+        }
+
+        return true;
+
+    }
+
+    catch (error) {
 
         console.error(error);
 
-        showError("Unable to validate invoice number.");
+        showError(
+            "Unable to validate invoice number."
+        );
 
         return false;
 
     }
-
-    if (
-        data &&
-        data.length > 0 &&
-        data[0].id !== state.currentInvoice?.id
-    ) {
-
-        showError("Invoice number already exists.");
-
-        return false;
-
-    }
-
-    return true;
 
 }
 
 /* ============================================================
-   Create New Invoice
+   New Invoice
 ============================================================ */
 
 export function createNewInvoice() {
 
     state.currentInvoice = null;
 
+    clearInvoiceChanged();
+
     clearInvoiceHeader();
 
-    document.getElementById("invoiceNumber").value =
-        getNextInvoiceNumber(state.lastInvoiceNumber);
+    setInvoiceNumber(
+
+        getNextInvoiceNumber(
+            state.lastInvoiceNumber
+        )
+
+    );
 
     setInvoiceDate();
 
 }
 
 /* ============================================================
-   Reset Invoice Header
-============================================================ */
-
-export function resetInvoiceHeader() {
-
-    clearInvoiceHeader();
-
-    document.getElementById("invoiceNumber").value =
-        getNextInvoiceNumber(state.lastInvoiceNumber);
-
-    setInvoiceDate();
-
-}
-
-/* ============================================================
-   Invoice Number Events
-============================================================ */
-
-function registerInvoiceEvents() {
-
-    const invoiceInput =
-        document.getElementById("invoiceNumber");
-
-    invoiceInput.addEventListener("blur", async () => {
-
-        const value =
-            invoiceInput.value.trim();
-
-        if (!value.length) {
-
-            invoiceInput.value =
-                getNextInvoiceNumber(state.lastInvoiceNumber);
-
-            return;
-
-        }
-
-        await validateInvoiceNumber(value);
-
-    });
-
-    document
-        .getElementById("btnNewInvoice")
-        .addEventListener(
-            "click",
-            createNewInvoice
-        );
-
-}
-
-/* ============================================================
-   Current Invoice Helpers
-============================================================ */
-
-export function getInvoiceNumber() {
-
-    return document
-        .getElementById("invoiceNumber")
-        .value
-        .trim();
-
-}
-
-export function setInvoiceNumber(number) {
-
-    document
-        .getElementById("invoiceNumber")
-        .value = number ?? "";
-
-}
-
-/* ============================================================
-   Load Invoice Header
-============================================================ */
-
-export function loadInvoiceHeader(invoice) {
-
-    if (!invoice) return;
-
-    state.currentInvoice = invoice;
-
-    setInvoiceNumber(invoice.invoice_no);
-
-    if (invoice.invoice_date)
-        setInvoiceDate(invoice.invoice_date);
-
-}
-
-/* ============================================================
-   Save Header To State
+   Header → State
 ============================================================ */
 
 export function syncInvoiceHeader() {
@@ -399,3 +371,161 @@ export function syncInvoiceHeader() {
         getInvoiceDate();
 
 }
+
+/* ============================================================
+   State → Header
+============================================================ */
+
+export function loadInvoiceHeader(invoice) {
+
+    if (!invoice)
+        return;
+
+    state.currentInvoice = invoice;
+
+    setInvoiceNumber(
+        invoice.invoice_no
+    );
+
+    setInvoiceDate(
+        invoice.invoice_date
+    );
+
+}
+
+/* ============================================================
+   Validate Invoice Header
+============================================================ */
+
+export function validateInvoiceHeader() {
+
+    const invoiceNumber = getInvoiceNumber();
+
+    if (!invoiceNumber) {
+
+        showError("Invoice number is required.");
+
+        return false;
+
+    }
+
+    const invoiceDate = getInvoiceDate();
+
+    if (!invoiceDate) {
+
+        showError("Invoice date is required.");
+
+        return false;
+
+    }
+
+    return true;
+
+}
+
+/* ============================================================
+   Invoice Changed Helpers
+============================================================ */
+
+export function isInvoiceModified() {
+
+    return state.flags.invoiceChanged;
+
+}
+
+export function markInvoiceModified() {
+
+    markInvoiceChanged();
+
+}
+
+export function clearInvoiceModified() {
+
+    clearInvoiceChanged();
+
+}
+
+/* ============================================================
+   Refresh Invoice Number
+============================================================ */
+
+export function refreshInvoiceNumber() {
+
+    setInvoiceNumber(
+        getNextInvoiceNumber(
+            state.lastInvoiceNumber
+        )
+    );
+
+}
+
+/* ============================================================
+   Before Unload Protection
+============================================================ */
+
+window.addEventListener("beforeunload", event => {
+
+    if (!isInvoiceModified())
+        return;
+
+    event.preventDefault();
+
+    event.returnValue = "";
+
+});
+
+/* ============================================================
+   Destroy Invoice
+============================================================ */
+
+export function destroyInvoice() {
+
+    clearInvoiceHeader();
+
+    state.currentInvoice = null;
+
+    clearInvoiceChanged();
+
+}
+
+/* ============================================================
+   Public API
+============================================================ */
+
+export default {
+
+    initializeInvoice,
+
+    createNewInvoice,
+
+    destroyInvoice,
+
+    validateInvoiceHeader,
+
+    validateInvoiceNumber,
+
+    getCurrentInvoice,
+
+    setCurrentInvoice,
+
+    getInvoiceNumber,
+
+    setInvoiceNumber,
+
+    getInvoiceDate,
+
+    setInvoiceDate,
+
+    syncInvoiceHeader,
+
+    loadInvoiceHeader,
+
+    refreshInvoiceNumber,
+
+    isInvoiceModified,
+
+    markInvoiceModified,
+
+    clearInvoiceModified
+
+};
