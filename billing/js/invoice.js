@@ -179,56 +179,51 @@ async function loadLastInvoice() {
             .limit(1)
             .maybeSingle();
 
-        if (error)
+        if (error) {
             throw error;
+        }
 
-      if (!data) {
+        if (!data) {
 
-    state.lastInvoiceNumber = "";
+            state.lastInvoiceNumber = "";
 
-    state.invoiceNumber = generateInvoiceNumber();
+            const firstInvoice = generateInvoiceNumber();
 
-    setInvoiceNumber(state.invoiceNumber);
+            state.invoiceNumber = firstInvoice;
 
-    return;
+            setInvoiceNumber(firstInvoice);
 
-}
+            return;
 
         }
 
-        state.lastInvoiceNumber =
-            data.invoice_no;
-   state.invoiceNumber =
-    data.invoice_no;
+        state.lastInvoiceNumber = data.invoice_no;
+        state.invoiceNumber = data.invoice_no;
 
         if (!getInvoiceNumber()) {
 
             setInvoiceNumber(
-                getNextInvoiceNumber(
-                    state.lastInvoiceNumber
-                )
+                getNextInvoiceNumber(state.lastInvoiceNumber)
             );
 
         }
 
-    }
-
-    catch (error) {
+    } catch (error) {
 
         console.error(error);
 
-        showError(
-            "Unable to load last invoice."
-        );
+        showError("Unable to load last invoice.");
 
-        setInvoiceNumber(
-            generateInvoiceNumber()
-        );
+        const firstInvoice = generateInvoiceNumber();
+
+        state.lastInvoiceNumber = "";
+        state.invoiceNumber = firstInvoice;
+
+        setInvoiceNumber(firstInvoice);
 
     }
 
 }
-
 /* ============================================================
    Default Invoice Number
 ============================================================ */
