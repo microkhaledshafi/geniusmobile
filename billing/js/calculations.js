@@ -545,6 +545,11 @@ export function initCalculations() {
 
     console.log(
         "[Calculations] Module initialized."
+        export function initializeCalculations() {
+
+    console.log("Calculations initialized");
+
+}
     );
 
 }
