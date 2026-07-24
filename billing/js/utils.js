@@ -178,3 +178,13 @@ export function formatNumber(value, decimals = 2) {
     return toNumber(value).toFixed(decimals);
 
 }
+export function parseNumber(value) {
+
+    if (value === null || value === undefined || value === "")
+        return 0;
+
+    const number = Number(String(value).replace(/,/g, ""));
+
+    return isNaN(number) ? 0 : number;
+
+}
