@@ -182,21 +182,24 @@ async function loadLastInvoice() {
         if (error)
             throw error;
 
-        if (!data) {
+      if (!data) {
 
-           state.lastInvoiceNumber = data.invoice_no;
-state.invoiceNumber = data.invoice_no;
+    state.lastInvoiceNumber = "";
 
-            setInvoiceNumber(
-                generateInvoiceNumber()
-            );
+    state.invoiceNumber = generateInvoiceNumber();
 
-            return;
+    setInvoiceNumber(state.invoiceNumber);
+
+    return;
+
+}
 
         }
 
         state.lastInvoiceNumber =
             data.invoice_no;
+   state.invoiceNumber =
+    data.invoice_no;
 
         if (!getInvoiceNumber()) {
 
@@ -344,24 +347,20 @@ export function createNewInvoice() {
 
     clearInvoiceHeader();
 
-    setInvoiceNumber(
-
+    const nextNumber =
         getNextInvoiceNumber(
             state.lastInvoiceNumber
-        )
-       const nextNumber = getNextInvoiceNumber(state.lastInvoiceNumber);
+        );
 
-setInvoiceNumber(nextNumber);
+    state.lastInvoiceNumber = nextNumber;
 
-state.lastInvoiceNumber = nextNumber;
-state.invoiceNumber = nextNumber;
+    state.invoiceNumber = nextNumber;
 
-    );
+    setInvoiceNumber(nextNumber);
 
     setInvoiceDate();
 
 }
-
 /* ============================================================
    Header → State
 ============================================================ */
