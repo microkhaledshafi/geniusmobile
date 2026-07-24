@@ -1,322 +1,131 @@
 /*
-==========================================================
+=========================================================
 Genius Scientific ERP
-Billing Module
-
-File:
 startup.js
-
-Purpose:
-Application startup.
-
-Responsibilities
-
-• Initialize billing application
-• Initialize all modules
-• Load startup data
-• Handle startup errors
-
-==========================================================
+=========================================================
+Application Startup
+=========================================================
 */
 
-/*==========================================================
-API
-==========================================================*/
+import { initializeState } from "./state.js";
+
+import { loadCustomers, initCustomer } from "./customer.js";
+
+import { initializeInvoice } from "./invoice.js";
+
+import { initializeProductSearch } from "./productSearch.js";
+
+import { initializeInvoiceTable } from "./invoiceTable.js";
+
+import { initializeCalculations } from "./calculations.js";
+
+import { initializePayment } from "./payment.js";
+
+import { initializeDashboard } from "./dashboard.js";
+
+import { initializeHistory } from "./history.js";
+
+import { initializeKeyboard } from "./keyboard.js";
 
 import {
-
-    pingDatabase,
-    getNextInvoiceNumber
-
-} from "./api.js";
-
-/*==========================================================
-State
-==========================================================*/
-
-import {
-
-    initializeState
-
-} from "./state.js";
-
-/*==========================================================
-Customer
-==========================================================*/
-
-import {
-
-    initCustomer
-
-} from "./customer.js";
-
-/*==========================================================
-Product Search
-==========================================================*/
-
-import {
-
-    initProductSearch
-
-} from "./productSearch.js";
-
-/*==========================================================
-Invoice
-==========================================================*/
-
-import {
-
-    initInvoice
-
-} from "./invoice.js";
-
-/*==========================================================
-Invoice Table
-==========================================================*/
-
-import {
-
-    initInvoiceTable
-
-} from "./invoiceTable.js";
-
-/*==========================================================
-Calculations
-==========================================================*/
-
-import {
-
-    initCalculations
-
-} from "./calculations.js";
-
-/*==========================================================
-Payment
-==========================================================*/
-
-import {
-
-    initPayment
-
-} from "./payment.js";
-
-/*==========================================================
-History
-==========================================================*/
-
-import {
-
-    initHistory
-
-} from "./history.js";
-
-/*==========================================================
-Dashboard
-==========================================================*/
-
-import {
-
-    initDashboard
-
-} from "./dashboard.js";
-
-/*==========================================================
-Keyboard
-==========================================================*/
-
-import {
-
-    initKeyboard
-
-} from "./keyboard.js";
-
-/*==========================================================
-Notifications
-==========================================================*/
-
-import {
-
-    initNotifications
-
+    showSuccess,
+    showError
 } from "./notifications.js";
-/*==========================================================
-Private Helpers
-==========================================================*/
 
-/**
- * Verify database connectivity
- */
-async function checkDatabase() {
+/*=========================================================
+START BILLING
+=========================================================*/
 
-    await pingDatabase();
-
-    console.log(
-        "[Startup] Database connected."
-    );
-
-}
-
-/**
- * Initialize application state
- */
-function initializeApplicationState() {
-
-    initializeState();
-
-    console.log(
-        "[Startup] State initialized."
-    );
-
-}
-
-/**
- * Initialize all modules
- */
-function initializeModules() {
-
-    initNotifications();
-
-    initCustomer();
-
-    initProductSearch();
-
-    initInvoice();
-
-    initInvoiceTable();
-
-    initCalculations();
-
-    initPayment();
-
-    initHistory();
-
-    initDashboard();
-
-    initKeyboard();
-
-    console.log(
-        "[Startup] Modules initialized."
-    );
-
-}
-
-/**
- * Load next invoice number
- */
-async function loadNextInvoiceNumber() {
-
-    const invoiceNumber = await getNextInvoiceNumber();
-
-    console.log(
-        "[Startup] Next Invoice:",
-        invoiceNumber
-    );
-
-    return invoiceNumber;
-
-}
-/*==========================================================
-Public API
-==========================================================*/
-
-/**
- * Initialize Billing Module
- */
-export async function initBilling() {
+export async function startBilling() {
 
     try {
 
-        console.log(
-            "[Startup] Initializing Billing..."
-        );
+        console.log("Starting Genius Scientific ERP...");
 
-        await checkDatabase();
+        /*----------------------------------------------
+        Initialize Global State
+        ----------------------------------------------*/
 
-        initializeApplicationState();
+        initializeState();
 
-        initializeModules();
+        /*----------------------------------------------
+        Customers
+        ----------------------------------------------*/
 
-        await runStartupLoaders();
+        await loadCustomers();
 
-        console.log(
-            "[Startup] Billing initialized successfully."
-        );
+        initCustomer();
 
-        return true;
+        /*----------------------------------------------
+        Invoice
+        ----------------------------------------------*/
+
+        if (typeof initializeInvoice === "function")
+            initializeInvoice();
+
+        /*----------------------------------------------
+        Products
+        ----------------------------------------------*/
+
+        if (typeof initializeProductSearch === "function")
+            await initializeProductSearch();
+
+        /*----------------------------------------------
+        Invoice Table
+        ----------------------------------------------*/
+
+        if (typeof initializeInvoiceTable === "function")
+            initializeInvoiceTable();
+
+        /*----------------------------------------------
+        Calculations
+        ----------------------------------------------*/
+
+        if (typeof initializeCalculations === "function")
+            initializeCalculations();
+
+        /*----------------------------------------------
+        Payment
+        ----------------------------------------------*/
+
+        if (typeof initializePayment === "function")
+            initializePayment();
+
+        /*----------------------------------------------
+        Dashboard
+        ----------------------------------------------*/
+
+        if (typeof initializeDashboard === "function")
+            await initializeDashboard();
+
+        /*----------------------------------------------
+        History
+        ----------------------------------------------*/
+
+        if (typeof initializeHistory === "function")
+            initializeHistory();
+
+        /*----------------------------------------------
+        Keyboard
+        ----------------------------------------------*/
+
+        if (typeof initializeKeyboard === "function")
+            initializeKeyboard();
+
+        console.log("ERP Loaded Successfully");
+
+        if (typeof showSuccess === "function")
+            showSuccess("Billing System Ready");
 
     }
 
     catch (error) {
 
-        console.error(
-            "[Startup] Initialization failed.",
-            error
-        );
+        console.error(error);
 
-        throw error;
+        if (typeof showError === "function")
+            showError(error.message);
 
     }
-
-}
-/*==========================================================
-Startup Loaders
-==========================================================*/
-
-/**
- * Load today's date
- */
-function loadTodayDate() {
-
-    const element = document.getElementById("invoiceDate");
-
-    if (!element) {
-
-        return;
-
-    }
-
-    const today = new Date();
-
-    element.value = today.toISOString().split("T")[0];
-
-}
-
-/**
- * Focus customer search
- */
-function focusCustomerInput() {
-
-    const element = document.getElementById("customerSearch");
-
-    if (!element) {
-
-        return;
-
-    }
-
-    requestAnimationFrame(() => {
-
-        element.focus();
-
-    });
-
-}
-
-/**
- * Run startup loaders
- */
-async function runStartupLoaders() {
-
-    await loadNextInvoiceNumber();
-
-    loadTodayDate();
-
-    focusCustomerInput();
-
-    console.log(
-
-        "[Startup] Startup data loaded."
-
-    );
 
 }
