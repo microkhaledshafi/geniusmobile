@@ -184,7 +184,8 @@ async function loadLastInvoice() {
 
         if (!data) {
 
-            state.lastInvoiceNumber = null;
+           state.lastInvoiceNumber = data.invoice_no;
+state.invoiceNumber = data.invoice_no;
 
             setInvoiceNumber(
                 generateInvoiceNumber()
@@ -348,6 +349,12 @@ export function createNewInvoice() {
         getNextInvoiceNumber(
             state.lastInvoiceNumber
         )
+       const nextNumber = getNextInvoiceNumber(state.lastInvoiceNumber);
+
+setInvoiceNumber(nextNumber);
+
+state.lastInvoiceNumber = nextNumber;
+state.invoiceNumber = nextNumber;
 
     );
 
