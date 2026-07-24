@@ -1,122 +1,157 @@
 /*
-==========================================================
+=========================================================
 Genius Scientific ERP
-Billing Module
 utils.js
-==========================================================
-Shared utility functions
-==========================================================
+=========================================================
+Common Utility Functions
+=========================================================
 */
 
-/*----------------------------------------------------------
-DOM
-----------------------------------------------------------*/
+/*---------------------------------------------------------
+DOM HELPERS
+---------------------------------------------------------*/
 
-export function qs(selector) {
-    return document.querySelector(selector);
-}
+export const qs = (selector, parent = document) =>
+    parent.querySelector(selector);
 
-export function qsa(selector) {
-    return document.querySelectorAll(selector);
-}
+export const qsa = (selector, parent = document) =>
+    [...parent.querySelectorAll(selector)];
 
-/*----------------------------------------------------------
-Date
-----------------------------------------------------------*/
+/*---------------------------------------------------------
+DATE HELPERS
+---------------------------------------------------------*/
 
 export function today() {
     return new Date().toISOString().split("T")[0];
 }
 
-export function formatDate(value) {
-    if (!value) return "";
+export function formatDate(date) {
 
-    const d = new Date(value);
+    if (!date) return "";
 
-    if (isNaN(d.getTime())) return "";
+    return new Date(date).toLocaleDateString("en-IN", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric"
+    });
 
-    return d.toISOString().split("T")[0];
 }
 
-/*----------------------------------------------------------
-Numbers
-----------------------------------------------------------*/
+/*---------------------------------------------------------
+NUMBER HELPERS
+---------------------------------------------------------*/
 
-export function toNumber(value) {
-    const n = Number(value);
+export function parseNumber(value) {
 
-    return isNaN(n) ? 0 : n;
+    if (value === null || value === undefined || value === "")
+        return 0;
+
+    const num = Number(String(value).replace(/,/g, ""));
+
+    return isNaN(num) ? 0 : num;
+
 }
 
-export function round(value, digits = 2) {
-    const factor = Math.pow(10, digits);
+export function round2(value) {
 
-    return Math.round(toNumber(value) * factor) / factor;
+    return Math.round((parseNumber(value) + Number.EPSILON) * 100) / 100;
+
+}
+
+export function formatNumber(value, decimals = 2) {
+
+    return round2(value).toLocaleString("en-IN", {
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals
+    });
+
 }
 
 export function money(value) {
-    return round(value).toFixed(2);
+
+    return formatNumber(value, 2);
+
 }
 
-export function formatCurrency(value) {
-    return money(value);
-}
-
-/*----------------------------------------------------------
-Validation
-----------------------------------------------------------*/
+/*---------------------------------------------------------
+TEXT HELPERS
+---------------------------------------------------------*/
 
 export function isEmpty(value) {
+
     return (
         value === null ||
         value === undefined ||
-        String(value).trim() === ""
+        value === ""
     );
-}
 
-export function isNumeric(value) {
-    return !isNaN(parseFloat(value)) && isFinite(value);
 }
-
-/*----------------------------------------------------------
-String
-----------------------------------------------------------*/
 
 export function sanitizeString(value) {
+
     return String(value ?? "").trim();
+
 }
 
 export function capitalize(text) {
-    if (isEmpty(text)) return "";
 
-    return text
+    return String(text)
         .toLowerCase()
         .replace(/\b\w/g, c => c.toUpperCase());
+
 }
 
-export function escapeHtml(text) {
-    const div = document.createElement("div");
-    div.textContent = text ?? "";
-    return div.innerHTML;
+/*---------------------------------------------------------
+ID
+---------------------------------------------------------*/
+
+export function uuid() {
+
+    if (crypto.randomUUID)
+        return crypto.randomUUID();
+
+    return Date.now().toString(36) +
+        Math.random().toString(36).substring(2);
+
 }
 
-/*----------------------------------------------------------
-Array
-----------------------------------------------------------*/
+/*---------------------------------------------------------
+MATH
+---------------------------------------------------------*/
 
-export function unique(array) {
-    return [...new Set(array)];
+export function percentage(value, percent) {
+
+    return round2(parseNumber(value) * parseNumber(percent) / 100);
+
 }
 
-export function clone(value) {
-    return JSON.parse(JSON.stringify(value));
+export function clamp(value, min, max) {
+
+    return Math.min(max, Math.max(min, value));
+
 }
 
-/*----------------------------------------------------------
-Debounce
-----------------------------------------------------------*/
+/*---------------------------------------------------------
+ARRAY
+---------------------------------------------------------*/
 
-export function debounce(fn, delay = 300) {
+export function sum(array, key = null) {
+
+    if (!Array.isArray(array))
+        return 0;
+
+    if (!key)
+        return array.reduce((a, b) => a + parseNumber(b), 0);
+
+    return array.reduce((a, b) => a + parseNumber(b[key]), 0);
+
+}
+
+/*---------------------------------------------------------
+DEBOUNCE
+---------------------------------------------------------*/
+
+export function debounce(callback, delay = 300) {
 
     let timer;
 
@@ -126,7 +161,7 @@ export function debounce(fn, delay = 300) {
 
         timer = setTimeout(() => {
 
-            fn(...args);
+            callback(...args);
 
         }, delay);
 
@@ -134,90 +169,63 @@ export function debounce(fn, delay = 300) {
 
 }
 
-/*----------------------------------------------------------
-Random
-----------------------------------------------------------*/
+/*---------------------------------------------------------
+COPY
+---------------------------------------------------------*/
 
-export function generateId(prefix = "") {
+export function deepCopy(object) {
 
-    return (
-        prefix +
-        Date.now().toString(36) +
-        Math.random().toString(36).substring(2, 8)
-    );
+    return JSON.parse(JSON.stringify(object));
 
 }
 
-/*----------------------------------------------------------
-Math
-----------------------------------------------------------*/
+/*---------------------------------------------------------
+LOCAL STORAGE
+---------------------------------------------------------*/
 
-export function percentage(value, percent) {
-    return toNumber(value) * toNumber(percent) / 100;
+export function saveLocal(key, value) {
+
+    localStorage.setItem(key, JSON.stringify(value));
+
 }
 
-export function calculateTax(amount, taxRate) {
-    return percentage(amount, taxRate);
+export function loadLocal(key, defaultValue = null) {
+
+    const data = localStorage.getItem(key);
+
+    if (!data)
+        return defaultValue;
+
+    return JSON.parse(data);
+
 }
 
-/*----------------------------------------------------------
-Sleep
-----------------------------------------------------------*/
+/*---------------------------------------------------------
+INPUT
+---------------------------------------------------------*/
+
+export function onlyNumbers(value) {
+
+    return String(value).replace(/[^\d.]/g, "");
+
+}
+
+/*---------------------------------------------------------
+WAIT
+---------------------------------------------------------*/
 
 export function sleep(ms) {
 
     return new Promise(resolve => setTimeout(resolve, ms));
 
 }
-/*----------------------------------------------------------
-Format Number
-----------------------------------------------------------*/
 
-export function formatNumber(value, decimals = 2) {
+/*---------------------------------------------------------
+BOOLEAN
+---------------------------------------------------------*/
 
-    return toNumber(value).toFixed(decimals);
+export function yesNo(value) {
 
-}
-export function parseNumber(value) {
+    return value ? "Yes" : "No";
 
-    if (value === null || value === undefined || value === "")
-        return 0;
-
-    const number = Number(String(value).replace(/,/g, ""));
-
-    return isNaN(number) ? 0 : number;
-
-}
-export function round2(value) {
-    return Math.round((Number(value) + Number.EPSILON) * 100) / 100;
-}
-
-export function money(value) {
-    return round2(value).toFixed(2);
-}
-
-export function today() {
-    return new Date().toISOString().split("T")[0];
-}
-
-export function uuid() {
-    return crypto.randomUUID();
-}
-
-export function isEmpty(value) {
-    return value === null || value === undefined || value === "";
-}
-
-export function sanitizeString(value) {
-    return String(value ?? "").trim();
-}
-
-export function parseNumber(value) {
-
-    if (value === null || value === undefined || value === "")
-        return 0;
-
-    const number = Number(String(value).replace(/,/g, ""));
-
-    return isNaN(number) ? 0 : number;
 }
