@@ -537,23 +537,15 @@ Public API
 /**
  * Initialize calculation module.
  */
-export function initCalculations() {
+export function initializeCalculations() {
 
     registerCalculationEvents();
 
     refreshInvoiceCalculations();
 
-    console.log(
-        "[Calculations] Module initialized."
-        export function initializeCalculations() {
-
-    console.log("Calculations initialized");
+    console.log("[Calculations] Module initialized.");
 
 }
-    );
-
-}
-
 /**
  * Recalculate one row.
  *
