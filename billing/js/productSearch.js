@@ -1,384 +1,376 @@
-/*
-==========================================================
-Genius Scientific ERP
-Billing Module
+import { supabase } from "../supabase.js";
+import { state } from "./state.js";
+import { qs, qsa } from "./utils.js";
+import { recalculateRow } from "./calculations.js";
+import { showError } from "./notifications.js";
 
-File:
-productSearch.js
+let productCache = [];
+let filteredProducts = [];
+let selectedRow = null;
+let highlightedIndex = 0;
 
-Purpose:
-Manage product searching and product selection.
+/* ============================================================
+   Initialize
+============================================================ */
 
-Responsibilities
+export async function initializeProductSearch() {
 
-• Product Search
-• Product Autocomplete
-• Search Results
-• Product Selection
-• Keyboard Navigation
-• Return Selected Product
+    await loadProducts();
 
-==========================================================
-*/
-
-/*==========================================================
-API
-==========================================================*/
-
-import {
-
-    searchProducts as searchProductsApi
-
-} from "./api.js";
-/*==========================================================
-State
-==========================================================*/
-
-import {
-
-    state
-
-} from "./state.js";
-
-/*==========================================================
-Notifications
-==========================================================*/
-
-import {
-
-    showError,
-    showWarning
-
-} from "./notifications.js";
-
-/*==========================================================
-Utilities
-==========================================================*/
-
-import {
-
-    debounce,
-    isEmpty,
-    sanitizeString
-
-} from "./utils.js";
-/*==========================================================
-Private Variables
-==========================================================*/
-
-let elements = {
-
-    searchInput: null,
-
-    searchButton: null,
-
-    searchModal: null,
-
-    resultsContainer: null,
-
-    noResults: null
-
-};
-
-let searchResults = [];
-
-let selectedIndex = -1;
-
-/*==========================================================
-Cache DOM
-==========================================================*/
-
-function cacheDom() {
-
-    elements.searchInput =
-        document.getElementById("productSearchInput");
-
-    elements.searchButton =
-        document.getElementById("productSearchButton");
-
-    elements.searchModal =
-        document.getElementById("productSearchModal");
-
-    elements.resultsContainer =
-        document.getElementById("productSearchResults");
-
-    elements.noResults =
-        document.getElementById("productNoResults");
+    registerEvents();
 
 }
 
-/*==========================================================
-Private Getters
-==========================================================*/
+/* ============================================================
+   Load Products
+============================================================ */
 
-function getElements() {
-
-    return elements;
-
-}
-
-function hasCachedDom() {
-
-    return Object
-        .values(elements)
-        .every(element => element !== null);
-
-}
-
-function getSearchResults() {
-
-    return searchResults;
-
-}
-
-function setSearchResults(results = []) {
-
-    searchResults = Array.isArray(results)
-        ? results
-        : [];
-
-}
-
-function getSelectedIndex() {
-
-    return selectedIndex;
-
-}
-
-function setSelectedIndex(index) {
-
-    selectedIndex = index;
-
-}
-/*==========================================================
-Product Search Helpers
-==========================================================*/
-
-/**
- * Fetch matching products
- */
-async function fetchProducts(keyword) {
-
-    const searchText = sanitizeString(keyword);
-
-    if (isEmpty(searchText)) {
-
-        setSearchResults([]);
-
-        renderResults();
-
-        return;
-
-    }
+async function loadProducts() {
 
     try {
 
-        const products = await searchProductsApi(searchText);
+        const { data, error } = await supabase
+            .from("products")
+            .select("*")
+            .order("name");
 
-        setSearchResults(products);
+        if (error) throw error;
 
-        setSelectedIndex(-1);
+        productCache = data || [];
 
-        renderResults();
+    }
 
-    } catch (error) {
+    catch (error) {
 
         console.error(error);
 
-        showError("Unable to search products.");
+        showError("Unable to load products.");
 
     }
 
 }
 
-/**
- * Render search results
- */
-function renderResults() {
+/* ============================================================
+   Register Events
+============================================================ */
 
-    if (!elements.resultsContainer) {
+function registerEvents() {
 
-        return;
+    const searchInput = qs("#productSearchInput");
 
-    }
+    if (searchInput) {
 
-    elements.resultsContainer.innerHTML = "";
+        searchInput.addEventListener("input", (event) => {
 
-    const results = getSearchResults();
-
-    if (!results.length) {
-
-        if (elements.noResults) {
-
-            elements.noResults.classList.remove("d-none");
-
-        }
-
-        return;
-
-    }
-
-    if (elements.noResults) {
-
-        elements.noResults.classList.add("d-none");
-
-    }
-
-    results.forEach((product, index) => {
-
-        const item = document.createElement("button");
-
-        item.type = "button";
-
-        item.className =
-            "list-group-item list-group-item-action";
-
-        item.dataset.index = index;
-
-        item.textContent =
-            `${product.product_name} (${product.product_code})`;
-
-        item.addEventListener("click", () => {
-
-            chooseProduct(index);
+            filterProducts(event.target.value);
 
         });
 
-        elements.resultsContainer.appendChild(item);
+    }
+
+    const closeButton = qs("#btnCloseProductSearch");
+
+    if (closeButton) {
+
+        closeButton.addEventListener("click", closeProductSearch);
+
+    }
+
+}
+
+/* ============================================================
+   Open Product Search
+============================================================ */
+
+export function openProductSearch(row) {
+
+    selectedRow = row;
+
+    highlightedIndex = 0;
+
+    filteredProducts = [...productCache];
+
+    renderProductList();
+
+    const modalElement = qs("#productSearchModal");
+
+    if (!modalElement)
+        return;
+
+    const modal =
+        bootstrap.Modal.getOrCreateInstance(modalElement);
+
+    modal.show();
+
+    const searchInput = qs("#productSearchInput");
+
+    if (searchInput) {
+
+        searchInput.value = "";
+
+        setTimeout(() => searchInput.focus(), 200);
+
+    }
+
+}
+
+/* ============================================================
+   Close Product Search
+============================================================ */
+
+export function closeProductSearch() {
+
+    const modalElement = qs("#productSearchModal");
+
+    if (!modalElement)
+        return;
+
+    bootstrap.Modal
+        .getOrCreateInstance(modalElement)
+        .hide();
+
+}
+
+/* ============================================================
+   Filter Products
+============================================================ */
+
+function filterProducts(keyword) {
+
+    keyword = keyword
+        .trim()
+        .toLowerCase();
+
+    if (!keyword.length) {
+
+        filteredProducts = [...productCache];
+
+        highlightedIndex = 0;
+
+        renderProductList();
+
+        return;
+
+    }
+
+    filteredProducts = productCache.filter(product => {
+
+        return (
+
+            (product.name || "")
+                .toLowerCase()
+                .includes(keyword)
+
+            ||
+
+            (product.product_code || "")
+                .toLowerCase()
+                .includes(keyword)
+
+            ||
+
+            (product.barcode || "")
+                .toLowerCase()
+                .includes(keyword)
+
+            ||
+
+            (product.hsn_code || "")
+                .toLowerCase()
+                .includes(keyword)
+
+        );
+
+    });
+
+    highlightedIndex = 0;
+
+    renderProductList();
+
+}
+
+/* ============================================================
+   Render Product List
+============================================================ */
+
+function renderProductList() {
+
+    const tbody = qs("#productSearchResults");
+
+    if (!tbody)
+        return;
+
+    tbody.innerHTML = "";
+
+    if (!filteredProducts.length) {
+
+        tbody.innerHTML = `
+
+            <tr>
+
+                <td
+                    colspan="7"
+                    class="text-center text-muted py-4">
+
+                    No products found
+
+                </td>
+
+            </tr>
+
+        `;
+
+        return;
+
+    }
+
+    filteredProducts.forEach((product, index) => {
+
+        const row = document.createElement("tr");
+
+        if (index === highlightedIndex)
+            row.classList.add("table-primary");
+
+        row.dataset.index = index;
+
+        row.innerHTML = `
+
+            <td>${product.product_code ?? ""}</td>
+
+            <td>${product.name ?? ""}</td>
+
+            <td>${product.batch ?? ""}</td>
+
+            <td>${product.stock ?? 0}</td>
+
+            <td>${product.rate ?? 0}</td>
+
+            <td>${product.gst ?? 0}%</td>
+
+            <td>
+
+                <button
+                    class="btn btn-success btn-sm select-product">
+
+                    Select
+
+                </button>
+
+            </td>
+
+        `;
+
+        tbody.appendChild(row);
 
     });
 
 }
 
-/**
- * Highlight selected result
- */
-function highlightResult() {
+/* ============================================================
+   Product Selection Events
+============================================================ */
 
-    if (!elements.resultsContainer) {
+document.addEventListener("click", (event) => {
 
+    const button = event.target.closest(".select-product");
+
+    if (!button) return;
+
+    const row = button.closest("tr");
+
+    if (!row) return;
+
+    const index = Number(row.dataset.index);
+
+    selectProduct(index);
+
+});
+
+document.addEventListener("dblclick", (event) => {
+
+    const row = event.target.closest("#productSearchResults tr");
+
+    if (!row) return;
+
+    selectProduct(Number(row.dataset.index));
+
+});
+
+/* ============================================================
+   Select Product
+============================================================ */
+
+function selectProduct(index) {
+
+    const product = filteredProducts[index];
+
+    if (!product || !selectedRow)
         return;
 
-    }
+    fillInvoiceRow(product);
 
-    const items =
-        elements.resultsContainer.querySelectorAll(
-            ".list-group-item"
-        );
-
-    items.forEach((item, index) => {
-
-        item.classList.toggle(
-
-            "active",
-
-            index === getSelectedIndex()
-
-        );
-
-    });
+    closeProductSearch();
 
 }
 
-/**
- * Reset search
- */
-function resetSearch() {
+/* ============================================================
+   Fill Invoice Row
+============================================================ */
 
-    if (elements.searchInput) {
+function fillInvoiceRow(product) {
 
-        elements.searchInput.value = "";
+    selectedRow.querySelector(".product-id").value =
+        product.id ?? "";
 
-    }
+    selectedRow.querySelector(".product-name").value =
+        product.name ?? "";
 
-    setSearchResults([]);
+    selectedRow.querySelector(".batch").value =
+        product.batch ?? "";
 
-    setSelectedIndex(-1);
+    selectedRow.querySelector(".expiry").value =
+        product.expiry ?? "";
 
-    renderResults();
+    selectedRow.querySelector(".hsn").value =
+        product.hsn_code ?? "";
 
-}
-/*==========================================================
-Event Handlers
-==========================================================*/
+    selectedRow.querySelector(".quantity").value = 1;
 
-/**
- * Handle search input
- */
-const handleSearchInput = debounce(async () => {
+    selectedRow.querySelector(".free").value = 0;
 
-    if (!elements.searchInput) {
+    selectedRow.querySelector(".rate").value =
+        Number(product.rate ?? 0);
 
-        return;
+    selectedRow.querySelector(".discount").value =
+        Number(product.discount ?? 0);
 
-    }
+    selectedRow.querySelector(".gst").value =
+        Number(product.gst ?? 0);
 
-    await fetchProducts(
+    recalculateRow(selectedRow);
 
-        elements.searchInput.value
+    const qty = selectedRow.querySelector(".quantity");
 
-    );
+    if (qty) {
 
-}, 300);
+        qty.focus();
 
-/**
- * Move selection
- */
-function moveSelection(direction) {
-
-    const results = getSearchResults();
-
-    if (!results.length) {
-
-        return;
+        qty.select();
 
     }
-
-    let index = getSelectedIndex();
-
-    index += direction;
-
-    if (index < 0) {
-
-        index = results.length - 1;
-
-    }
-
-    if (index >= results.length) {
-
-        index = 0;
-
-    }
-
-    setSelectedIndex(index);
-
-    highlightResult();
 
 }
 
-/**
- * Choose selected product
- */
-function chooseProduct(index) {
+/* ============================================================
+   Keyboard Navigation
+============================================================ */
 
-    const results = getSearchResults();
+document.addEventListener("keydown", (event) => {
 
-    if (!results[index]) {
+    const modal = qs("#productSearchModal");
 
+    if (!modal || !modal.classList.contains("show"))
         return;
-
-    }
-
-    state.selectedProduct = results[index];
-
-    resetSearch();
-
-}
-
-/**
- * Handle keyboard navigation
- */
-function handleKeyDown(event) {
 
     switch (event.key) {
 
@@ -386,7 +378,10 @@ function handleKeyDown(event) {
 
             event.preventDefault();
 
-            moveSelection(1);
+            if (highlightedIndex < filteredProducts.length - 1)
+                highlightedIndex++;
+
+            renderProductList();
 
             break;
 
@@ -394,7 +389,10 @@ function handleKeyDown(event) {
 
             event.preventDefault();
 
-            moveSelection(-1);
+            if (highlightedIndex > 0)
+                highlightedIndex--;
+
+            renderProductList();
 
             break;
 
@@ -402,188 +400,41 @@ function handleKeyDown(event) {
 
             event.preventDefault();
 
-            if (getSelectedIndex() >= 0) {
-
-                chooseProduct(
-
-                    getSelectedIndex()
-
-                );
-
-            }
+            if (filteredProducts.length)
+                selectProduct(highlightedIndex);
 
             break;
 
         case "Escape":
 
-            resetSearch();
+            event.preventDefault();
+
+            closeProductSearch();
 
             break;
 
-        default:
-
-            break;
-
     }
+
+});
+
+/* ============================================================
+   Public Helpers
+============================================================ */
+
+export function refreshProducts() {
+
+    return loadProducts();
 
 }
 
-/**
- * Register Events
- */
-function registerEvents() {
+export function getProductById(id) {
 
-    if (elements.searchInput) {
-
-        elements.searchInput.addEventListener(
-
-            "input",
-
-            handleSearchInput
-
-        );
-
-        elements.searchInput.addEventListener(
-
-            "keydown",
-
-            handleKeyDown
-
-        );
-
-    }
-
-    if (elements.searchButton) {
-
-        elements.searchButton.addEventListener(
-
-            "click",
-
-            async () => {
-
-                await fetchProducts(
-
-                    elements.searchInput.value
-
-                );
-
-            }
-
-        );
-
-    }
-
-}
-/*==========================================================
-Public API
-==========================================================*/
-
-/**
- * Initialize Product Search Module
- */
-export function initProductSearch() {
-
-    cacheDom();
-
-    if (!hasCachedDom()) {
-
-        console.warn(
-
-            "[Product Search] Required elements not found."
-
-        );
-
-        return false;
-
-    }
-
-    registerEvents();
-
-    resetSearch();
-
-    console.log(
-
-        "[Product Search] Module initialized."
-
-    );
-
-    return true;
+    return productCache.find(product => product.id === id);
 
 }
 
-/**
- * Open Product Search
- */
-export function openProductSearch() {
+export function getAllProducts() {
 
-    if (elements.searchModal) {
-
-        elements.searchModal.classList.add("show");
-
-        elements.searchModal.style.display = "block";
-
-    }
-
-    if (elements.searchInput) {
-
-        elements.searchInput.focus();
-
-    }
-
-}
-
-/**
- * Close Product Search
- */
-export function closeProductSearch() {
-
-    if (elements.searchModal) {
-
-        elements.searchModal.classList.remove("show");
-
-        elements.searchModal.style.display = "none";
-
-    }
-
-    resetSearch();
-
-}
-
-/**
- * Search Products
- */
-export async function searchProducts(keyword) {
-
-    await fetchProducts(keyword);
-
-}
-
-
-
-/**
- * Select Product
- */
-export function selectProduct(index) {
-
-    const results = getSearchResults();
-
-    if (!results[index]) {
-
-        return null;
-
-    }
-
-    chooseProduct(index);
-
-    return results[index];
-
-}
-
-/**
- * Clear Product Search
- */
-export function clearProductSearch() {
-
-    resetSearch();
+    return [...productCache];
 
 }
