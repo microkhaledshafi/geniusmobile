@@ -1,942 +1,380 @@
 /*
-==========================================================
+=========================================================
 Genius Scientific ERP
-Billing Module
-
-File:
 customer.js
-
-Purpose:
-Handles all customer-related operations.
-
-Responsibilities:
-• Customer search
-• Customer selection
-• Customer information loading
-• Autocomplete
-• Keyboard navigation
-• Customer state management
-
-Author:
-Genius Scientific ERP
-
-==========================================================
+=========================================================
+Customer Management Module
+=========================================================
 */
 
+import { supabase } from "../supabase.js";
 import { state } from "./state.js";
-import * as api from "./api.js";
-import * as utils from "./utils.js";
-
-/*==========================================================
-Module Variables
-==========================================================*/
-
-let customerInput = null;
-let phoneInput = null;
-let gstInput = null;
-let addressInput = null;
-
-let suggestionContainer = null;
-
-let searchResults = [];
-
-let selectedIndex = -1;
-
-let debounceTimer = null;
-
-/*==========================================================
-Initialize Customer Module
-==========================================================*/
-
-export function initCustomer() {
-
-    cacheDom();
-
-    registerEvents();
-
-    resetCustomerState();
-
-}
-
-/*==========================================================
-Cache DOM Elements
-==========================================================*/
-
-function cacheDom() {
-
-    customerInput = document.getElementById("customerName");
-
-    phoneInput = document.getElementById("customerPhone");
-
-    gstInput = document.getElementById("customerGST");
-
-    addressInput = document.getElementById("customerAddress");
-
-    suggestionContainer =
-        document.getElementById("customerSuggestions");
-
-}
-
-/*==========================================================
-Register Events
-==========================================================*/
-
-function registerEvents() {
-
-    if (!customerInput) {
-
-        console.error("Customer input not found.");
-
-        return;
-
-    }
-
-    customerInput.addEventListener(
-
-        "input",
-
-        handleCustomerInput
-
-    );
-
-    customerInput.addEventListener(
-
-        "keydown",
-
-        handleKeyboard
-
-    );
-
-    customerInput.addEventListener(
-
-        "focus",
-
-        handleFocus
-
-    );
-
-    customerInput.addEventListener(
-
-        "blur",
-
-        handleBlur
-
-    );
-
-}
-
-/*==========================================================
-Input Event
-==========================================================*/
-
-
-/*==========================================================
-Keyboard Event
-==========================================================*/
-
-
-
-/*==========================================================
-Focus Event
-==========================================================*/
-
-
-
-/*==========================================================
-Blur Event
-==========================================================*/
-
-
-
-/*==========================================================
-Reset Customer State
-==========================================================*/
-
-
-
-/*==========================================================
-Input Event
-==========================================================*/
-
-function handleCustomerInput(event) {
-
-    const keyword = event.target.value.trim();
-
-    clearTimeout(debounceTimer);
-
-    if (keyword.length === 0) {
-
-        searchResults = [];
-
-        selectedIndex = -1;
-
-        hideSuggestions();
-
-        return;
-
-    }
-
-    debounceTimer = setTimeout(() => {
-
-        searchCustomers(keyword);
-
-    }, 300);
-
-}
-
-/*==========================================================
-Search Customers
-==========================================================*/
-
-async function searchCustomers(keyword) {
+import {
+    qs,
+    sanitizeString,
+    isEmpty
+} from "./utils.js";
+
+import {
+    showSuccess,
+    showError
+} from "./notifications.js";
+
+/*=========================================================
+DOM
+=========================================================*/
+
+const customerSelect = () => qs("#customer");
+const gstInput = () => qs("#customerGST");
+const phoneInput = () => qs("#customerPhone");
+const addressInput = () => qs("#customerAddress");
+
+/*=========================================================
+LOAD CUSTOMERS
+=========================================================*/
+
+export async function loadCustomers() {
 
     try {
 
-        showSearchLoading();
+        const { data, error } = await supabase
+            .from("customers")
+            .select("*")
+            .order("customer_name");
 
-        const customers = await api.searchCustomers(keyword);
+        if (error)
+            throw error;
 
-        if (Array.isArray(customers)) {
+        state.customers = data || [];
 
-            searchResults = customers;
-
-        } else {
-
-            searchResults = [];
-
-        }
-
-        selectedIndex = -1;
-
-        renderSuggestions(searchResults);
+        populateCustomerDropdown();
 
     }
 
-    catch (error) {
+    catch (err) {
 
-        console.error("Customer search failed:", error);
+        console.error(err);
 
-        searchResults = [];
-
-        selectedIndex = -1;
-
-        hideSuggestions();
-
-    }
-
-    finally {
-
-        hideSearchLoading();
+        showError(err.message);
 
     }
 
 }
 
-/*==========================================================
-Loading Indicator
-==========================================================*/
+/*=========================================================
+POPULATE DROPDOWN
+=========================================================*/
 
-function showSearchLoading() {
+export function populateCustomerDropdown() {
 
-    if (!customerInput) return;
+    const select = customerSelect();
 
-    customerInput.classList.add("loading");
+    if (!select)
+        return;
 
-}
+    select.innerHTML = "";
 
-/*==========================================================
-Remove Loading Indicator
-==========================================================*/
+    const option = document.createElement("option");
 
-function hideSearchLoading() {
+    option.value = "";
 
-    if (!customerInput) return;
+    option.textContent = "Select Customer";
 
-    customerInput.classList.remove("loading");
+    select.appendChild(option);
 
-}
+    state.customers.forEach(customer => {
 
-/*==========================================================
-Hide Suggestions
-==========================================================*/
+        const opt = document.createElement("option");
 
-function hideSuggestions() {
+        opt.value = customer.id;
 
-    if (!suggestionContainer) return;
+        opt.textContent = customer.customer_name;
 
-    suggestionContainer.innerHTML = "";
+        select.appendChild(opt);
 
-    suggestionContainer.style.display = "none";
+    });
 
 }
 
-/*==========================================================
-Render Customer Suggestions
-==========================================================*/
+/*=========================================================
+GET CUSTOMER
+=========================================================*/
 
-function renderSuggestions(customers) {
+export function getCustomer(id) {
 
-    if (!suggestionContainer) return;
+    return state.customers.find(customer =>
 
-    suggestionContainer.innerHTML = "";
+        Number(customer.id) === Number(id)
 
-    if (!customers || customers.length === 0) {
+    );
 
-        hideSuggestions();
+}
+
+/*=========================================================
+SELECT CUSTOMER
+=========================================================*/
+
+export function selectCustomer(id) {
+
+    if (isEmpty(id)) {
+
+        clearCustomer();
 
         return;
 
     }
 
-    customers.forEach((customer, index) => {
+    const customer = getCustomer(id);
 
-        const item = createSuggestionItem(customer, index);
+    if (!customer)
+        return;
 
-        suggestionContainer.appendChild(item);
+    state.customer = customer;
 
-    });
-
-    suggestionContainer.style.display = "block";
-
-}
-
-/*==========================================================
-Create Suggestion Item
-==========================================================*/
-
-function createSuggestionItem(customer, index) {
-
-    const item = document.createElement("div");
-
-    item.className = "search-item";
-
-    item.dataset.index = index;
-
-    const gst = customer.gst ? customer.gst : "No GST";
-
-    const phone = customer.phone ? customer.phone : "";
-
-    item.innerHTML = `
-        <div class="fw-semibold">${escapeHtml(customer.name)}</div>
-
-        <small class="text-muted">
-
-            ${phone}
-
-            ${phone && gst ? " | " : ""}
-
-            ${gst}
-
-        </small>
-    `;
-
-    item.addEventListener("mousedown", function (event) {
-
-        event.preventDefault();
-
-        selectCustomer(customer);
-
-    });
-
-    return item;
+    fillCustomer(customer);
 
 }
 
-/*==========================================================
-Focus Event
-==========================================================*/
+/*=========================================================
+FILL DETAILS
+=========================================================*/
 
-function handleFocus() {
+export function fillCustomer(customer) {
 
-    if (searchResults.length > 0) {
+    gstInput().value =
+        customer.gstin || "";
 
-        renderSuggestions(searchResults);
+    phoneInput().value =
+        customer.phone || "";
 
-    }
-
-}
-
-/*==========================================================
-Blur Event
-==========================================================*/
-
-function handleBlur() {
-
-    setTimeout(() => {
-
-        hideSuggestions();
-
-    }, 150);
+    addressInput().value =
+        customer.address || "";
 
 }
 
-/*==========================================================
-Escape HTML
-==========================================================*/
-
-function escapeHtml(text) {
-
-    if (!text) return "";
-
-    const div = document.createElement("div");
-
-    div.textContent = text;
-
-    return div.innerHTML;
-
-}
-
-/*==========================================================
-Keyboard Navigation
-==========================================================*/
-
-function handleKeyboard(event) {
-
-    if (searchResults.length === 0) return;
-
-    switch (event.key) {
-
-        case "ArrowDown":
-
-            event.preventDefault();
-
-            moveSelectionDown();
-
-            break;
-
-        case "ArrowUp":
-
-            event.preventDefault();
-
-            moveSelectionUp();
-
-            break;
-
-        case "Enter":
-
-            event.preventDefault();
-
-            if (selectedIndex >= 0) {
-
-                selectCustomer(searchResults[selectedIndex]);
-
-            }
-
-            break;
-
-        case "Escape":
-
-            event.preventDefault();
-
-            hideSuggestions();
-
-            break;
-
-        case "Tab":
-
-            if (selectedIndex >= 0) {
-
-                selectCustomer(searchResults[selectedIndex]);
-
-            }
-
-            break;
-
-    }
-
-}
-
-/*==========================================================
-Move Selection Down
-==========================================================*/
-
-function moveSelectionDown() {
-
-    if (searchResults.length === 0) return;
-
-    if (selectedIndex < searchResults.length - 1) {
-
-        selectedIndex++;
-
-    }
-
-    updateSelection();
-
-}
-
-/*==========================================================
-Move Selection Up
-==========================================================*/
-
-function moveSelectionUp() {
-
-    if (searchResults.length === 0) return;
-
-    if (selectedIndex > 0) {
-
-        selectedIndex--;
-
-    }
-
-    updateSelection();
-
-}
-
-/*==========================================================
-Update Selected Item
-==========================================================*/
-
-function updateSelection() {
-
-    if (!suggestionContainer) return;
-
-    const items = suggestionContainer.querySelectorAll(".search-item");
-
-    items.forEach(item => {
-
-        item.classList.remove("active");
-
-    });
-
-    if (
-        selectedIndex >= 0 &&
-        selectedIndex < items.length
-    ) {
-
-        const selectedItem = items[selectedIndex];
-
-        selectedItem.classList.add("active");
-
-        scrollItemIntoView(selectedItem);
-
-    }
-
-}
-
-/*==========================================================
-Keep Selected Item Visible
-==========================================================*/
-
-function scrollItemIntoView(item) {
-
-    item.scrollIntoView({
-
-        block: "nearest",
-
-        behavior: "smooth"
-
-    });
-
-}
-
-/*==========================================================
-Select Customer
-==========================================================*/
-
-function selectCustomer(customer) {
-
-    if (!customer) return;
-
-    state.customer = {
-
-        id: customer.id,
-
-        name: customer.name || "",
-
-        phone: customer.phone || "",
-
-        email: customer.email || "",
-
-        gst: customer.gst || "",
-
-        address: customer.address || "",
-
-        opening_balance: Number(customer.opening_balance || 0)
-
-    };
-
-    fillCustomerFields();
-
-    hideSuggestions();
-
-    selectedIndex = -1;
-
-    searchResults = [];
-
-    customerInput.focus();
-
-}
-
-/*==========================================================
-Fill Customer Fields
-==========================================================*/
-
-function fillCustomerFields() {
-
-    if (!state.customer) return;
-
-    customerInput.value = state.customer.name;
-
-    phoneInput.value = state.customer.phone;
-
-    gstInput.value = state.customer.gst;
-
-    addressInput.value = state.customer.address;
-
-}
-
-/*==========================================================
-Get Selected Customer
-==========================================================*/
-
-export function getSelectedCustomer() {
-
-    return state.customer;
-
-}
-
-/*==========================================================
-Check Customer Selected
-==========================================================*/
-
-export function hasCustomer() {
-
-    return state.customer !== null;
-
-}
-
-/*==========================================================
-Get Customer ID
-==========================================================*/
-
-export function getCustomerId() {
-
-    if (!state.customer) return null;
-
-    return state.customer.id;
-
-}
-
-/*==========================================================
-Refresh Customer
-==========================================================*/
-
-export async function refreshCustomer() {
-
-    if (!state.customer) return;
-
-    try {
-
-        const customer = await api.getCustomerById(
-            state.customer.id
-        );
-
-        if (!customer) return;
-
-        state.customer = {
-
-            id: customer.id,
-
-            name: customer.name || "",
-
-            phone: customer.phone || "",
-
-            email: customer.email || "",
-
-            gst: customer.gst || "",
-
-            address: customer.address || "",
-
-            opening_balance: Number(customer.opening_balance || 0)
-
-        };
-
-        fillCustomerFields();
-
-    }
-
-    catch (error) {
-
-        console.error(
-            "Unable to refresh customer.",
-            error
-        );
-
-    }
-
-}
-
-/*==========================================================
-Reset Customer State
-==========================================================*/
-
-function resetCustomerState() {
-
-    state.customer = null;
-
-    searchResults = [];
-
-    selectedIndex = -1;
-
-}
-
-/*==========================================================
-Clear Customer
-==========================================================*/
+/*=========================================================
+CLEAR
+=========================================================*/
 
 export function clearCustomer() {
 
-    resetCustomerState();
+    customerSelect().value = "";
 
-    if (customerInput) {
+    gstInput().value = "";
 
-        customerInput.value = "";
+    phoneInput().value = "";
 
-    }
+    addressInput().value = "";
 
-    if (phoneInput) {
-
-        phoneInput.value = "";
-
-    }
-
-    if (gstInput) {
-
-        gstInput.value = "";
-
-    }
-
-    if (addressInput) {
-
-        addressInput.value = "";
-
-    }
-
-    hideSuggestions();
-
-    notifyCustomerChanged();
+    state.customer = null;
 
 }
 
-/*==========================================================
-Clear Search Results
-==========================================================*/
+/*=========================================================
+SEARCH
+=========================================================*/
 
-function clearSearchResults() {
+export function searchCustomer(keyword) {
 
-    searchResults = [];
+    keyword = sanitizeString(keyword).toLowerCase();
 
-    selectedIndex = -1;
+    if (keyword === "")
+        return state.customers;
 
-    hideSuggestions();
+    return state.customers.filter(customer =>
 
-}
+        customer.customer_name
+            ?.toLowerCase()
+            .includes(keyword)
 
-/*==========================================================
-Reset Customer Form
-==========================================================*/
+        ||
 
-export function resetCustomerForm() {
+        customer.phone
+            ?.toLowerCase()
+            .includes(keyword)
 
-    clearCustomer();
+        ||
 
-    if (customerInput) {
-
-        customerInput.focus();
-
-    }
-
-}
-
-/*==========================================================
-Notify Other Modules
-==========================================================*/
-
-function notifyCustomerChanged() {
-
-    document.dispatchEvent(
-
-        new CustomEvent(
-
-            "customerChanged",
-
-            {
-
-                detail: {
-
-                    customer: state.customer
-
-                }
-
-            }
-
-        )
+        customer.gstin
+            ?.toLowerCase()
+            .includes(keyword)
 
     );
 
 }
 
-/*==========================================================
-Customer Selected Notification
-==========================================================*/
+/*=========================================================
+ADD CUSTOMER
+=========================================================*/
 
-function notifyCustomerSelected() {
+export async function addCustomer(customer) {
 
-    document.dispatchEvent(
+    try {
 
-        new CustomEvent(
+        const { data, error } = await supabase
 
-            "customerSelected",
+            .from("customers")
 
-            {
+            .insert(customer)
 
-                detail: {
+            .select()
 
-                    customer: state.customer
+            .single();
 
-                }
+        if (error)
+            throw error;
 
-            }
+        state.customers.push(data);
 
-        )
+        populateCustomerDropdown();
+
+        customerSelect().value = data.id;
+
+        selectCustomer(data.id);
+
+        showSuccess("Customer added successfully");
+
+        return data;
+
+    }
+
+    catch (err) {
+
+        console.error(err);
+
+        showError(err.message);
+
+        return null;
+
+    }
+
+}
+
+/*=========================================================
+UPDATE CUSTOMER
+=========================================================*/
+
+export async function updateCustomer(id, customer) {
+
+    try {
+
+        const { data, error } = await supabase
+
+            .from("customers")
+
+            .update(customer)
+
+            .eq("id", id)
+
+            .select()
+
+            .single();
+
+        if (error)
+            throw error;
+
+        const index = state.customers.findIndex(
+
+            c => Number(c.id) === Number(id)
+
+        );
+
+        if (index >= 0)
+
+            state.customers[index] = data;
+
+        populateCustomerDropdown();
+
+        selectCustomer(id);
+
+        showSuccess("Customer updated");
+
+    }
+
+    catch (err) {
+
+        console.error(err);
+
+        showError(err.message);
+
+    }
+
+}
+
+/*=========================================================
+DELETE CUSTOMER
+=========================================================*/
+
+export async function deleteCustomer(id) {
+
+    if (!confirm("Delete this customer?"))
+        return;
+
+    try {
+
+        const { error } = await supabase
+
+            .from("customers")
+
+            .delete()
+
+            .eq("id", id);
+
+        if (error)
+            throw error;
+
+        state.customers =
+
+            state.customers.filter(
+
+                c => Number(c.id) !== Number(id)
+
+            );
+
+        clearCustomer();
+
+        populateCustomerDropdown();
+
+        showSuccess("Customer deleted");
+
+    }
+
+    catch (err) {
+
+        console.error(err);
+
+        showError(err.message);
+
+    }
+
+}
+
+/*=========================================================
+EVENTS
+=========================================================*/
+
+function registerEvents() {
+
+    customerSelect()?.addEventListener(
+
+        "change",
+
+        e => {
+
+            selectCustomer(e.target.value);
+
+        }
 
     );
 
 }
 
-/*==========================================================
-Highlight Search Text
-==========================================================*/
+/*=========================================================
+INIT
+=========================================================*/
 
-function highlightText(text, keyword) {
+export function initCustomer() {
 
-    if (!text || !keyword) return escapeHtml(text);
-
-    const escaped = escapeHtml(text);
-
-    const escapedKeyword = keyword.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-
-    const regex = new RegExp(`(${escapedKeyword})`, "ig");
-
-    return escaped.replace(regex, "<mark>$1</mark>");
+    registerEvents();
 
 }
-
-/*==========================================================
-Is Same Search
-==========================================================*/
-
-function isSameSearch(keyword) {
-
-    return state.customerSearchKeyword === keyword;
-
-}
-
-/*==========================================================
-Save Search Keyword
-==========================================================*/
-
-function saveSearchKeyword(keyword) {
-
-    state.customerSearchKeyword = keyword;
-
-}
-
-/*==========================================================
-Clear Search Keyword
-==========================================================*/
-
-function clearSearchKeyword() {
-
-    state.customerSearchKeyword = "";
-
-}
-
-/*==========================================================
-Cache Recent Customers
-==========================================================*/
-
-function cacheCustomers(customers) {
-
-    state.customerCache = customers;
-
-}
-
-/*==========================================================
-Get Cached Customers
-==========================================================*/
-
-function getCachedCustomers() {
-
-    return state.customerCache || [];
-
-}
-
-/*==========================================================
-Clear Customer Cache
-==========================================================*/
-
-function clearCustomerCache() {
-
-    state.customerCache = [];
-
-}
-
-/*==========================================================
-Show Search Error
-==========================================================*/
-
-function showSearchError(message) {
-
-    console.error(message);
-
-    hideSuggestions();
-
-}
-
-/*==========================================================
-Validate Customer Object
-==========================================================*/
-
-function isValidCustomer(customer) {
-
-    return (
-
-        customer &&
-
-        typeof customer === "object" &&
-
-        customer.id !== undefined &&
-
-        customer.name !== undefined
-
-    );
-
-}
-
-/*==========================================================
-Prepare Customer Object
-==========================================================*/
-
-function normalizeCustomer(customer) {
-
-    return {
-
-        id: customer.id,
-
-        name: customer.name || "",
-
-        phone: customer.phone || "",
-
-        email: customer.email || "",
-
-        gst: customer.gst || "",
-
-        address: customer.address || "",
-
-        opening_balance: Number(customer.opening_balance || 0)
-
-    };
-
-}
-
