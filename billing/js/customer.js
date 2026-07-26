@@ -170,13 +170,7 @@ txtCustomerPhone?.addEventListener(
    Open Customer Search
 ========================================================== */
 
-async function openCustomerSearch() {
 
-    console.log(
-        "[Customer] Search requested."
-    );
-
-}
 
 /* ==========================================================
    Load Customer
