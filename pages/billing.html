@@ -2,64 +2,76 @@
 <html lang="en">
 
 <head>
-
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0">
+    <title>Billing | Genius Scientific ERP</title>
 
-    <title>Genius Scientific ERP - Billing</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
-    <!-- Bootstrap -->
-
-    <link
-        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-        rel="stylesheet">
-
-    <!-- Bootstrap Icons -->
-
-    <link
-        href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
-        rel="stylesheet">
-
-    <!-- Billing CSS -->
-
-    <link
-        rel="stylesheet"
-        href="../billing/billing.css">
-
+    <link rel="stylesheet" href="../billing/billing.css">
 </head>
 
-<body class="bg-light">
+<body>
+
+<div id="billingApp">
 
     <!-- ==========================================
-         Navigation
+         NAVBAR
     =========================================== -->
 
-    <nav class="navbar navbar-dark bg-primary shadow-sm">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
 
         <div class="container-fluid">
 
-            <span class="navbar-brand fw-bold">
-
-                <i class="bi bi-receipt-cutoff"></i>
-
+            <a class="navbar-brand" href="#">
                 Genius Scientific ERP
+            </a>
 
-            </span>
+            <button
+                class="navbar-toggler"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#navbarBilling">
 
-            <div>
+                <span class="navbar-toggler-icon"></span>
 
-                <button
-                    id="btnDashboard"
-                    class="btn btn-outline-light">
+            </button>
 
-                    <i class="bi bi-speedometer2"></i>
+            <div class="collapse navbar-collapse" id="navbarBilling">
 
-                    Dashboard
+                <ul class="navbar-nav me-auto">
 
-                </button>
+                    <li class="nav-item">
+                        <a id="btnDashboard"
+                           class="nav-link active"
+                           href="#">
+                            Dashboard
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a id="btnInvoiceHistory"
+                           class="nav-link"
+                           href="#">
+                            Invoice History
+                        </a>
+                    </li>
+
+                </ul>
+
+                <div class="d-flex align-items-center">
+
+                    <span class="text-white me-3">
+
+                        Logged User :
+                        <strong id="loggedUser">
+                            Admin
+                        </strong>
+
+                    </span>
+
+                </div>
 
             </div>
 
@@ -67,35 +79,59 @@
 
     </nav>
 
+
     <!-- ==========================================
-         Main Container
+         MAIN CONTAINER
     =========================================== -->
 
-    <div class="container-fluid py-3">
+    <div class="container-fluid py-4">
 
-        <!-- ======================================
-             Dashboard Cards
-        ======================================= -->
+
+        <!-- ==========================================
+             PAGE TITLE
+        =========================================== -->
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+
+            <div>
+
+                <h2 class="mb-1">
+
+                    Billing Module
+
+                </h2>
+
+                <small class="text-muted">
+
+                    GST Invoice & Billing System
+
+                </small>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- ==========================================
+             DASHBOARD
+        =========================================== -->
 
         <div class="row g-3 mb-4">
 
-            <!-- Today's Sale -->
-
             <div class="col-lg-3 col-md-6">
 
-                <div class="card shadow-sm">
+                <div class="card dashboard-card">
 
-                    <div class="card-body text-center">
+                    <div class="card-body">
 
                         <h6 class="text-muted">
 
-                            Today's Sale
+                            Today's Sales
 
                         </h6>
 
-                        <h3
-                            id="dashboardTodaySales"
-                            class="fw-bold text-success">
+                        <h3 id="todaySales">
 
                             ₹0.00
 
@@ -107,51 +143,21 @@
 
             </div>
 
-            <!-- Monthly Sale -->
+
 
             <div class="col-lg-3 col-md-6">
 
-                <div class="card shadow-sm">
+                <div class="card dashboard-card">
 
-                    <div class="card-body text-center">
-
-                        <h6 class="text-muted">
-
-                            Monthly Sale
-
-                        </h6>
-
-                        <h3
-                            id="dashboardMonthlySales"
-                            class="fw-bold text-primary">
-
-                            ₹0.00
-
-                        </h3>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-            <!-- Total Invoices -->
-
-            <div class="col-lg-3 col-md-6">
-
-                <div class="card shadow-sm">
-
-                    <div class="card-body text-center">
+                    <div class="card-body">
 
                         <h6 class="text-muted">
 
-                            Total Invoices
+                            Today's Invoices
 
                         </h6>
 
-                        <h3
-                            id="dashboardTotalInvoices"
-                            class="fw-bold text-dark">
+                        <h3 id="todayInvoices">
 
                             0
 
@@ -163,23 +169,47 @@
 
             </div>
 
-            <!-- Total Customers -->
+
 
             <div class="col-lg-3 col-md-6">
 
-                <div class="card shadow-sm">
+                <div class="card dashboard-card">
 
-                    <div class="card-body text-center">
+                    <div class="card-body">
 
                         <h6 class="text-muted">
 
-                            Total Customers
+                            Monthly Sales
 
                         </h6>
 
-                        <h3
-                            id="dashboardTotalCustomers"
-                            class="fw-bold text-warning">
+                        <h3 id="monthlySales">
+
+                            ₹0.00
+
+                        </h3>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+
+            <div class="col-lg-3 col-md-6">
+
+                <div class="card dashboard-card">
+
+                    <div class="card-body">
+
+                        <h6 class="text-muted">
+
+                            Total Products
+
+                        </h6>
+
+                        <h3 id="totalProducts">
 
                             0
 
@@ -193,891 +223,27 @@
 
         </div>
 
-        <!-- ======================================
-             Billing Card
-        ======================================= -->
 
-        <div class="card shadow-sm">
 
-            <div class="card-header bg-white">
+        <!-- ==========================================
+             INVOICE + CUSTOMER
+        =========================================== -->
 
-                <h5 class="mb-0">
+        <div class="row">
 
-                    Tax Invoice
+            <!-- Invoice Information -->
 
-                </h5>
+            <div class="col-lg-6">
 
-            </div>
+                <div class="card mb-4">
 
-            <div class="card-body">
+                    <div class="card-header bg-primary text-white">
 
-                                <!-- ======================================
-                     Customer & Invoice Information
-                ======================================= -->
+                        <h5 class="mb-0">
 
-                <div class="row g-3">
+                            Invoice Information
 
-                    <!-- Customer Details -->
-
-                    <div class="col-lg-8">
-
-                        <div class="card border-0">
-
-                            <div class="card-header bg-light">
-
-                                <strong>
-
-                                    Customer Details
-
-                                </strong>
-
-                            </div>
-
-                            <div class="card-body">
-
-                                <div class="row g-3">
-
-                                    <!-- Customer Name -->
-
-                                    <div class="col-md-6">
-
-                                        <label
-                                            for="customerName"
-                                            class="form-label">
-
-                                            Customer Name
-
-                                        </label>
-
-                                        <input
-                                            type="text"
-                                            id="customerName"
-                                            class="form-control"
-                                            placeholder="Enter customer name">
-
-                                    </div>
-
-                                    <!-- Mobile -->
-
-                                    <div class="col-md-3">
-
-                                        <label
-                                            for="customerPhone"
-                                            class="form-label">
-
-                                            Mobile
-
-                                        </label>
-
-                                        <input
-                                            type="text"
-                                            id="customerPhone"
-                                            class="form-control"
-                                            maxlength="10"
-                                            placeholder="Mobile Number">
-
-                                    </div>
-
-                                    <!-- GST -->
-
-                                    <div class="col-md-3">
-
-                                        <label
-                                            for="customerGST"
-                                            class="form-label">
-
-                                            GSTIN
-
-                                        </label>
-
-                                        <input
-                                            type="text"
-                                            id="customerGST"
-                                            class="form-control"
-                                            placeholder="GST Number">
-
-                                    </div>
-
-                                    <!-- Address -->
-
-                                    <div class="col-12">
-
-                                        <label
-                                            for="customerAddress"
-                                            class="form-label">
-
-                                            Address
-
-                                        </label>
-
-                                        <textarea
-                                            id="customerAddress"
-                                            rows="2"
-                                            class="form-control"
-                                            placeholder="Customer Address"></textarea>
-
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                    <!-- Invoice Details -->
-
-                    <div class="col-lg-4">
-
-                        <div class="card border-0">
-
-                            <div class="card-header bg-light">
-
-                                <strong>
-
-                                    Invoice Details
-
-                                </strong>
-
-                            </div>
-
-                            <div class="card-body">
-
-                                <div class="mb-3">
-
-                                    <label
-                                        for="invoiceNumber"
-                                        class="form-label">
-
-                                        Invoice Number
-
-                                    </label>
-
-                                    <input
-                                        type="text"
-                                        id="invoiceNumber"
-                                        class="form-control"
-                                        readonly>
-
-                                </div>
-
-                                <div class="mb-3">
-
-                                    <label
-                                        for="invoiceDate"
-                                        class="form-label">
-
-                                        Invoice Date
-
-                                    </label>
-
-                                    <input
-                                        type="date"
-                                        id="invoiceDate"
-                                        class="form-control">
-
-                                </div>
-
-                                <div class="mb-3">
-
-                                    <label
-                                        for="invoiceReference"
-                                        class="form-label">
-
-                                        Reference
-
-                                    </label>
-
-                                    <input
-                                        type="text"
-                                        id="invoiceReference"
-                                        class="form-control"
-                                        placeholder="Reference">
-
-                                </div>
-
-                                <div>
-
-                                    <label
-                                        for="invoiceRemarks"
-                                        class="form-label">
-
-                                        Remarks
-
-                                    </label>
-
-                                    <textarea
-                                        id="invoiceRemarks"
-                                        rows="2"
-                                        class="form-control"
-                                        placeholder="Remarks"></textarea>
-
-                                </div>
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-                <hr class="my-4">
-
-                <!-- ======================================
-                     Product Entry Starts
-                ======================================= -->
-
-                                <!-- ======================================
-                     Customer & Invoice Information
-                ======================================= -->
-
-                <div class="row g-3">
-
-                    <!-- Customer Details -->
-
-                    <div class="col-lg-8">
-
-                        <div class="card border-0">
-
-                            <div class="card-header bg-light">
-
-                                <strong>
-
-                                    Customer Details
-
-                                </strong>
-
-                            </div>
-
-                            <div class="card-body">
-
-                                <div class="row g-3">
-
-                                    <!-- Customer Name -->
-
-                                    <div class="col-md-6">
-
-                                        <label
-                                            for="customerName"
-                                            class="form-label">
-
-                                            Customer Name
-
-                                        </label>
-
-                                        <input
-                                            type="text"
-                                            id="customerName"
-                                            class="form-control"
-                                            placeholder="Enter customer name">
-
-                                    </div>
-
-                                    <!-- Mobile -->
-
-                                    <div class="col-md-3">
-
-                                        <label
-                                            for="customerPhone"
-                                            class="form-label">
-
-                                            Mobile
-
-                                        </label>
-
-                                        <input
-                                            type="text"
-                                            id="customerPhone"
-                                            class="form-control"
-                                            maxlength="10"
-                                            placeholder="Mobile Number">
-
-                                    </div>
-
-                                    <!-- GST -->
-
-                                    <div class="col-md-3">
-
-                                        <label
-                                            for="customerGST"
-                                            class="form-label">
-
-                                            GSTIN
-
-                                        </label>
-
-                                        <input
-                                            type="text"
-                                            id="customerGST"
-                                            class="form-control"
-                                            placeholder="GST Number">
-
-                                    </div>
-
-                                    <!-- Address -->
-
-                                    <div class="col-12">
-
-                                        <label
-                                            for="customerAddress"
-                                            class="form-label">
-
-                                            Address
-
-                                        </label>
-
-                                        <textarea
-                                            id="customerAddress"
-                                            rows="2"
-                                            class="form-control"
-                                            placeholder="Customer Address"></textarea>
-
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                    <!-- Invoice Details -->
-
-                    <div class="col-lg-4">
-
-                        <div class="card border-0">
-
-                            <div class="card-header bg-light">
-
-                                <strong>
-
-                                    Invoice Details
-
-                                </strong>
-
-                            </div>
-
-                            <div class="card-body">
-
-                                <div class="mb-3">
-
-                                    <label
-                                        for="invoiceNumber"
-                                        class="form-label">
-
-                                        Invoice Number
-
-                                    </label>
-
-                                    <input
-                                        type="text"
-                                        id="invoiceNumber"
-                                        class="form-control"
-                                        readonly>
-
-                                </div>
-
-                                <div class="mb-3">
-
-                                    <label
-                                        for="invoiceDate"
-                                        class="form-label">
-
-                                        Invoice Date
-
-                                    </label>
-
-                                    <input
-                                        type="date"
-                                        id="invoiceDate"
-                                        class="form-control">
-
-                                </div>
-
-                                <div class="mb-3">
-
-                                    <label
-                                        for="invoiceReference"
-                                        class="form-label">
-
-                                        Reference
-
-                                    </label>
-
-                                    <input
-                                        type="text"
-                                        id="invoiceReference"
-                                        class="form-control"
-                                        placeholder="Reference">
-
-                                </div>
-
-                                <div>
-
-                                    <label
-                                        for="invoiceRemarks"
-                                        class="form-label">
-
-                                        Remarks
-
-                                    </label>
-
-                                    <textarea
-                                        id="invoiceRemarks"
-                                        rows="2"
-                                        class="form-control"
-                                        placeholder="Remarks"></textarea>
-
-                                </div>
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-                <hr class="my-4">
-
-                <!-- ======================================
-                     Product Entry Starts
-                ======================================= -->
-
-                                <div class="card border-0 mb-4">
-
-                    <div class="card-header bg-light">
-
-                        <strong>
-
-                            Invoice Items
-
-                        </strong>
-
-                    </div>
-
-                    <div class="card-body p-0">
-
-                        <div class="table-responsive">
-
-                            <table
-                                id="invoiceTable"
-                                class="table table-bordered table-hover align-middle mb-0">
-
-                                <thead class="table-primary">
-
-                                    <tr>
-
-                                        <th
-                                            style="width:60px"
-                                            class="text-center">
-
-                                            #
-
-                                        </th>
-
-                                        <th>
-
-                                            Product
-
-                                        </th>
-
-                                        <th
-                                            style="width:90px"
-                                            class="text-center">
-
-                                            Qty
-
-                                        </th>
-
-                                        <th
-                                            style="width:120px"
-                                            class="text-end">
-
-                                            Rate
-
-                                        </th>
-
-                                        <th
-                                            style="width:100px"
-                                            class="text-end">
-
-                                            Disc %
-
-                                        </th>
-
-                                        <th
-                                            style="width:100px"
-                                            class="text-end">
-
-                                            GST %
-
-                                        </th>
-
-                                        <th
-                                            style="width:140px"
-                                            class="text-end">
-
-                                            Total
-
-                                        </th>
-
-                                        <th
-                                            style="width:90px"
-                                            class="text-center">
-
-                                            Action
-
-                                        </th>
-
-                                    </tr>
-
-                                </thead>
-
-                                <tbody id="invoiceTableBody">
-
-                                    <tr>
-
-                                        <td
-                                            colspan="8"
-                                            class="text-center text-muted py-4">
-
-                                            No items added.
-
-                                        </td>
-
-                                    </tr>
-
-                                </tbody>
-
-                                <tfoot>
-
-                                    <tr>
-
-                                        <td
-                                            colspan="6"
-                                            class="text-end fw-bold">
-
-                                            Grand Total
-
-                                        </td>
-
-                                        <td
-                                            id="invoiceTableGrandTotal"
-                                            class="text-end fw-bold">
-
-                                            0.00
-
-                                        </td>
-
-                                        <td></td>
-
-                                    </tr>
-
-                                </tfoot>
-
-                            </table>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-                <!-- ======================================
-                     Totals & Payment Starts
-                ======================================= -->
-
-                                <div class="row g-4 mb-4">
-
-                    <!-- ======================================
-                         Invoice Totals
-                    ======================================= -->
-
-                    <div class="col-lg-6">
-
-                        <div class="card border-0">
-
-                            <div class="card-header bg-light">
-
-                                <strong>
-
-                                    Invoice Totals
-
-                                </strong>
-
-                            </div>
-
-                            <div class="card-body">
-
-                                <table class="table table-borderless mb-0">
-
-                                    <tbody>
-
-                                        <tr>
-
-                                            <td>
-
-                                                Sub Total
-
-                                            </td>
-
-                                            <td
-                                                id="subTotal"
-                                                class="text-end fw-bold">
-
-                                                0.00
-
-                                            </td>
-
-                                        </tr>
-
-                                        <tr>
-
-                                            <td>
-
-                                                Discount
-
-                                            </td>
-
-                                            <td
-                                                id="discountTotal"
-                                                class="text-end fw-bold">
-
-                                                0.00
-
-                                            </td>
-
-                                        </tr>
-
-                                        <tr>
-
-                                            <td>
-
-                                                GST
-
-                                            </td>
-
-                                            <td
-                                                id="gstTotal"
-                                                class="text-end fw-bold">
-
-                                                0.00
-
-                                            </td>
-
-                                        </tr>
-
-                                        <tr class="table-primary">
-
-                                            <td>
-
-                                                <strong>
-
-                                                    Grand Total
-
-                                                </strong>
-
-                                            </td>
-
-                                            <td
-                                                id="grandTotal"
-                                                class="text-end fw-bold fs-5">
-
-                                                ₹0.00
-
-                                            </td>
-
-                                        </tr>
-
-                                    </tbody>
-
-                                </table>
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                    <!-- ======================================
-                         Payment Details
-                    ======================================= -->
-
-                    <div class="col-lg-6">
-
-                        <div class="card border-0">
-
-                            <div class="card-header bg-light">
-
-                                <strong>
-
-                                    Payment Details
-
-                                </strong>
-
-                            </div>
-
-                            <div class="card-body">
-
-                                <div class="row g-3">
-
-                                    <!-- Payment Mode -->
-
-                                    <div class="col-md-6">
-
-                                        <label
-                                            for="paymentMode"
-                                            class="form-label">
-
-                                            Payment Mode
-
-                                        </label>
-
-                                        <select
-                                            id="paymentMode"
-                                            class="form-select">
-
-                                            <option value="Cash">
-
-                                                Cash
-
-                                            </option>
-
-                                            <option value="Card">
-
-                                                Card
-
-                                            </option>
-
-                                            <option value="UPI">
-
-                                                UPI
-
-                                            </option>
-
-                                            <option value="Bank">
-
-                                                Bank Transfer
-
-                                            </option>
-
-                                            <option value="Credit">
-
-                                                Credit
-
-                                            </option>
-
-                                        </select>
-
-                                    </div>
-
-                                    <!-- Payment Status -->
-
-                                    <div class="col-md-6">
-
-                                        <label
-                                            for="paymentStatus"
-                                            class="form-label">
-
-                                            Payment Status
-
-                                        </label>
-
-                                        <select
-                                            id="paymentStatus"
-                                            class="form-select">
-
-                                            <option value="Paid">
-
-                                                Paid
-
-                                            </option>
-
-                                            <option value="Partial">
-
-                                                Partial
-
-                                            </option>
-
-                                            <option value="Pending">
-
-                                                Pending
-
-                                            </option>
-
-                                        </select>
-
-                                    </div>
-
-                                    <!-- Amount Received -->
-
-                                    <div class="col-md-6">
-
-                                        <label
-                                            for="amountReceived"
-                                            class="form-label">
-
-                                            Amount Received
-
-                                        </label>
-
-                                        <input
-                                            type="number"
-                                            id="amountReceived"
-                                            class="form-control"
-                                            step="0.01"
-                                            value="0">
-
-                                    </div>
-
-                                    <!-- Balance -->
-
-                                    <div class="col-md-6">
-
-                                        <label
-                                            for="balanceAmount"
-                                            class="form-label">
-
-                                            Balance
-
-                                        </label>
-
-                                        <input
-                                            type="number"
-                                            id="balanceAmount"
-                                            class="form-control"
-                                            readonly
-                                            value="0.00">
-
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-                <!-- ======================================
-                     Action Buttons Starts
-                ======================================= -->
-
-                                <div class="card border-0 mb-4">
-
-                    <div class="card-header bg-light">
-
-                        <strong>
-
-                            Actions
-
-                        </strong>
+                        </h5>
 
                     </div>
 
@@ -1085,105 +251,238 @@
 
                         <div class="row g-3">
 
-                            <!-- Save -->
+                            <div class="col-md-6">
 
-                            <div class="col-lg col-md-6 d-grid">
+                                <label class="form-label">
 
-                                <button
-                                    type="button"
-                                    id="btnSaveInvoice"
-                                    class="btn btn-success">
+                                    Invoice No
 
-                                    <i class="bi bi-save"></i>
+                                </label>
 
-                                    Save Invoice
-
-                                </button>
-
-                            </div>
-
-                            <!-- Save & New -->
-
-                            <div class="col-lg col-md-6 d-grid">
-
-                                <button
-                                    type="button"
-                                    id="btnSaveNew"
-                                    class="btn btn-primary">
-
-                                    <i class="bi bi-file-earmark-plus"></i>
-
-                                    Save & New
-
-                                </button>
+                                <input
+                                    type="text"
+                                    id="invoiceNumber"
+                                    class="form-control"
+                                    readonly>
 
                             </div>
 
-                            <!-- Print -->
+                            <div class="col-md-6">
 
-                            <div class="col-lg col-md-6 d-grid">
+                                <label class="form-label">
 
-                                <button
-                                    type="button"
-                                    id="btnPrintInvoice"
-                                    class="btn btn-secondary">
+                                    Invoice Date
 
-                                    <i class="bi bi-printer"></i>
+                                </label>
 
-                                    Print
-
-                                </button>
+                                <input
+                                    type="date"
+                                    id="invoiceDate"
+                                    class="form-control">
 
                             </div>
 
-                            <!-- History -->
+                            <div class="col-md-6">
 
-                            <div class="col-lg col-md-6 d-grid">
+                                <label class="form-label">
 
-                                <button
-                                    type="button"
-                                    id="btnHistory"
-                                    class="btn btn-info text-white">
+                                    Reference
 
-                                    <i class="bi bi-clock-history"></i>
+                                </label>
 
-                                    History
-
-                                </button>
+                                <input
+                                    type="text"
+                                    id="invoiceReference"
+                                    class="form-control">
 
                             </div>
 
-                            <!-- Dashboard -->
+                            <div class="col-md-6">
 
-                            <div class="col-lg col-md-6 d-grid">
+                                <label class="form-label">
 
-                                <button
-                                    type="button"
-                                    id="btnRefreshDashboard"
-                                    class="btn btn-warning">
+                                    Sales Person
 
-                                    <i class="bi bi-speedometer2"></i>
+                                </label>
 
-                                    Dashboard
-
-                                </button>
+                                <input
+                                    type="text"
+                                    id="salesPerson"
+                                    class="form-control">
 
                             </div>
 
-                            <!-- New Invoice -->
+                            <div class="col-12">
 
-                            <div class="col-lg col-md-6 d-grid">
+                                <label class="form-label">
 
-                                <button
-                                    type="button"
-                                    id="btnNewInvoice"
-                                    class="btn btn-danger">
+                                    Remarks
 
-                                    <i class="bi bi-arrow-clockwise"></i>
+                                </label>
 
-                                    New Invoice
+                                <textarea
+                                    id="invoiceRemarks"
+                                    class="form-control"
+                                    rows="3"></textarea>
 
-                                </button>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+                        <!-- ==========================================
+                 CUSTOMER INFORMATION
+            =========================================== -->
+
+            <div class="col-lg-6">
+
+                <div class="card mb-4">
+
+                    <div class="card-header bg-success text-white">
+
+                        <h5 class="mb-0">
+
+                            Customer Information
+
+                        </h5>
+
+                    </div>
+
+                    <div class="card-body">
+
+                        <div class="row g-3">
+
+                            <div class="col-md-4">
+
+                                <label class="form-label">
+
+                                    Customer ID
+
+                                </label>
+
+                                <input
+                                    type="text"
+                                    id="customerId"
+                                    class="form-control"
+                                    readonly>
+
+                            </div>
+
+                            <div class="col-md-8">
+
+                                <label class="form-label">
+
+                                    Customer Name
+
+                                </label>
+
+                                <div class="input-group">
+
+                                    <input
+                                        type="text"
+                                        id="customerName"
+                                        class="form-control"
+                                        placeholder="Select customer">
+
+                                    <button
+                                        class="btn btn-outline-primary"
+                                        id="btnCustomerSearch"
+                                        type="button">
+
+                                        Search
+
+                                    </button>
+
+                                    <button
+                                        class="btn btn-success"
+                                        id="btnNewCustomer"
+                                        type="button">
+
+                                        New
+
+                                    </button>
+
+                                </div>
+
+                            </div>
+
+                            <div class="col-md-6">
+
+                                <label class="form-label">
+
+                                    Phone
+
+                                </label>
+
+                                <input
+                                    type="text"
+                                    id="customerPhone"
+                                    class="form-control">
+
+                            </div>
+
+                            <div class="col-md-6">
+
+                                <label class="form-label">
+
+                                    Email
+
+                                </label>
+
+                                <input
+                                    type="email"
+                                    id="customerEmail"
+                                    class="form-control">
+
+                            </div>
+
+                            <div class="col-md-6">
+
+                                <label class="form-label">
+
+                                    GSTIN
+
+                                </label>
+
+                                <input
+                                    type="text"
+                                    id="customerGSTIN"
+                                    class="form-control">
+
+                            </div>
+
+                            <div class="col-md-6">
+
+                                <label class="form-label">
+
+                                    State
+
+                                </label>
+
+                                <input
+                                    type="text"
+                                    id="customerState"
+                                    class="form-control">
+
+                            </div>
+
+                            <div class="col-12">
+
+                                <label class="form-label">
+
+                                    Address
+
+                                </label>
+
+                                <textarea
+                                    id="customerAddress"
+                                    class="form-control"
+                                    rows="3"></textarea>
 
                             </div>
 
@@ -1197,85 +496,62 @@
 
         </div>
 
-        <!-- ======================================
-             Customer Modal Starts
-        ======================================= -->
 
-            <!-- ==========================================
-         Customer Search Modal
-    =========================================== -->
+        <!-- ==========================================
+             PRODUCT ENTRY
+        =========================================== -->
 
-    <div
-        class="modal fade"
-        id="customerModal"
-        tabindex="-1"
-        aria-labelledby="customerModalLabel"
-        aria-hidden="true">
+        <div class="card mb-4">
 
-        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="card-header bg-info text-white">
 
-            <div class="modal-content">
+                <h5 class="mb-0">
 
-                <!-- Header -->
+                    Product Entry
 
-                <div class="modal-header">
+                </h5>
 
-                    <h5
-                        class="modal-title"
-                        id="customerModalLabel">
+            </div>
 
-                        Select Customer
+            <div class="card-body">
 
-                    </h5>
+                <div class="row g-3 align-items-end">
 
-                    <button
-                        type="button"
-                        class="btn-close"
-                        data-bs-dismiss="modal">
+                    <div class="col-lg-2">
 
-                    </button>
+                        <label class="form-label">
 
-                </div>
+                            Barcode
 
-                <!-- Body -->
+                        </label>
 
-                <div class="modal-body">
+                        <input
+                            type="text"
+                            id="productBarcode"
+                            class="form-control">
 
-                    <div class="row g-3 mb-3">
+                    </div>
 
-                        <div class="col-md-8">
+                    <div class="col-lg-4">
 
-                            <label
-                                for="txtCustomerSearch"
-                                class="form-label">
+                        <label class="form-label">
 
-                                Search Customer
+                            Product
 
-                            </label>
+                        </label>
+
+                        <div class="input-group">
 
                             <input
                                 type="text"
-                                id="txtCustomerSearch"
+                                id="productSearch"
                                 class="form-control"
-                                placeholder="Name / Mobile / GST">
-
-                        </div>
-
-                        <div class="col-md-4 d-grid">
-
-                            <label
-                                class="form-label">
-
-                                &nbsp;
-
-                            </label>
+                                autocomplete="off">
 
                             <button
-                                type="button"
-                                id="btnSearchCustomer"
-                                class="btn btn-primary">
-
-                                <i class="bi bi-search"></i>
+                                class="btn btn-outline-primary"
+                                id="btnProductSearch"
+                                type="button">
 
                                 Search
 
@@ -1285,85 +561,129 @@
 
                     </div>
 
-                    <!-- Customer List -->
+                    <div class="col-lg-1">
 
-                    <div class="table-responsive">
+                        <label class="form-label">
 
-                        <table
-                            class="table table-hover table-bordered align-middle">
+                            Qty
 
-                            <thead class="table-light">
+                        </label>
 
-                                <tr>
+                        <input
+                            type="number"
+                            id="productQty"
+                            class="form-control"
+                            value="1">
 
-                                    <th style="width:60px">
+                    </div>
 
-                                        #
+                    <div class="col-lg-1">
 
-                                    </th>
+                        <label class="form-label">
 
-                                    <th>
+                            MRP
 
-                                        Name
+                        </label>
 
-                                    </th>
+                        <input
+                            type="number"
+                            id="productMRP"
+                            class="form-control">
 
-                                    <th>
+                    </div>
 
-                                        Mobile
+                    <div class="col-lg-1">
 
-                                    </th>
+                        <label class="form-label">
 
-                                    <th>
+                            Rate
 
-                                        GSTIN
+                        </label>
 
-                                    </th>
+                        <input
+                            type="number"
+                            id="productRate"
+                            class="form-control">
 
-                                    <th style="width:120px">
+                    </div>
 
-                                        Action
+                    <div class="col-lg-1">
 
-                                    </th>
+                        <label class="form-label">
 
-                                </tr>
+                            Disc %
 
-                            </thead>
+                        </label>
 
-                            <tbody id="customerSearchResults">
+                        <input
+                            type="number"
+                            id="productDiscount"
+                            class="form-control"
+                            value="0">
 
-                                <tr>
+                    </div>
 
-                                    <td
-                                        colspan="5"
-                                        class="text-center text-muted py-4">
+                    <div class="col-lg-1">
 
-                                        Search customers to display results.
+                        <label class="form-label">
 
-                                    </td>
+                            GST %
 
-                                </tr>
+                        </label>
 
-                            </tbody>
+                        <input
+                            type="number"
+                            id="productGST"
+                            class="form-control">
 
-                        </table>
+                    </div>
+
+                    <div class="col-lg-1">
+
+                        <button
+                            class="btn btn-primary w-100"
+                            id="btnAddItem"
+                            type="button">
+
+                            Add
+
+                        </button>
 
                     </div>
 
                 </div>
 
-                <!-- Footer -->
+                <div class="row mt-3">
 
-                <div class="modal-footer">
+                    <div class="col-md-3">
 
-                    <button
-                        type="button"
-                        class="btn btn-secondary"
-                        data-bs-dismiss="modal">
+                        <label class="form-label">
 
-                        Close
+                            Batch
 
-                    </button>
+                        </label>
+
+                        <input
+                            type="text"
+                            id="productBatch"
+                            class="form-control">
+
+                    </div>
+
+                    <div class="col-md-3">
+
+                        <label class="form-label">
+
+                            Expiry
+
+                        </label>
+
+                        <input
+                            type="month"
+                            id="productExpiry"
+                            class="form-control">
+
+                    </div>
 
                 </div>
 
@@ -1371,418 +691,273 @@
 
         </div>
 
+        <!-- ==========================================
+     INVOICE ITEMS
+========================================== -->
+
+<div class="card mb-4">
+
+    <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+
+        <h5 class="mb-0">
+            Invoice Items
+        </h5>
+
+        <button
+            id="btnClearTable"
+            class="btn btn-sm btn-light"
+            type="button">
+
+            Clear Table
+
+        </button>
+
     </div>
 
-    <!-- ======================================
-         Product Search Modal Starts
-    ======================================= -->
+    <div class="card-body p-0">
 
-            <!-- ==========================================
-         Product Search Modal
-    =========================================== -->
+        <div class="table-responsive">
 
-    <div
-        class="modal fade"
-        id="productSearchModal"
-        tabindex="-1"
-        aria-labelledby="productSearchModalLabel"
-        aria-hidden="true">
+            <table
+                id="invoiceTable"
+                class="table table-bordered table-hover align-middle mb-0">
 
-        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+                <thead class="table-primary">
 
-            <div class="modal-content">
+                <tr>
 
-                <!-- Header -->
+                    <th width="50">#</th>
 
-                <div class="modal-header">
+                    <th>Barcode</th>
 
-                    <h5
-                        class="modal-title"
-                        id="productSearchModalLabel">
+                    <th width="300">Product</th>
 
-                        Product Search
+                    <th>Batch</th>
 
-                    </h5>
+                    <th>Expiry</th>
 
-                    <button
-                        type="button"
-                        class="btn-close"
-                        data-bs-dismiss="modal">
+                    <th width="80">Qty</th>
 
-                    </button>
+                    <th width="100">MRP</th>
 
-                </div>
+                    <th width="100">Rate</th>
 
-                <!-- Body -->
+                    <th width="90">Disc %</th>
 
-                <div class="modal-body">
+                    <th width="90">GST %</th>
 
-                    <div class="row g-3 mb-3">
+                    <th width="130">Amount</th>
 
-                        <!-- Search -->
+                    <th width="70">Action</th>
 
-                        <div class="col-md-8">
+                </tr>
 
-                            <label
-                                for="txtProductSearch"
-                                class="form-label">
+                </thead>
 
-                                Search Product
+                <tbody id="invoiceTableBody">
 
-                            </label>
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ==========================================
+     TOTALS + PAYMENT
+========================================== -->
+
+<div class="row">
+
+    <!-- Totals -->
+
+    <div class="col-lg-6">
+
+        <div class="card mb-4">
+
+            <div class="card-header bg-secondary text-white">
+
+                Invoice Summary
+
+            </div>
+
+            <div class="card-body">
+
+                <table class="table">
+
+                    <tr>
+
+                        <td>Sub Total</td>
+
+                        <td>
 
                             <input
-                                type="text"
-                                id="txtProductSearch"
-                                class="form-control"
-                                placeholder="Search by Name, Barcode or HSN">
+                                id="subTotal"
+                                class="form-control text-end"
+                                readonly>
 
-                        </div>
+                        </td>
 
-                        <!-- Search Button -->
+                    </tr>
 
-                        <div class="col-md-2 d-grid">
+                    <tr>
 
-                            <label
-                                class="form-label">
+                        <td>Discount</td>
 
-                                &nbsp;
-
-                            </label>
-
-                            <button
-                                type="button"
-                                id="btnSearchProduct"
-                                class="btn btn-primary">
-
-                                <i class="bi bi-search"></i>
-
-                                Search
-
-                            </button>
-
-                        </div>
-
-                        <!-- Refresh -->
-
-                        <div class="col-md-2 d-grid">
-
-                            <label
-                                class="form-label">
-
-                                &nbsp;
-
-                            </label>
-
-                            <button
-                                type="button"
-                                id="btnRefreshProducts"
-                                class="btn btn-outline-secondary">
-
-                                <i class="bi bi-arrow-repeat"></i>
-
-                                Refresh
-
-                            </button>
-
-                        </div>
-
-                    </div>
-
-                    <!-- Product List -->
-
-                    <div class="table-responsive">
-
-                        <table
-                            class="table table-hover table-bordered align-middle">
-
-                            <thead class="table-primary">
-
-                                <tr>
-
-                                    <th style="width:70px">
-
-                                        #
-
-                                    </th>
-
-                                    <th>
-
-                                        Barcode
-
-                                    </th>
-
-                                    <th>
-
-                                        Product Name
-
-                                    </th>
-
-                                    <th>
-
-                                        HSN
-
-                                    </th>
-
-                                    <th class="text-end">
-
-                                        MRP
-
-                                    </th>
-
-                                    <th class="text-end">
-
-                                        Rate
-
-                                    </th>
-
-                                    <th class="text-center">
-
-                                        GST %
-
-                                    </th>
-
-                                    <th class="text-center">
-
-                                        Stock
-
-                                    </th>
-
-                                    <th style="width:120px">
-
-                                        Action
-
-                                    </th>
-
-                                </tr>
-
-                            </thead>
-
-                            <tbody id="productSearchResults">
-
-                                <tr>
-
-                                    <td
-                                        colspan="9"
-                                        class="text-center text-muted py-4">
-
-                                        Search products to display results.
-
-                                    </td>
-
-                                </tr>
-
-                            </tbody>
-
-                        </table>
-
-                    </div>
-
-                </div>
-
-                <!-- Footer -->
-
-                <div class="modal-footer">
-
-                    <button
-                        type="button"
-                        class="btn btn-secondary"
-                        data-bs-dismiss="modal">
-
-                        Close
-
-                    </button>
-
-                </div>
-
-            </div>
-
-        </div>
-
-    </div>
-
-    <!-- ======================================
-         History Modal Starts
-    ======================================= -->
-
-            <!-- ==========================================
-         Invoice History Modal
-    =========================================== -->
-
-    <div
-        class="modal fade"
-        id="historyModal"
-        tabindex="-1"
-        aria-labelledby="historyModalLabel"
-        aria-hidden="true">
-
-        <div class="modal-dialog modal-fullscreen-lg-down modal-xl modal-dialog-scrollable">
-
-            <div class="modal-content">
-
-                <!-- Header -->
-
-                <div class="modal-header">
-
-                    <h5
-                        class="modal-title"
-                        id="historyModalLabel">
-
-                        Invoice History
-
-                    </h5>
-
-                    <button
-                        type="button"
-                        class="btn-close"
-                        data-bs-dismiss="modal">
-
-                    </button>
-
-                </div>
-
-                <!-- Body -->
-
-                <div class="modal-body">
-
-                    <!-- Search -->
-
-                    <div class="row g-3 mb-3">
-
-                        <div class="col-md-10">
-
-                            <label
-                                for="txtHistorySearch"
-                                class="form-label">
-
-                                Search Invoice
-
-                            </label>
+                        <td>
 
                             <input
-                                type="text"
-                                id="txtHistorySearch"
-                                class="form-control"
-                                placeholder="Invoice No, Customer or Date">
+                                id="discountTotal"
+                                class="form-control text-end"
+                                readonly>
 
-                        </div>
+                        </td>
 
-                        <div class="col-md-2 d-grid">
+                    </tr>
 
-                            <label
-                                class="form-label">
+                    <tr>
 
-                                &nbsp;
+                        <td>GST Total</td>
 
-                            </label>
+                        <td>
 
-                            <button
-                                type="button"
-                                id="btnRefreshHistory"
-                                class="btn btn-primary">
+                            <input
+                                id="taxTotal"
+                                class="form-control text-end"
+                                readonly>
 
-                                <i class="bi bi-arrow-repeat"></i>
+                        </td>
 
-                                Refresh
+                    </tr>
 
-                            </button>
+                    <tr class="table-success">
 
-                        </div>
+                        <th>Grand Total</th>
 
-                    </div>
+                        <th>
 
-                    <!-- Invoice List -->
+                            <input
+                                id="grandTotal"
+                                class="form-control text-end fw-bold"
+                                readonly>
 
-                    <div class="table-responsive">
+                        </th>
 
-                        <table
-                            class="table table-bordered table-hover align-middle">
+                    </tr>
 
-                            <thead class="table-dark">
+                </table>
 
-                                <tr>
+            </div>
 
-                                    <th style="width:120px">
+        </div>
 
-                                        Invoice
+    </div>
 
-                                    </th>
 
-                                    <th style="width:120px">
+    <!-- Payment -->
 
-                                        Date
+    <div class="col-lg-6">
 
-                                    </th>
+        <div class="card mb-4">
 
-                                    <th>
+            <div class="card-header bg-success text-white">
 
-                                        Customer
+                Payment
 
-                                    </th>
+            </div>
 
-                                    <th
-                                        class="text-end"
-                                        style="width:140px">
+            <div class="card-body">
 
-                                        Grand Total
+                <div class="mb-3">
 
-                                    </th>
+                    <label class="form-label">
+                        Payment Mode
+                    </label>
 
-                                    <th
-                                        class="text-center"
-                                        style="width:140px">
+                    <select
+                        id="paymentMode"
+                        class="form-select">
 
-                                        Payment
+                        <option>Cash</option>
+                        <option>UPI</option>
+                        <option>Card</option>
+                        <option>Bank</option>
+                        <option>Credit</option>
 
-                                    </th>
-
-                                    <th
-                                        class="text-center"
-                                        style="width:220px">
-
-                                        Actions
-
-                                    </th>
-
-                                </tr>
-
-                            </thead>
-
-                            <tbody id="historyTableBody">
-
-                                <tr>
-
-                                    <td
-                                        colspan="6"
-                                        class="text-center text-muted py-5">
-
-                                        No invoices available.
-
-                                    </td>
-
-                                </tr>
-
-                            </tbody>
-
-                        </table>
-
-                    </div>
+                    </select>
 
                 </div>
 
-                <!-- Footer -->
+                <div class="mb-3">
 
-                <div class="modal-footer">
+                    <label class="form-label">
+                        Amount Payable
+                    </label>
 
-                    <button
-                        type="button"
-                        id="btnHistoryClose"
-                        class="btn btn-secondary"
-                        data-bs-dismiss="modal">
+                    <input
+                        id="amountPayable"
+                        class="form-control"
+                        readonly>
 
-                        Close
+                </div>
 
-                    </button>
+                <div class="mb-3">
+
+                    <label class="form-label">
+                        Amount Received
+                    </label>
+
+                    <input
+                        id="amountReceived"
+                        class="form-control">
+
+                </div>
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+                        Balance
+                    </label>
+
+                    <input
+                        id="balanceAmount"
+                        class="form-control"
+                        readonly>
+
+                </div>
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+                        Change
+                    </label>
+
+                    <input
+                        id="changeAmount"
+                        class="form-control"
+                        readonly>
+
+                </div>
+
+                <div>
+
+                    <label class="form-label">
+                        Status
+                    </label>
+
+                    <select
+                        id="paymentStatus"
+                        class="form-select">
+
+                        <option>Paid</option>
+                        <option>Partial</option>
+                        <option>Credit</option>
+
+                    </select>
 
                 </div>
 
@@ -1792,44 +967,222 @@
 
     </div>
 
-    <!-- ======================================
-         Scripts Start
-    ======================================= -->
+</div>
 
-            <!-- ==========================================
-         Bootstrap JavaScript
-    =========================================== -->
 
-    <script
-        src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js">
-    </script>
+<!-- ==========================================
+     ACTION BUTTONS
+========================================== -->
 
-    <!-- ==========================================
-         Supabase CDN
-    =========================================== -->
+<div class="d-flex flex-wrap gap-2 justify-content-end mb-5">
 
-    <script
-        src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
-    </script>
+    <button
+        id="btnSaveInvoice"
+        class="btn btn-success">
 
-    <!-- ==========================================
-         Supabase Configuration
-    =========================================== -->
+        Save Invoice
 
-    <script
-        type="module"
-        src="../billing/supabase.js">
-    </script>
+    </button>
 
-    <!-- ==========================================
-         Billing Application Entry
-    =========================================== -->
+    <button
+        id="btnPrintInvoice"
+        class="btn btn-primary">
 
-    <script
-        type="module"
-        src="../billing/billing.js">
-    </script>
+        Print
+
+    </button>
+
+    <button
+        id="btnClearInvoice"
+        class="btn btn-warning">
+
+        Clear
+
+    </button>
+
+    <button
+        id="btnInvoiceHistory"
+        class="btn btn-info">
+
+        History
+
+    </button>
+
+</div>
+
+
+<!-- ==========================================
+     CUSTOMER SEARCH MODAL
+========================================== -->
+
+<div class="modal fade"
+     id="customerModal"
+     tabindex="-1">
+
+<div class="modal-dialog modal-xl">
+
+<div class="modal-content">
+
+<div class="modal-header">
+
+<h5>Select Customer</h5>
+
+<button
+type="button"
+class="btn-close"
+data-bs-dismiss="modal"></button>
+
+</div>
+
+<div class="modal-body">
+
+<input
+id="txtCustomerSearch"
+class="form-control mb-3"
+placeholder="Search customer...">
+
+<div id="customerSearchResults">
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+
+<!-- ==========================================
+     PRODUCT SEARCH MODAL
+========================================== -->
+
+<div class="modal fade"
+id="productModal"
+tabindex="-1">
+
+<div class="modal-dialog modal-xl">
+
+<div class="modal-content">
+
+<div class="modal-header">
+
+<h5>Select Product</h5>
+
+<button
+type="button"
+class="btn-close"
+data-bs-dismiss="modal"></button>
+
+</div>
+
+<div class="modal-body">
+
+<input
+id="txtProductSearch"
+class="form-control mb-3"
+placeholder="Search product...">
+
+<div id="productSearchResults">
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+
+<!-- ==========================================
+     HISTORY MODAL
+========================================== -->
+
+<div class="modal fade"
+id="historyModal"
+tabindex="-1">
+
+<div class="modal-dialog modal-fullscreen">
+
+<div class="modal-content">
+
+<div class="modal-header">
+
+<h5>Invoice History</h5>
+
+<button
+type="button"
+class="btn-close"
+data-bs-dismiss="modal"></button>
+
+</div>
+
+<div class="modal-body">
+
+<input
+id="txtHistorySearch"
+class="form-control mb-3"
+placeholder="Search invoice">
+
+<table class="table table-striped">
+
+<thead>
+
+<tr>
+
+<th>No</th>
+
+<th>Date</th>
+
+<th>Customer</th>
+
+<th>Total</th>
+
+<th>Actions</th>
+
+</tr>
+
+</thead>
+
+<tbody id="historyTableBody">
+
+</tbody>
+
+</table>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+
+<!-- Loading -->
+
+<div id="loadingOverlay" style="display:none;">
+
+<div class="spinner-border text-primary"></div>
+
+</div>
+
+
+<!-- Toast -->
+
+<div id="toastContainer"></div>
+
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script type="module" src="../billing/billing.js"></script>
 
 </body>
 
 </html>
+
