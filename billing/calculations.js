@@ -1,53 +1,26 @@
-/*
-==========================================================
-Genius Scientific ERP
-Billing Module
+/* ==========================================================
+   Genius Scientific ERP
+   calculations.js
+   Part 1
+   Invoice Calculation Engine
+========================================================== */
 
-File:
-calculations.js
+import { getInvoiceItems } from "./invoiceTable.js";
+import { updatePayment } from "./payment.js";
 
-Purpose:
-Invoice calculation engine.
-
-Responsibilities
-
-• Calculate invoice rows
-• Calculate invoice totals
-• Update totals state
-• Register calculation events
-• Expose calculation API
-
-==========================================================
-*/
-
-/*==========================================================
-Imports
-==========================================================*/
-
-import {
-
-    getInvoiceItems
-
-} from "./invoiceTable.js";
-
-import {
-
-    updatePayment
-
-} from "./payment.js";
-/*==========================================================
-Constants
-==========================================================*/
+/* ==========================================================
+   Constants
+========================================================== */
 
 const DECIMAL_PLACES = 2;
 
-/*==========================================================
-Module State
-==========================================================*/
+/* ==========================================================
+   Module State
+========================================================== */
 
-let invoiceTotals = {
+const totals = {
 
-    subtotal: 0,
+    subTotal: 0,
 
     discount: 0,
 
@@ -59,17 +32,11 @@ let invoiceTotals = {
 
 };
 
-/*==========================================================
-Private Helper Functions
-==========================================================*/
+/* ==========================================================
+   Number Helpers
+========================================================== */
 
-/**
- * Safely convert any value into a number.
- *
- * @param {*} value
- * @returns {number}
- */
-function parseNumber(value) {
+function toNumber(value) {
 
     const number = Number(value);
 
@@ -79,127 +46,186 @@ function parseNumber(value) {
 
 }
 
-/**
- * Round a number using the configured precision.
- *
- * @param {number} value
- * @returns {number}
- */
-function roundValue(value) {
+function round(value) {
 
     return Number(
-        parseNumber(value).toFixed(
-            DECIMAL_PLACES
-        )
+
+        toNumber(value)
+
+            .toFixed(DECIMAL_PLACES)
+
     );
 
 }
 
-/**
- * Reset invoice totals.
- */
+/* ==========================================================
+   Totals Helpers
+========================================================== */
+
 function resetTotals() {
 
-    invoiceTotals.subtotal = 0;
+    totals.subTotal = 0;
 
-    invoiceTotals.discount = 0;
+    totals.discount = 0;
 
-    invoiceTotals.taxable = 0;
+    totals.taxable = 0;
 
-    invoiceTotals.gst = 0;
+    totals.gst = 0;
 
-    invoiceTotals.grandTotal = 0;
+    totals.grandTotal = 0;
 
 }
 
-/**
- * Clone totals object.
- *
- * Prevents external modules from
- * modifying internal state.
- *
- * @returns {Object}
- */
 function cloneTotals() {
 
     return {
 
-        subtotal: invoiceTotals.subtotal,
+        subTotal: totals.subTotal,
 
-        discount: invoiceTotals.discount,
+        discount: totals.discount,
 
-        taxable: invoiceTotals.taxable,
+        taxable: totals.taxable,
 
-        gst: invoiceTotals.gst,
+        gst: totals.gst,
 
-        grandTotal: invoiceTotals.grandTotal
+        grandTotal: totals.grandTotal
 
     };
 
 }
 
-/*==========================================================
-End of Part 1
-==========================================================*/
-/*==========================================================
-Row Calculation Engine
-==========================================================*/
+/* ==========================================================
+   UI Helpers
+========================================================== */
+
+function setValue(id, value) {
+
+    const element = document.getElementById(id);
+
+    if (!element)
+        return;
+
+    if (
+
+        element.tagName === "INPUT" ||
+
+        element.tagName === "TEXTAREA"
+
+    ) {
+
+        element.value =
+
+            round(value)
+
+                .toFixed(DECIMAL_PLACES);
+
+    }
+
+    else {
+
+        element.textContent =
+
+            round(value)
+
+                .toFixed(DECIMAL_PLACES);
+
+    }
+
+}
+
+/* ==========================================================
+   Row Helpers
+========================================================== */
+
+function getRowValues(row) {
+
+    return {
+
+        quantity: toNumber(
+
+            row.querySelector(".qty")?.value
+
+        ),
+
+        rate: toNumber(
+
+            row.querySelector(".rate")?.value
+
+        ),
+
+        discount: toNumber(
+
+            row.querySelector(".discount")?.value
+
+        ),
+
+        gst: toNumber(
+
+            row.querySelector(".gst")?.value
+
+        )
+
+    };
+
+}
+
+/* ==========================================================
+   End Part 1
+========================================================== */
+
+/* ==========================================================
+   Row Calculation Engine
+========================================================== */
 
 /**
  * Calculate a single invoice row.
  *
- * Formula
- *
+ * Formula:
  * Amount = Qty × Rate
- * Discount = Amount × Discount% / 100
+ * Discount = Amount × Discount%
  * Taxable = Amount − Discount
- * GST = Taxable × GST% / 100
+ * GST = Taxable × GST%
  * Total = Taxable + GST
- *
- * @param {Object} item
- * @returns {Object}
  */
-function calculateRow(item = {}) {
+function calculateRow(values = {}) {
 
     const quantity =
-        parseNumber(item.quantity);
+        toNumber(values.quantity);
 
     const rate =
-        parseNumber(item.rate);
+        toNumber(values.rate);
 
     const discountPercent =
-        parseNumber(item.discount);
+        toNumber(values.discount);
 
     const gstPercent =
-        parseNumber(item.gst);
+        toNumber(values.gst);
 
     const amount =
-        roundValue(
-            quantity * rate
-        );
+        round(quantity * rate);
 
     const discountAmount =
-        roundValue(
+        round(
             amount *
             discountPercent /
             100
         );
 
     const taxableAmount =
-        roundValue(
+        round(
             amount -
             discountAmount
         );
 
     const gstAmount =
-        roundValue(
+        round(
             taxableAmount *
             gstPercent /
             100
         );
 
     const lineTotal =
-        roundValue(
+        round(
             taxableAmount +
             gstAmount
         );
@@ -210,9 +236,9 @@ function calculateRow(item = {}) {
 
         rate,
 
-        discount: discountPercent,
+        discountPercent,
 
-        gst: gstPercent,
+        gstPercent,
 
         amount,
 
@@ -222,61 +248,31 @@ function calculateRow(item = {}) {
 
         gstAmount,
 
-        total: lineTotal
+        lineTotal
 
     };
 
 }
 
-/**
- * Update calculated values
- * inside a table row.
- *
- * @param {HTMLTableRowElement} row
- * @param {Object} values
- */
+/* ==========================================================
+   Update Row UI
+========================================================== */
+
 function updateRowUI(
     row,
     values
 ) {
 
-    if (!row) {
-
+    if (!row)
         return;
 
-    }
-
-    const amountCell =
+    const amountInput =
         row.querySelector(".amount");
 
-    const taxCell =
-        row.querySelector(".tax");
+    if (amountInput) {
 
-    const totalCell =
-        row.querySelector(".total");
-
-    if (amountCell) {
-
-        amountCell.textContent =
-            values.amount.toFixed(
-                DECIMAL_PLACES
-            );
-
-    }
-
-    if (taxCell) {
-
-        taxCell.textContent =
-            values.gstAmount.toFixed(
-                DECIMAL_PLACES
-            );
-
-    }
-
-    if (totalCell) {
-
-        totalCell.textContent =
-            values.total.toFixed(
+        amountInput.value =
+            values.lineTotal.toFixed(
                 DECIMAL_PLACES
             );
 
@@ -284,53 +280,72 @@ function updateRowUI(
 
 }
 
-/**
- * Recalculate one row.
- *
- * @param {HTMLTableRowElement} row
- */
-function recalculateSingleRow(
-    row
-) {
+/* ==========================================================
+   Recalculate One Row
+========================================================== */
 
-    if (!row) {
+function recalculateSingleRow(row) {
 
+    if (!row)
         return null;
 
-    }
-
     const values =
-        calculateRow({
+        calculateRow(
 
-            quantity:
-                row.querySelector(".quantity")?.value,
+            getRowValues(row)
 
-            rate:
-                row.querySelector(".rate")?.value,
-
-            discount:
-                row.querySelector(".discount")?.value,
-
-            gst:
-                row.querySelector(".gst")?.value
-
-        });
+        );
 
     updateRowUI(
+
         row,
+
         values
+
     );
 
     return values;
 
 }
-/*==========================================================
-Invoice Totals Engine
-==========================================================*/
 
-/**
- * Calculate complete invoice totals.
- */
+/* ==========================================================
+   Public Row Recalculation
+========================================================== */
+
+export function recalculateRow(row) {
+
+    return recalculateSingleRow(row);
+
+}
+
+/* ==========================================================
+   Utility
+========================================================== */
+
+export function calculateItem(item) {
+
+    return calculateRow({
+
+        quantity:
+            item.quantity,
+
+        rate:
+            item.rate,
+
+        discount:
+            item.discount,
+
+        gst:
+            item.gst
+
+    });
+
+}
+
+/* ==========================================================
+   Invoice Totals Engine
+========================================================== */
+
 function calculateInvoiceTotals() {
 
     resetTotals();
@@ -339,119 +354,82 @@ function calculateInvoiceTotals() {
 
     for (const item of items) {
 
-        const values = calculateRow(item);
+        const values = calculateItem(item);
 
-        invoiceTotals.subtotal += values.amount;
+        totals.subTotal += values.amount;
 
-        invoiceTotals.discount += values.discountAmount;
+        totals.discount += values.discountAmount;
 
-        invoiceTotals.taxable += values.taxableAmount;
+        totals.taxable += values.taxableAmount;
 
-        invoiceTotals.gst += values.gstAmount;
+        totals.gst += values.gstAmount;
 
-        invoiceTotals.grandTotal += values.total;
+        totals.grandTotal += values.lineTotal;
 
     }
 
-    invoiceTotals.subtotal =
-        roundValue(invoiceTotals.subtotal);
+    totals.subTotal =
+        round(totals.subTotal);
 
-    invoiceTotals.discount =
-        roundValue(invoiceTotals.discount);
+    totals.discount =
+        round(totals.discount);
 
-    invoiceTotals.taxable =
-        roundValue(invoiceTotals.taxable);
+    totals.taxable =
+        round(totals.taxable);
 
-    invoiceTotals.gst =
-        roundValue(invoiceTotals.gst);
+    totals.gst =
+        round(totals.gst);
 
-    invoiceTotals.grandTotal =
-        roundValue(invoiceTotals.grandTotal);
+    totals.grandTotal =
+        round(totals.grandTotal);
 
 }
 
-/**
- * Update invoice totals on screen.
- */
+/* ==========================================================
+   Update Totals UI
+========================================================== */
+
 function updateTotalsUI() {
 
-    const subtotalElement =
-        document.getElementById("subtotal");
+    setValue(
 
-    const discountElement =
-        document.getElementById("discountTotal");
+        "subTotal",
 
-    const taxableElement =
-        document.getElementById("taxableAmount");
+        totals.subTotal
 
-    const gstElement =
-        document.getElementById("gstTotal");
+    );
 
-    const grandTotalElement =
-        document.getElementById("grandTotal");
+    setValue(
 
-    if (subtotalElement) {
+        "discountTotal",
 
-        subtotalElement.textContent =
-            invoiceTotals.subtotal.toFixed(
-                DECIMAL_PLACES
-            );
+        totals.discount
 
-    }
+    );
 
-    if (discountElement) {
+    setValue(
 
-        discountElement.textContent =
-            invoiceTotals.discount.toFixed(
-                DECIMAL_PLACES
-            );
+        "taxTotal",
 
-    }
+        totals.gst
 
-    if (taxableElement) {
+    );
 
-        taxableElement.textContent =
-            invoiceTotals.taxable.toFixed(
-                DECIMAL_PLACES
-            );
+    setValue(
 
-    }
+        "grandTotal",
 
-    if (gstElement) {
+        totals.grandTotal
 
-        gstElement.textContent =
-            invoiceTotals.gst.toFixed(
-                DECIMAL_PLACES
-            );
-
-    }
-
-    if (grandTotalElement) {
-
-        grandTotalElement.textContent =
-            invoiceTotals.grandTotal.toFixed(
-                DECIMAL_PLACES
-            );
-
-    }
+    );
 
 }
 
-/**
- * Recalculate the entire invoice.
- */
-function refreshInvoiceCalculations() {
+/* ==========================================================
+   Refresh Invoice Totals
+========================================================== */
 
-    const rows =
-        document.querySelectorAll(
-            "#invoiceItemsBody tr"
-        );
-
-    rows.forEach((row) => {
-
-        recalculateSingleRow(row);
-
-    });
+export function refreshInvoiceTotals() {
 
     calculateInvoiceTotals();
 
@@ -460,138 +438,84 @@ function refreshInvoiceCalculations() {
     updatePayment();
 
 }
-/*==========================================================
-Event Registration
-==========================================================*/
 
-/**
- * Register calculation events.
- */
-function registerCalculationEvents() {
+/* ==========================================================
+   Get Current Totals
+========================================================== */
 
-    const tableBody =
-        document.getElementById(
-            "invoiceItemsBody"
-        );
-
-    if (!tableBody) {
-
-        return;
-
-    }
-
-    tableBody.addEventListener(
-        "input",
-        (event) => {
-
-            const target =
-                event.target;
-
-            if (!(target instanceof HTMLElement)) {
-
-                return;
-
-            }
-
-            if (
-
-                target.classList.contains("quantity") ||
-
-                target.classList.contains("rate") ||
-
-                target.classList.contains("discount") ||
-
-                target.classList.contains("gst")
-
-            ) {
-
-                const row =
-                    target.closest("tr");
-
-                if (!row) {
-
-                    return;
-
-                }
-
-                recalculateSingleRow(
-                    row
-                );
-
-                calculateInvoiceTotals();
-
-                updateTotalsUI();
-
-            }
-
-        }
-
-    );
-
-}
-
-/*==========================================================
-Public API
-==========================================================*/
-
-/**
- * Initialize calculation module.
- */
-export function initCalculations() {
-
-    registerCalculationEvents();
-
-    refreshInvoiceCalculations();
-
-    console.log(
-        "[Calculations] Module initialized."
-    );
-
-}
-
-/**
- * Recalculate one row.
- *
- * @param {HTMLTableRowElement} row
- */
-export function recalculateRow(
-    row
-) {
-
-    recalculateSingleRow(
-        row
-    );
-
-    calculateInvoiceTotals();
-
-    updateTotalsUI();
-
-    updatePayment();
-
-}
-/**
- * Recalculate complete invoice.
- */
-export function recalculateInvoice() {
-
-    refreshInvoiceCalculations();
-
-}
-
-/**
- * Return current totals.
- *
- * @returns {Object}
- */
 export function getInvoiceTotals() {
 
     return cloneTotals();
 
 }
 
-/**
- * Clear invoice totals.
- */
+/* ==========================================================
+   Get Grand Total
+========================================================== */
+
+export function getGrandTotal() {
+
+    return totals.grandTotal;
+
+}
+
+/* ==========================================================
+   Get Tax Total
+========================================================== */
+
+export function getTaxTotal() {
+
+    return totals.gst;
+
+}
+
+/* ==========================================================
+   Get Discount Total
+========================================================== */
+
+export function getDiscountTotal() {
+
+    return totals.discount;
+
+}
+
+/* ==========================================================
+   Get Sub Total
+========================================================== */
+
+export function getSubTotal() {
+
+    return totals.subTotal;
+
+}
+
+/* ==========================================================
+   Initialize
+========================================================== */
+
+let initialized = false;
+
+export function initializeCalculations() {
+
+    if (initialized)
+        return;
+
+    resetTotals();
+
+    updateTotalsUI();
+
+    initialized = true;
+
+    console.log(
+        "[Calculations] Initialized"
+    );
+
+}
+
+/* ==========================================================
+   Clear Totals
+========================================================== */
+
 export function clearTotals() {
 
     resetTotals();
@@ -601,3 +525,60 @@ export function clearTotals() {
     updatePayment();
 
 }
+
+/* ==========================================================
+   Reset Module
+========================================================== */
+
+export function resetCalculations() {
+
+    initialized = false;
+
+    clearTotals();
+
+}
+
+/* ==========================================================
+   Public Recalculate
+========================================================== */
+
+export function recalculateRow(row) {
+
+    const result =
+        recalculateSingleRow(row);
+
+    refreshInvoiceTotals();
+
+    return result;
+
+}
+
+/* ==========================================================
+   Default Export
+========================================================== */
+
+export default {
+
+    initializeCalculations,
+
+    calculateItem,
+
+    recalculateRow,
+
+    refreshInvoiceTotals,
+
+    getInvoiceTotals,
+
+    getSubTotal,
+
+    getDiscountTotal,
+
+    getTaxTotal,
+
+    getGrandTotal,
+
+    clearTotals,
+
+    resetCalculations
+
+};
