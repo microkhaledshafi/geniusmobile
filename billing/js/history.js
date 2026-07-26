@@ -453,3 +453,83 @@ export async function reloadHistory() {
     await refreshHistory();
 
 }
+
+/* ==========================================================
+   Clear History
+========================================================== */
+
+export function clearHistory() {
+
+    historyData = [];
+
+    if (historyTableBody) {
+
+        historyTableBody.innerHTML = "";
+
+    }
+
+}
+
+/* ==========================================================
+   Destroy History
+========================================================== */
+
+export function destroyHistory() {
+
+    clearHistory();
+
+    closeHistory();
+
+}
+
+/* ==========================================================
+   Set History
+========================================================== */
+
+export function setHistory(invoices = []) {
+
+    historyData = invoices;
+
+    renderHistory(historyData);
+
+}
+
+/* ==========================================================
+   History Count
+========================================================== */
+
+export function getHistoryCount() {
+
+    return historyData.length;
+
+}
+
+/* ==========================================================
+   Public API
+========================================================== */
+
+export default {
+
+    initializeHistory,
+
+    openHistory,
+
+    closeHistory,
+
+    refreshHistory,
+
+    reloadHistory,
+
+    renderHistory,
+
+    clearHistory,
+
+    destroyHistory,
+
+    getHistory,
+
+    setHistory,
+
+    getHistoryCount
+
+};
