@@ -1,380 +1,331 @@
-/*
-=========================================================
-Genius Scientific ERP
-customer.js
-=========================================================
-Customer Management Module
-=========================================================
-*/
+/* ==========================================================
+   Genius Scientific ERP
+   customer.js
+   Part 1
+========================================================== */
 
-import { supabase } from "../supabase.js";
 import { state } from "./state.js";
-import {
-    qs,
-    sanitizeString,
-    isEmpty
-} from "./utils.js";
+
+import { qs } from "./utils.js";
 
 import {
-    showSuccess,
-    showError
-} from "./notifications.js";
+    searchCustomers,
+    getCustomer
+} from "./api.js";
 
-/*=========================================================
-DOM
-=========================================================*/
+let initialized = false;
 
-const customerSelect = () => qs("#customer");
-const gstInput = () => qs("#customerGST");
-const phoneInput = () => qs("#customerPhone");
-const addressInput = () => qs("#customerAddress");
+/* ==========================================================
+   Elements
+========================================================== */
 
-/*=========================================================
-LOAD CUSTOMERS
-=========================================================*/
+let txtCustomerId = null;
+let txtCustomerName = null;
+let txtCustomerPhone = null;
+let txtCustomerEmail = null;
+let txtCustomerAddress = null;
+let txtCustomerGSTIN = null;
 
-export async function loadCustomers() {
+let btnCustomerSearch = null;
+let btnNewCustomer = null;
 
-    try {
+/* ==========================================================
+   Initialize
+========================================================== */
 
-        const { data, error } = await supabase
-            .from("customers")
-            .select("*")
-            .order("customer_name");
+export function initializeCustomer() {
 
-        if (error)
-            throw error;
+    if (initialized) return;
 
-        state.customers = data || [];
+    initialized = true;
 
-        populateCustomerDropdown();
+    cacheElements();
 
-    }
+    registerEvents();
 
-    catch (err) {
-
-        console.error(err);
-
-        showError(err.message);
-
-    }
+    console.log("[Customer] Initialized");
 
 }
 
-/*=========================================================
-POPULATE DROPDOWN
-=========================================================*/
+/* ==========================================================
+   Cache Elements
+========================================================== */
 
-export function populateCustomerDropdown() {
+function cacheElements() {
 
-    const select = customerSelect();
+    txtCustomerId =
+        qs("#customerId");
 
-    if (!select)
-        return;
+    txtCustomerName =
+        qs("#customerName");
 
-    select.innerHTML = "";
+    txtCustomerPhone =
+        qs("#customerPhone");
 
-    const option = document.createElement("option");
+    txtCustomerEmail =
+        qs("#customerEmail");
 
-    option.value = "";
+    txtCustomerAddress =
+        qs("#customerAddress");
 
-    option.textContent = "Select Customer";
+    txtCustomerGSTIN =
+        qs("#customerGSTIN");
 
-    select.appendChild(option);
+    btnCustomerSearch =
+        qs("#btnCustomerSearch");
 
-    state.customers.forEach(customer => {
-
-        const opt = document.createElement("option");
-
-        opt.value = customer.id;
-
-        opt.textContent = customer.customer_name;
-
-        select.appendChild(opt);
-
-    });
+    btnNewCustomer =
+        qs("#btnNewCustomer");
 
 }
 
-/*=========================================================
-GET CUSTOMER
-=========================================================*/
+/* ==========================================================
+   Register Events
+========================================================== */
 
-export function getCustomer(id) {
+function registerEvents() {
 
-    return state.customers.find(customer =>
+    btnCustomerSearch?.addEventListener(
 
-        Number(customer.id) === Number(id)
+        "click",
+
+        openCustomerSearch
+
+    );
+
+    btnNewCustomer?.addEventListener(
+
+        "click",
+
+        clearCustomer
+
+    );
+
+    txtCustomerName?.addEventListener(
+
+    "input",
+
+    onCustomerSearchInput
+
+);
+
+txtCustomerPhone?.addEventListener(
+
+    "input",
+
+    onCustomerSearchInput
+
+);
+
+    txtCustomerName?.addEventListener(
+
+        "change",
+
+        syncCustomerState
+
+    );
+
+    txtCustomerPhone?.addEventListener(
+
+        "change",
+
+        syncCustomerState
+
+    );
+
+    txtCustomerEmail?.addEventListener(
+
+        "change",
+
+        syncCustomerState
+
+    );
+
+    txtCustomerAddress?.addEventListener(
+
+        "change",
+
+        syncCustomerState
+
+    );
+
+    txtCustomerGSTIN?.addEventListener(
+
+        "change",
+
+        syncCustomerState
 
     );
 
 }
 
-/*=========================================================
-SELECT CUSTOMER
-=========================================================*/
+/* ==========================================================
+   Open Customer Search
+========================================================== */
 
-export function selectCustomer(id) {
+async function openCustomerSearch() {
 
-    if (isEmpty(id)) {
+    console.log(
+        "[Customer] Search requested."
+    );
 
-        clearCustomer();
+}
 
+/* ==========================================================
+   Load Customer
+========================================================== */
+
+export async function loadCustomer(customerId) {
+
+    if (!customerId)
         return;
 
-    }
-
-    const customer = getCustomer(id);
+    const customer =
+        await getCustomer(customerId);
 
     if (!customer)
         return;
 
-    state.customer = customer;
-
-    fillCustomer(customer);
+    populateCustomer(customer);
 
 }
 
-/*=========================================================
-FILL DETAILS
-=========================================================*/
+/* ==========================================================
+   Populate Customer
+========================================================== */
 
-export function fillCustomer(customer) {
+function populateCustomer(customer) {
 
-    gstInput().value =
-        customer.gstin || "";
+    txtCustomerId.value =
+        customer.id ?? "";
 
-    phoneInput().value =
-        customer.phone || "";
+    txtCustomerName.value =
+        customer.name ?? "";
 
-    addressInput().value =
-        customer.address || "";
+    txtCustomerPhone.value =
+        customer.phone ?? "";
 
-}
+    txtCustomerEmail.value =
+        customer.email ?? "";
 
-/*=========================================================
-CLEAR
-=========================================================*/
+    txtCustomerAddress.value =
+        customer.address ?? "";
 
-export function clearCustomer() {
+    txtCustomerGSTIN.value =
+        customer.gstin ?? "";
 
-    customerSelect().value = "";
-
-    gstInput().value = "";
-
-    phoneInput().value = "";
-
-    addressInput().value = "";
-
-    state.customer = null;
+    syncCustomerState();
 
 }
 
-/*=========================================================
-SEARCH
-=========================================================*/
+/* ==========================================================
+   Customer Search
+========================================================== */
 
-export function searchCustomer(keyword) {
+let customerResults = [];
 
-    keyword = sanitizeString(keyword).toLowerCase();
+/* ==========================================================
+   Search Customers
+========================================================== */
 
-    if (keyword === "")
-        return state.customers;
-
-    return state.customers.filter(customer =>
-
-        customer.customer_name
-            ?.toLowerCase()
-            .includes(keyword)
-
-        ||
-
-        customer.phone
-            ?.toLowerCase()
-            .includes(keyword)
-
-        ||
-
-        customer.gstin
-            ?.toLowerCase()
-            .includes(keyword)
-
-    );
-
-}
-
-/*=========================================================
-ADD CUSTOMER
-=========================================================*/
-
-export async function addCustomer(customer) {
+export async function searchCustomer(keyword = "") {
 
     try {
 
-        const { data, error } = await supabase
+        customerResults = await searchCustomers(keyword);
 
-            .from("customers")
-
-            .insert(customer)
-
-            .select()
-
-            .single();
-
-        if (error)
-            throw error;
-
-        state.customers.push(data);
-
-        populateCustomerDropdown();
-
-        customerSelect().value = data.id;
-
-        selectCustomer(data.id);
-
-        showSuccess("Customer added successfully");
-
-        return data;
+        renderCustomerResults(customerResults);
 
     }
 
-    catch (err) {
+    catch (error) {
 
-        console.error(err);
-
-        showError(err.message);
-
-        return null;
-
-    }
-
-}
-
-/*=========================================================
-UPDATE CUSTOMER
-=========================================================*/
-
-export async function updateCustomer(id, customer) {
-
-    try {
-
-        const { data, error } = await supabase
-
-            .from("customers")
-
-            .update(customer)
-
-            .eq("id", id)
-
-            .select()
-
-            .single();
-
-        if (error)
-            throw error;
-
-        const index = state.customers.findIndex(
-
-            c => Number(c.id) === Number(id)
-
+        console.error(
+            "[Customer] Search Failed",
+            error
         );
 
-        if (index >= 0)
-
-            state.customers[index] = data;
-
-        populateCustomerDropdown();
-
-        selectCustomer(id);
-
-        showSuccess("Customer updated");
-
-    }
-
-    catch (err) {
-
-        console.error(err);
-
-        showError(err.message);
-
     }
 
 }
 
-/*=========================================================
-DELETE CUSTOMER
-=========================================================*/
+/* ==========================================================
+   Render Customer Results
+========================================================== */
 
-export async function deleteCustomer(id) {
+function renderCustomerResults(customers) {
 
-    if (!confirm("Delete this customer?"))
+    console.log(
+        `[Customer] ${customers.length} customer(s) found.`
+    );
+
+    /*
+        Part 4 will replace this with
+        history/customer modal rendering.
+
+        This function will populate
+
+        customerModal.html
+    */
+
+}
+
+/* ==========================================================
+   Select Customer
+========================================================== */
+
+export function selectCustomer(customer) {
+
+    if (!customer)
         return;
 
-    try {
-
-        const { error } = await supabase
-
-            .from("customers")
-
-            .delete()
-
-            .eq("id", id);
-
-        if (error)
-            throw error;
-
-        state.customers =
-
-            state.customers.filter(
-
-                c => Number(c.id) !== Number(id)
-
-            );
-
-        clearCustomer();
-
-        populateCustomerDropdown();
-
-        showSuccess("Customer deleted");
-
-    }
-
-    catch (err) {
-
-        console.error(err);
-
-        showError(err.message);
-
-    }
+    populateCustomer(customer);
 
 }
 
-/*=========================================================
-EVENTS
-=========================================================*/
+/* ==========================================================
+   Select Customer By Id
+========================================================== */
 
-function registerEvents() {
+export async function selectCustomerById(id) {
 
-    customerSelect()?.addEventListener(
+    if (!id)
+        return;
 
-        "change",
+    const customer =
+        await getCustomer(id);
 
-        e => {
+    if (!customer)
+        return;
 
-            selectCustomer(e.target.value);
+    populateCustomer(customer);
 
-        }
+}
 
+/* ==========================================================
+   Customer Search Input
+========================================================== */
+
+export async function onCustomerSearchInput(event) {
+
+    const keyword =
+        event.target.value.trim();
+
+    await searchCustomer(keyword);
+
+}
+
+/* ==========================================================
+   Search Button
+========================================================== */
+
+async function openCustomerSearch() {
+
+    await searchCustomer("");
+
+    console.log(
+        "[Customer] Open Search Modal"
     );
 
 }
 
-/*=========================================================
-INIT
-=========================================================*/
-
-export function initCustomer() {
-
-    registerEvents();
-
-}
