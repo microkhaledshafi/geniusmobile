@@ -1,17 +1,13 @@
-/*
-=========================================================
-Genius Scientific ERP
-startup.js
-=========================================================
-Application Startup
-=========================================================
-*/
+/* ==========================================================
+   Genius Scientific ERP
+   startup.js
+========================================================== */
 
-import { initializeState } from "./state.js";
-
-import { loadCustomers, initCustomer } from "./customer.js";
+import { initializeAPI } from "./api.js";
 
 import { initializeInvoice } from "./invoice.js";
+
+import { initializeCustomer } from "./customer.js";
 
 import { initializeProductSearch } from "./productSearch.js";
 
@@ -21,111 +17,130 @@ import { initializeCalculations } from "./calculations.js";
 
 import { initializePayment } from "./payment.js";
 
-import { initializeDashboard } from "./dashboard.js";
+import { initializeSaveInvoice } from "./saveInvoice.js";
 
 import { initializeHistory } from "./history.js";
 
+import { initializeEditInvoice } from "./editInvoice.js";
+
+import { initializeDeleteInvoice } from "./deleteInvoice.js";
+
+import { initializeDashboard } from "./dashboard.js";
+
 import { initializeKeyboard } from "./keyboard.js";
 
-import {
-    showSuccess,
-    showError
-} from "./notifications.js";
+import { initializeValidation } from "./validation.js";
 
-/*=========================================================
-START BILLING
-=========================================================*/
+import { initializeNotifications } from "./notifications.js";
 
-export async function startBilling() {
+let initialized = false;
+
+/* ==========================================================
+   Startup
+========================================================== */
+
+export async function startup() {
+
+    if (initialized)
+        return;
 
     try {
 
-        console.log("Starting Genius Scientific ERP...");
+        await initializeAPI();
 
-        /*----------------------------------------------
-        Initialize Global State
-        ----------------------------------------------*/
+        initializeNotifications();
 
-        initializeState();
+        initializeValidation();
 
-        /*----------------------------------------------
-        Customers
-        ----------------------------------------------*/
+        initializeInvoice();
 
-        await loadCustomers();
+        initializeCustomer();
 
-        initCustomer();
+        initializeProductSearch();
 
-        /*----------------------------------------------
-        Invoice
-        ----------------------------------------------*/
+        initializeInvoiceTable();
 
-        if (typeof initializeInvoice === "function")
-            initializeInvoice();
+        initializeCalculations();
 
-        /*----------------------------------------------
-        Products
-        ----------------------------------------------*/
+        initializePayment();
 
-        if (typeof initializeProductSearch === "function")
-            await initializeProductSearch();
+        initializeSaveInvoice();
 
-        /*----------------------------------------------
-        Invoice Table
-        ----------------------------------------------*/
+        initializeHistory();
 
-        if (typeof initializeInvoiceTable === "function")
-            initializeInvoiceTable();
+        initializeEditInvoice();
 
-        /*----------------------------------------------
-        Calculations
-        ----------------------------------------------*/
+        initializeDeleteInvoice();
 
-        if (typeof initializeCalculations === "function")
-            initializeCalculations();
+        await initializeDashboard();
 
-        /*----------------------------------------------
-        Payment
-        ----------------------------------------------*/
+        initializeKeyboard();
 
-        if (typeof initializePayment === "function")
-            initializePayment();
+        initialized = true;
 
-        /*----------------------------------------------
-        Dashboard
-        ----------------------------------------------*/
+        console.log(
 
-        if (typeof initializeDashboard === "function")
-            await initializeDashboard();
+            "[Startup] Billing application initialized"
 
-        /*----------------------------------------------
-        History
-        ----------------------------------------------*/
-
-        if (typeof initializeHistory === "function")
-            initializeHistory();
-
-        /*----------------------------------------------
-        Keyboard
-        ----------------------------------------------*/
-
-        if (typeof initializeKeyboard === "function")
-            initializeKeyboard();
-
-        console.log("ERP Loaded Successfully");
-
-        if (typeof showSuccess === "function")
-            showSuccess("Billing System Ready");
+        );
 
     }
 
     catch (error) {
 
-        console.error(error);
+        console.error(
 
-        if (typeof showError === "function")
-            showError(error.message);
+            "[Startup]",
+
+            error
+
+        );
+
+        throw error;
 
     }
 
 }
+
+/* ==========================================================
+   Shutdown
+========================================================== */
+
+export function shutdown() {
+
+    if (!initialized)
+        return;
+
+    initialized = false;
+
+    console.log(
+
+        "[Startup] Billing application stopped"
+
+    );
+
+}
+
+/* ==========================================================
+   Status
+========================================================== */
+
+export function isInitialized() {
+
+    return initialized;
+
+}
+
+/* ==========================================================
+   Default Export
+========================================================== */
+
+export default {
+
+    startup,
+
+    shutdown,
+
+    isInitialized
+
+};
