@@ -9,8 +9,15 @@ import { state } from "./state.js";
 import { qs } from "./utils.js";
 
 import {
+
     searchCustomers,
-    getCustomer
+
+    getCustomer,
+
+    createCustomer,
+
+    updateCustomer
+
 } from "./api.js";
 
 let initialized = false;
@@ -328,4 +335,241 @@ async function openCustomerSearch() {
     );
 
 }
+
+/* ==========================================================
+   Create Customer
+========================================================== */
+
+export async function saveCustomer() {
+
+    const customer = getCustomerData();
+
+    if (!validateCustomer(customer))
+        return null;
+
+    let savedCustomer;
+
+    if (customer.id) {
+
+        savedCustomer = await updateCustomer(
+
+            customer.id,
+
+            customer
+
+        );
+
+    }
+
+    else {
+
+        savedCustomer = await createCustomer(
+
+            customer
+
+        );
+
+    }
+
+    populateCustomer(savedCustomer);
+
+    return savedCustomer;
+
+}
+
+/* ==========================================================
+   Get Customer Data
+========================================================== */
+
+export function getCustomerData() {
+
+    return {
+
+        id: txtCustomerId?.value.trim() || "",
+
+        name: txtCustomerName?.value.trim() || "",
+
+        phone: txtCustomerPhone?.value.trim() || "",
+
+        email: txtCustomerEmail?.value.trim() || "",
+
+        address: txtCustomerAddress?.value.trim() || "",
+
+        gstin: txtCustomerGSTIN?.value.trim() || ""
+
+    };
+
+}
+
+/* ==========================================================
+   Sync Customer State
+========================================================== */
+
+export function syncCustomerState() {
+
+    state.customer = getCustomerData();
+
+}
+
+/* ==========================================================
+   Clear Customer
+========================================================== */
+
+export function clearCustomer() {
+
+    txtCustomerId.value = "";
+
+    txtCustomerName.value = "";
+
+    txtCustomerPhone.value = "";
+
+    txtCustomerEmail.value = "";
+
+    txtCustomerAddress.value = "";
+
+    txtCustomerGSTIN.value = "";
+
+    syncCustomerState();
+
+}
+
+/* ==========================================================
+   Validation
+========================================================== */
+
+export function validateCustomer(customer = getCustomerData()) {
+
+    if (!customer.name) {
+
+        console.warn(
+            "[Customer] Name is required."
+        );
+
+        return false;
+
+    }
+
+    return true;
+
+}
+
+/* ==========================================================
+   Refresh Customer
+========================================================== */
+
+export function refreshCustomer() {
+
+    syncCustomerState();
+
+}
+
+/* ==========================================================
+   Reset Customer
+========================================================== */
+
+export function resetCustomer() {
+
+    clearCustomer();
+
+}
+
+/* ==========================================================
+   Load Customer From Object
+========================================================== */
+
+export function loadCustomerData(customer = {}) {
+
+    txtCustomerId.value =
+        customer.id ?? "";
+
+    txtCustomerName.value =
+        customer.name ?? "";
+
+    txtCustomerPhone.value =
+        customer.phone ?? "";
+
+    txtCustomerEmail.value =
+        customer.email ?? "";
+
+    txtCustomerAddress.value =
+        customer.address ?? "";
+
+    txtCustomerGSTIN.value =
+        customer.gstin ?? "";
+
+    syncCustomerState();
+
+}
+
+/* ==========================================================
+   Get Selected Customer
+========================================================== */
+
+export function getSelectedCustomer() {
+
+    return state.customer;
+
+}
+
+/* ==========================================================
+   Customer Exists
+========================================================== */
+
+export function hasCustomer() {
+
+    return !!state.customer?.id;
+
+}
+
+/* ==========================================================
+   Destroy Customer Module
+========================================================== */
+
+export function destroyCustomer() {
+
+    resetCustomer();
+
+}
+
+/* ==========================================================
+   Public API
+========================================================== */
+
+export default {
+
+    initializeCustomer,
+
+    searchCustomer,
+
+    selectCustomer,
+
+    selectCustomerById,
+
+    loadCustomer,
+
+    loadCustomerData,
+
+    saveCustomer,
+
+    getCustomerData,
+
+    getSelectedCustomer,
+
+    syncCustomerState,
+
+    validateCustomer,
+
+    refreshCustomer,
+
+    clearCustomer,
+
+    resetCustomer,
+
+    hasCustomer,
+
+    destroyCustomer
+
+};
+
+
 
