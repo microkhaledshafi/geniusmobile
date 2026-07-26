@@ -4,136 +4,308 @@
    Part 1
 ========================================================== */
 
-import { supabase } from "../supabase.js";
+import {
 
-import { state } from "./state.js";
+    saveInvoiceHeader,
+    saveInvoiceItems,
+    updateProductStock
+
+} from "./api.js";
 
 import {
-    validateInvoiceHeader,
-    syncInvoiceHeader
-} from "./invoice.js";
 
-import {
-    syncInvoiceItems,
-    getInvoiceItems
+    getInvoiceItems,
+    validateInvoiceItems
+
 } from "./invoiceTable.js";
 
 import {
-    savePaymentState
-} from "./payment.js";
 
-import {
     getInvoiceTotals
+
 } from "./calculations.js";
 
 import {
-    showSuccess,
-    showError
-} from "./notifications.js";
 
-let initialized = false;
+    getPaymentState,
+    validatePayment
 
-let btnSave = null;
+} from "./payment.js";
 
 /* ==========================================================
-   Initialize
+   Module State
 ========================================================== */
 
-export function initializeSaveInvoice() {
+const saveState = {
 
-    if (initialized) return;
+    initialized: false,
 
-    initialized = true;
+    saving: false,
 
-    btnSave =
-        document.getElementById("btnSaveInvoice");
+    invoiceId: null
 
-    btnSave?.addEventListener(
-        "click",
-        saveInvoice
-    );
+};
 
-    console.log("[Save Invoice] Initialized");
+/* ==========================================================
+   Helpers
+========================================================== */
+
+function qs(id) {
+
+    return document.getElementById(id);
+
+}
+
+function value(id) {
+
+    return qs(id)?.value?.trim() || "";
 
 }
 
 /* ==========================================================
-   Main Save
+   Collect Invoice Header
 ========================================================== */
 
-export async function saveInvoice() {
+function buildInvoiceHeader() {
 
-    try {
+    const totals = getInvoiceTotals();
 
-        if (!validateBeforeSave())
-            return;
+    const payment = getPaymentState();
 
-        buildInvoiceState();
+    return {
 
-       await saveInvoiceHeader();
+        invoiceNumber:
 
-await saveInvoiceItems();
+            value("invoiceNumber"),
 
-await afterSave();
+        invoiceDate:
 
-showSuccess(
-    "Invoice saved successfully."
-);
+            value("invoiceDate"),
 
-    }
+        invoiceReference:
 
-    catch (error) {
+            value("invoiceReference"),
 
-        console.error(error);
+        customerId:
 
-        showError(
-            error.message ||
-            "Unable to save invoice."
-        );
+            value("customerId"),
 
-    }
+        salesPerson:
+
+            value("salesPerson"),
+
+        remarks:
+
+            value("invoiceRemarks"),
+
+        subTotal:
+
+            totals.subTotal,
+
+        discount:
+
+            totals.discount,
+
+        tax:
+
+            totals.gst,
+
+        grandTotal:
+
+            totals.grandTotal,
+
+        paymentMode:
+
+            payment.paymentMode,
+
+        amountReceived:
+
+            payment.amountReceived,
+
+        balanceAmount:
+
+            payment.balanceAmount,
+
+        changeAmount:
+
+            payment.changeAmount,
+
+        paymentStatus:
+
+            payment.paymentStatus
+
+    };
 
 }
 
 /* ==========================================================
-   Validation
+   Validate Customer
 ========================================================== */
 
-function validateBeforeSave() {
+function validateCustomer() {
 
-    if (!validateInvoiceHeader())
-        return false;
+    const customerId = value("customerId");
 
-    syncInvoiceItems();
+    if (!customerId) {
 
-    if (state.invoiceItems.length === 0) {
+        return {
 
-        showError(
-            "Invoice contains no items."
-        );
+            valid: false,
 
-        return false;
+            message: "Please select a customer."
+
+        };
 
     }
 
-    return true;
+    return {
+
+        valid: true
+
+    };
 
 }
 
 /* ==========================================================
-   Build State
+   Validate Invoice Header
 ========================================================== */
 
-function buildInvoiceState() {
+function validateInvoiceHeader(header) {
 
-    syncInvoiceHeader();
+    if (!header.invoiceNumber) {
 
-    syncInvoiceItems();
+        return {
 
-    savePaymentState();
+            valid: false,
 
-    state.totals =
-        getInvoiceTotals();
+            message: "Invoice number is required."
+
+        };
+
+    }
+
+    if (!header.invoiceDate) {
+
+        return {
+
+            valid: false,
+
+            message: "Invoice date is required."
+
+        };
+
+    }
+
+    return {
+
+        valid: true
+
+    };
+
+}
+
+/* ==========================================================
+   Validate Complete Invoice
+========================================================== */
+
+function validateInvoice() {
+
+    const header = buildInvoiceHeader();
+
+    const headerValidation =
+
+        validateInvoiceHeader(header);
+
+    if (!headerValidation.valid)
+        return headerValidation;
+
+    const customerValidation =
+
+        validateCustomer();
+
+    if (!customerValidation.valid)
+        return customerValidation;
+
+    const itemValidation =
+
+        validateInvoiceItems();
+
+    if (!itemValidation.valid)
+        return itemValidation;
+
+    const paymentValidation =
+
+        validatePayment();
+
+    if (!paymentValidation.valid)
+        return {
+
+            valid: false,
+
+            message: "Payment information is invalid."
+
+        };
+
+    return {
+
+        valid: true,
+
+        header
+
+    };
+
+}
+
+/* ==========================================================
+   Collect Invoice Items
+========================================================== */
+
+function buildInvoiceItems() {
+
+    return getInvoiceItems()
+
+        .filter(item =>
+
+            item.productId
+
+        )
+
+        .map(item => ({
+
+            ...item
+
+        }));
+
+}
+
+/* ==========================================================
+   Prepare Save Data
+========================================================== */
+
+function prepareInvoiceData() {
+
+    const validation =
+
+        validateInvoice();
+
+    if (!validation.valid)
+        return validation;
+
+    const items =
+
+        buildInvoiceItems();
+
+    return {
+
+        valid: true,
+
+        header:
+
+            validation.header,
+
+        items
+
+    };
 
 }
 
@@ -141,269 +313,156 @@ function buildInvoiceState() {
    Save Invoice Header
 ========================================================== */
 
-async function saveInvoiceHeader() {
+async function saveHeader(header) {
 
-    const invoiceData = {
-
-        invoice_number: state.invoice.invoiceNumber,
-
-        invoice_date: state.invoice.invoiceDate,
-
-        customer_id: state.customer?.id || null,
-
-        customer_name: state.customer?.name || "",
-
-        customer_phone: state.customer?.phone || "",
-
-        subtotal: state.totals.subtotal,
-
-        discount: state.totals.discount,
-
-        tax: state.totals.tax,
-
-        grand_total: state.totals.grandTotal,
-
-        payment_mode: state.payment.mode,
-
-        payment_status: state.payment.status,
-
-        amount_received: state.payment.amountReceived,
-
-        balance: state.payment.balance,
-
-        change_amount: state.payment.change
-
-    };
-
-    /* ---------- UPDATE ---------- */
-
-    if (state.currentInvoiceId) {
-
-        const { error } = await supabase
-
-            .from("invoices")
-
-            .update(invoiceData)
-
-            .eq("id", state.currentInvoiceId);
-
-        if (error) throw error;
-
-        return;
-
-    }
-
-    /* ---------- INSERT ---------- */
-
-    const { data, error } = await supabase
-
-        .from("invoices")
-
-        .insert(invoiceData)
-
-        .select()
-
-        .single();
-
-    if (error) throw error;
-
-    state.currentInvoiceId = data.id;
+    return await saveInvoiceHeader(header);
 
 }
 
 /* ==========================================================
-   Save Items
+   Save Invoice Items
 ========================================================== */
 
-async function saveInvoiceItems() {
+async function saveItems(invoiceId, items) {
 
-    if (!state.currentInvoiceId)
-        throw new Error("Invoice ID missing.");
+    const invoiceItems =
 
-    /* ---------- Editing Existing ---------- */
+        items.map(item => ({
 
-    if (state.editMode) {
+            invoiceId,
 
-        const { error } = await supabase
+            ...item
 
-            .from("invoice_items")
+        }));
 
-            .delete()
+    return await saveInvoiceItems(
 
-            .eq("invoice_id", state.currentInvoiceId);
+        invoiceItems
 
-        if (error) throw error;
-
-    }
-
-    const rows = getInvoiceItems();
-
-    const items = rows.map(item => ({
-
-        invoice_id: state.currentInvoiceId,
-
-        product_id: item.productId,
-
-        product_name: item.productName,
-
-        hsn_code: item.hsnCode,
-
-        quantity: item.quantity,
-
-        unit: item.unit,
-
-        rate: item.rate,
-
-        discount: item.discount,
-
-        tax_percent: item.tax,
-
-        amount: item.amount
-
-    }));
-
-    if (items.length === 0)
-        return;
-
-    const { error } = await supabase
-
-        .from("invoice_items")
-
-        .insert(items);
-
-    if (error)
-        throw error;
-
-}
-
-/* ==========================================================
-   Save Complete
-========================================================== */
-
-async function finalizeSave() {
-
-    state.editMode = false;
-
-    state.selectedInvoice = null;
-
-    console.log(
-        "[Save Invoice] Completed"
     );
 
 }
 
 /* ==========================================================
-   Post Save Operations
+   Update Product Stock
 ========================================================== */
 
-async function afterSave() {
+async function updateStock(items) {
 
-    finalizeSave();
+    for (const item of items) {
 
-    await refreshApplication();
-
-    resetInvoiceForm();
+    await updateProductStock(
+        item.productId,
+        item.qty
+    );
 
 }
 
+
 /* ==========================================================
-   Refresh Application
+   Save Complete Invoice
 ========================================================== */
 
-async function refreshApplication() {
+export async function saveInvoice() {
 
-    try {
+    if (saveState.saving) {
 
-        const dashboardModule = await import("./dashboard.js");
-        dashboardModule.refreshDashboard?.();
+        return {
 
-    } catch (error) {
+            success: false,
 
-        console.warn("[Save Invoice] Dashboard refresh skipped.", error);
+            message: "Invoice is already being saved."
+
+        };
 
     }
 
+    saveState.saving = true;
+
     try {
 
-        const historyModule = await import("./history.js");
-        historyModule.refreshHistory?.();
+        const data =
 
-    } catch (error) {
+            prepareInvoiceData();
 
-        console.warn("[Save Invoice] History refresh skipped.", error);
+        if (!data.valid) {
+
+            return {
+
+                success: false,
+
+                message: data.message
+
+            };
+
+        }
+
+        const invoiceId =
+
+            await saveHeader(
+
+                data.header
+
+            );
+
+        saveState.invoiceId =
+
+            invoiceId;
+
+        await saveItems(
+
+            invoiceId,
+
+            data.items
+
+        );
+
+        await updateStock(
+
+            data.items
+
+        );
+
+        return {
+
+            success: true,
+
+            invoiceId
+
+        };
+
+    }
+
+    catch (error) {
+
+        console.error(
+
+            "[Save Invoice]",
+
+            error
+
+        );
+
+        return {
+
+            success: false,
+
+            message:
+
+                error.message ||
+
+                "Unable to save invoice."
+
+        };
+
+    }
+
+    finally {
+
+        saveState.saving = false;
 
     }
 
 }
 
-/* ==========================================================
-   Reset Invoice
-========================================================== */
-
-function resetInvoiceForm() {
-
-    state.currentInvoiceId = null;
-
-    state.editMode = false;
-
-    state.selectedInvoice = null;
-
-    state.invoiceItems = [];
-
-    state.customer = {};
-
-    state.payment = {};
-
-    state.totals = {};
-
-}
-
-/* ==========================================================
-   Save And Reset
-========================================================== */
-
-export async function saveAndReset() {
-
-    await saveInvoice();
-
-    resetInvoiceForm();
-
-}
-
-/* ==========================================================
-   Save And New Invoice
-========================================================== */
-
-export async function saveAndNew() {
-
-    await saveInvoice();
-
-    try {
-
-        const invoiceModule = await import("./invoice.js");
-
-        invoiceModule.createNewInvoice?.();
-
-    } catch (error) {
-
-        console.warn("[Save Invoice] Unable to create new invoice.", error);
-
-    }
-
-}
-
-/* ==========================================================
-   Public API
-========================================================== */
-
-export default {
-
-    initializeSaveInvoice,
-
-    saveInvoice,
-
-    saveAndReset,
-
-    saveAndNew
-
-};
+await updateInvoiceStock(data.items);
