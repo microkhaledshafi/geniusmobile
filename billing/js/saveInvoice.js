@@ -70,13 +70,15 @@ export async function saveInvoice() {
 
         buildInvoiceState();
 
-        await saveInvoiceHeader();
+       await saveInvoiceHeader();
 
-        await saveInvoiceItems();
+await saveInvoiceItems();
 
-        showSuccess(
-            "Invoice saved successfully."
-        );
+await afterSave();
+
+showSuccess(
+    "Invoice saved successfully."
+);
 
     }
 
