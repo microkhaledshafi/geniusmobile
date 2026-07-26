@@ -9,6 +9,9 @@ import { qs } from "./utils.js";
 import {
     getInvoices
 } from "./api.js";
+import { editInvoice } from "./editInvoice.js";
+
+import { deleteInvoice } from "./deleteInvoice.js"
 
 let initialized = false;
 
@@ -66,7 +69,7 @@ function cacheElements() {
         qs("#btnHistoryClose");
 
     txtHistorySearch =
-        qs("#historySearch");
+        qs("#txtHistorySearch");
 
     historyTableBody =
         qs("#historyTableBody");
@@ -328,9 +331,7 @@ function onSearchInput(event) {
    History Actions
 ========================================================== */
 
-import { editInvoice } from "./editInvoice.js";
 
-import { deleteInvoice } from "./deleteInvoice.js";
 
 /* ==========================================================
    Register Table Events
