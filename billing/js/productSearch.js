@@ -1,42 +1,147 @@
-import { supabase } from "../supabase.js";
-import { state } from "./state.js";
-import { qs, qsa } from "./utils.js";
-import { recalculateRow } from "./calculations.js";
-import { showError } from "./notifications.js";
+/* ==========================================================
+   Genius Scientific ERP
+   productSearch.js
+   Part 1
+   Product Search Engine
+========================================================== */
+
+import {
+
+    searchProducts,
+    getProductByBarcode
+
+} from "./api.js";
+
+import { qs } from "./utils.js";
+
+import {
+    fillRow
+} from "./invoiceTable.js";
+
+import {
+
+    showError
+
+} from "./notifications.js";
+
+/* ==========================================================
+   Module State
+========================================================== */
+
+let initialized = false;
 
 let productCache = [];
+
 let filteredProducts = [];
+
 let selectedRow = null;
+
 let highlightedIndex = 0;
 
-/* ============================================================
+let modal = null;
+
+/* ==========================================================
    Initialize
-============================================================ */
+========================================================== */
 
 export async function initializeProductSearch() {
 
-    await loadProducts();
+    if (initialized)
+        return;
+
+    modal = bootstrap.Modal.getOrCreateInstance(
+
+        qs("#productModal")
+
+    );
 
     registerEvents();
 
+    await refreshProducts();
+
+    initialized = true;
+
+    console.log("[ProductSearch] Initialized");
+
 }
 
-/* ============================================================
-   Load Products
-============================================================ */
+/* ==========================================================
+   Register Events
+========================================================== */
 
-async function loadProducts() {
+function registerEvents() {
+
+    const txtSearch = qs("#txtProductSearch");
+
+    txtSearch?.addEventListener(
+
+        "input",
+
+        event => {
+
+            filterProducts(
+
+                event.target.value
+
+            );
+
+        }
+
+    );
+
+    txtSearch?.addEventListener(
+
+        "keydown",
+
+        handleKeyboard
+
+    );
+
+    qs("#btnSearchProduct")
+
+        ?.addEventListener(
+
+            "click",
+
+            () => {
+
+                filterProducts(
+
+                    txtSearch.value
+
+                );
+
+            }
+
+        );
+
+    document.addEventListener(
+
+        "click",
+
+        handleProductClick
+
+    );
+
+}
+
+/* ==========================================================
+   Refresh Products
+========================================================== */
+
+export async function refreshProducts() {
 
     try {
 
-        const { data, error } = await supabase
-            .from("products")
-            .select("*")
-            .order("product_name");
+        productCache =
 
-        if (error) throw error;
+            await searchProducts("");
 
-        productCache = data || [];
+        filteredProducts =
+
+            [...productCache];
+
+        renderProducts();
 
     }
 
@@ -44,43 +149,19 @@ async function loadProducts() {
 
         console.error(error);
 
-        showError("Unable to load products.");
+        showError(
+
+            "Unable to load products."
+
+        );
 
     }
 
 }
 
-/* ============================================================
-   Register Events
-============================================================ */
-
-function registerEvents() {
-
-    const searchInput = qs("#productSearchInput");
-
-    if (searchInput) {
-
-        searchInput.addEventListener("input", (event) => {
-
-            filterProducts(event.target.value);
-
-        });
-
-    }
-
-    const closeButton = qs("#btnCloseProductSearch");
-
-    if (closeButton) {
-
-        closeButton.addEventListener("click", closeProductSearch);
-
-    }
-
-}
-
-/* ============================================================
+/* ==========================================================
    Open Product Search
-============================================================ */
+========================================================== */
 
 export function openProductSearch(row) {
 
@@ -88,66 +169,59 @@ export function openProductSearch(row) {
 
     highlightedIndex = 0;
 
-    filteredProducts = [...productCache];
+    filteredProducts =
 
-    renderProductList();
+        [...productCache];
 
-    const modalElement = qs("#productSearchModal");
-
-    if (!modalElement)
-        return;
-
-    const modal =
-        bootstrap.Modal.getOrCreateInstance(modalElement);
+    renderProducts();
 
     modal.show();
 
-    const searchInput = qs("#productSearchInput");
+    const input =
 
-    if (searchInput) {
+        qs("#txtProductSearch");
 
-        searchInput.value = "";
+    if (input) {
 
-        setTimeout(() => searchInput.focus(), 200);
+        input.value = "";
+
+        setTimeout(() => {
+
+            input.focus();
+
+        }, 150);
 
     }
 
 }
 
-/* ============================================================
+/* ==========================================================
    Close Product Search
-============================================================ */
+========================================================== */
 
 export function closeProductSearch() {
 
-    const modalElement = qs("#productSearchModal");
-
-    if (!modalElement)
-        return;
-
-    bootstrap.Modal
-        .getOrCreateInstance(modalElement)
-        .hide();
+    modal.hide();
 
 }
 
-/* ============================================================
+/* ==========================================================
    Filter Products
-============================================================ */
+========================================================== */
 
-function filterProducts(keyword) {
+function filterProducts(searchText = "") {
 
-    keyword = keyword
+    const keyword = searchText
         .trim()
         .toLowerCase();
 
-    if (!keyword.length) {
+    if (!keyword) {
 
         filteredProducts = [...productCache];
 
         highlightedIndex = 0;
 
-        renderProductList();
+        renderProducts();
 
         return;
 
@@ -157,25 +231,31 @@ function filterProducts(keyword) {
 
         return (
 
-            (product.product_name || "")
+            String(product.product_name ?? "")
                 .toLowerCase()
                 .includes(keyword)
 
             ||
 
-            (product.product_code || "")
+            String(product.barcode ?? "")
                 .toLowerCase()
                 .includes(keyword)
 
             ||
 
-            (product.barcode || "")
+            String(product.product_code ?? "")
                 .toLowerCase()
                 .includes(keyword)
 
             ||
 
-            (product.hsn_code || "")
+            String(product.hsn_code ?? "")
+                .toLowerCase()
+                .includes(keyword)
+
+            ||
+
+            String(product.batch ?? "")
                 .toLowerCase()
                 .includes(keyword)
 
@@ -185,15 +265,15 @@ function filterProducts(keyword) {
 
     highlightedIndex = 0;
 
-    renderProductList();
+    renderProducts();
 
 }
 
-/* ============================================================
-   Render Product List
-============================================================ */
+/* ==========================================================
+   Render Products
+========================================================== */
 
-function renderProductList() {
+function renderProducts() {
 
     const tbody = qs("#productSearchResults");
 
@@ -206,170 +286,184 @@ function renderProductList() {
 
         tbody.innerHTML = `
 
-            <tr>
+<tr>
 
-                <td
-                    colspan="7"
-                    class="text-center text-muted py-4">
+<td colspan="8"
+class="text-center text-muted py-4">
 
-                    No products found
+No products found
 
-                </td>
+</td>
 
-            </tr>
+</tr>
 
-        `;
+`;
 
         return;
 
     }
 
-    filteredProducts.forEach((product, index) => {
+    filteredProducts.forEach(
 
-        const row = document.createElement("tr");
+        (product, index) => {
 
-        if (index === highlightedIndex)
-            row.classList.add("table-primary");
+            tbody.appendChild(
 
-        row.dataset.index = index;
+                createProductRow(
 
-        row.innerHTML = `
+                    product,
 
-            <td>${product.product_code ?? ""}</td>
+                    index
 
-            <td>${product.product_name ?? ""}</td>
+                )
 
-            <td>${product.batch ?? ""}</td>
+            );
 
-            <td>${product.stock ?? 0}</td>
+        }
 
-            <td>${product.rate ?? 0}</td>
+    );
 
-            <td>${product.gst ?? 0}%</td>
+}
 
-            <td>
+/* ==========================================================
+   Create Product Row
+========================================================== */
 
-                <button
-                    class="btn btn-success btn-sm select-product">
+function createProductRow(product, index) {
 
-                    Select
+    const tr = document.createElement("tr");
 
-                </button>
+    tr.dataset.index = index;
 
-            </td>
+    tr.className =
+        index === highlightedIndex
+            ? "table-primary"
+            : "";
 
-        `;
+    tr.innerHTML = `
 
-        tbody.appendChild(row);
+<td>${product.barcode ?? ""}</td>
+
+<td>${product.product_name ?? ""}</td>
+
+<td>${product.batch ?? ""}</td>
+
+<td>${product.hsn_code ?? ""}</td>
+
+<td class="text-end">
+
+${Number(product.mrp ?? 0).toFixed(2)}
+
+</td>
+
+<td class="text-end">
+
+${Number(product.rate ?? 0).toFixed(2)}
+
+</td>
+
+<td class="text-center">
+
+${Number(product.gst ?? 0)}%
+
+</td>
+
+<td class="text-center">
+
+${product.stock ?? "-"}
+
+</td>
+
+`;
+
+    tr.addEventListener(
+
+        "mouseenter",
+
+        () => {
+
+            highlightedIndex = index;
+
+            refreshHighlight();
+
+        }
+
+    );
+
+    tr.addEventListener(
+
+        "dblclick",
+
+        () => {
+
+            selectHighlightedProduct();
+
+        }
+
+    );
+
+    return tr;
+
+}
+
+/* ==========================================================
+   Refresh Highlight
+========================================================== */
+
+function refreshHighlight() {
+
+    const rows =
+
+        qs("#productSearchResults")
+            ?.querySelectorAll("tr");
+
+    if (!rows)
+        return;
+
+    rows.forEach((row, index) => {
+
+        row.classList.toggle(
+
+            "table-primary",
+
+            index === highlightedIndex
+
+        );
 
     });
 
 }
 
-/* ============================================================
-   Product Selection Events
-============================================================ */
+/* ==========================================================
+   Scroll Highlight Into View
+========================================================== */
 
-document.addEventListener("click", (event) => {
+function scrollHighlightedIntoView() {
 
-    const button = event.target.closest(".select-product");
+    const rows =
 
-    if (!button) return;
+        qs("#productSearchResults")
+            ?.querySelectorAll("tr");
 
-    const row = button.closest("tr");
-
-    if (!row) return;
-
-    const index = Number(row.dataset.index);
-
-    selectProduct(index);
-
-});
-
-document.addEventListener("dblclick", (event) => {
-
-    const row = event.target.closest("#productSearchResults tr");
-
-    if (!row) return;
-
-    selectProduct(Number(row.dataset.index));
-
-});
-
-/* ============================================================
-   Select Product
-============================================================ */
-
-function selectProduct(index) {
-
-    const product = filteredProducts[index];
-
-    if (!product || !selectedRow)
+    if (!rows?.length)
         return;
 
-    fillInvoiceRow(product);
+    rows[highlightedIndex]
+        ?.scrollIntoView({
 
-    closeProductSearch();
+            block: "nearest"
 
-}
-
-/* ============================================================
-   Fill Invoice Row
-============================================================ */
-
-function fillInvoiceRow(product) {
-
-    selectedRow.querySelector(".product-id").value =
-        product.id ?? "";
-
-    selectedRow.querySelector(".product-name").value =
-        product.product_name ?? "";
-
-    selectedRow.querySelector(".batch").value =
-        product.batch ?? "";
-
-    selectedRow.querySelector(".expiry").value =
-        product.expiry ?? "";
-
-    selectedRow.querySelector(".hsn").value =
-        product.hsn_code ?? "";
-
-    selectedRow.querySelector(".quantity").value = 1;
-
-    selectedRow.querySelector(".free").value = 0;
-
-    selectedRow.querySelector(".rate").value =
-        Number(product.rate ?? 0);
-
-    selectedRow.querySelector(".discount").value =
-        Number(product.discount ?? 0);
-
-    selectedRow.querySelector(".gst").value =
-        Number(product.gst ?? 0);
-
-    recalculateRow(selectedRow);
-
-    const qty = selectedRow.querySelector(".quantity");
-
-    if (qty) {
-
-        qty.focus();
-
-        qty.select();
-
-    }
+        });
 
 }
 
-/* ============================================================
+/* ==========================================================
    Keyboard Navigation
-============================================================ */
+========================================================== */
 
-document.addEventListener("keydown", (event) => {
+function handleKeyboard(event) {
 
-    const modal = qs("#productSearchModal");
-
-    if (!modal || !modal.classList.contains("show"))
+    if (!filteredProducts.length)
         return;
 
     switch (event.key) {
@@ -378,10 +472,15 @@ document.addEventListener("keydown", (event) => {
 
             event.preventDefault();
 
-            if (highlightedIndex < filteredProducts.length - 1)
+            if (highlightedIndex < filteredProducts.length - 1) {
+
                 highlightedIndex++;
 
-            renderProductList();
+                refreshHighlight();
+
+                scrollHighlightedIntoView();
+
+            }
 
             break;
 
@@ -389,10 +488,15 @@ document.addEventListener("keydown", (event) => {
 
             event.preventDefault();
 
-            if (highlightedIndex > 0)
+            if (highlightedIndex > 0) {
+
                 highlightedIndex--;
 
-            renderProductList();
+                refreshHighlight();
+
+                scrollHighlightedIntoView();
+
+            }
 
             break;
 
@@ -400,8 +504,7 @@ document.addEventListener("keydown", (event) => {
 
             event.preventDefault();
 
-            if (filteredProducts.length)
-                selectProduct(highlightedIndex);
+            selectHighlightedProduct();
 
             break;
 
@@ -415,26 +518,342 @@ document.addEventListener("keydown", (event) => {
 
     }
 
-});
+}
 
-/* ============================================================
-   Public Helpers
-============================================================ */
+/* ==========================================================
+   Mouse Click Selection
+========================================================== */
 
-export function refreshProducts() {
+function handleProductClick(event) {
 
-    return loadProducts();
+    const row = event.target.closest(
+
+        "#productSearchResults tr"
+
+    );
+
+    if (!row)
+        return;
+
+    highlightedIndex = Number(
+
+        row.dataset.index
+
+    );
+
+    refreshHighlight();
 
 }
 
-export function getProductById(id) {
+/* ==========================================================
+   Select Highlighted Product
+========================================================== */
 
-    return productCache.find(product => product.id === id);
+function selectHighlightedProduct() {
+
+    const product =
+
+        filteredProducts[highlightedIndex];
+
+    if (!product)
+        return;
+
+    selectProduct(product);
 
 }
 
-export function getAllProducts() {
+/* ==========================================================
+   Select Product
+========================================================== */
+
+export function selectProduct(product) {
+
+    if (!product)
+        return;
+
+    if (selectedRow) {
+
+        fillRow(
+
+            selectedRow,
+
+            product
+
+        );
+
+    }
+
+    else {
+
+        addOrUpdateProduct(
+
+            product
+
+        );
+
+    }
+
+    closeProductSearch();
+
+}
+
+/* ==========================================================
+   Barcode Search
+========================================================== */
+
+export async function searchBarcode(barcode) {
+
+    barcode = barcode.trim();
+
+    if (!barcode)
+        return null;
+
+    try {
+
+        const product =
+
+            await getProductByBarcode(
+
+                barcode
+
+            );
+
+        if (!product)
+            return null;
+
+        return product;
+
+    }
+
+    catch (error) {
+
+        console.error(error);
+
+        return null;
+
+    }
+
+}
+
+/* ==========================================================
+   Barcode Fill Helper
+========================================================== */
+
+export async function fillProductFromBarcode(
+
+    row,
+    barcode
+
+) {
+
+    const product =
+
+        await searchBarcode(
+
+            barcode
+
+        );
+
+    if (!product)
+        return false;
+
+    fillRow(
+
+        row,
+        product
+
+    );
+
+    return true;
+
+}
+
+/* ==========================================================
+   Search Helpers
+========================================================== */
+
+export function getFilteredProducts() {
+
+    return [...filteredProducts];
+
+}
+
+export function getProductCache() {
 
     return [...productCache];
 
 }
+
+export function clearSearchBox() {
+
+    const input =
+
+        qs("#txtProductSearch");
+
+    if (input)
+        input.value = "";
+
+}
+
+export function focusSearchBox() {
+
+    const input =
+
+        qs("#txtProductSearch");
+
+    input?.focus();
+
+    input?.select();
+
+}
+
+/* ==========================================================
+   Reset Search
+========================================================== */
+
+export function resetProductSearch() {
+
+    filteredProducts = [...productCache];
+
+    highlightedIndex = 0;
+
+    selectedRow = null;
+
+    clearSearchBox();
+
+    renderProducts();
+
+}
+
+/* ==========================================================
+   Reload Product Cache
+========================================================== */
+
+export async function reloadProductCache() {
+
+    await refreshProducts();
+
+}
+
+/* ==========================================================
+   Product Exists
+========================================================== */
+
+export function productExists(productId) {
+
+    return productCache.some(product =>
+        String(product.id) === String(productId)
+    );
+
+}
+
+/* ==========================================================
+   Find Product By ID
+========================================================== */
+
+export function findProduct(productId) {
+
+    return productCache.find(product =>
+        String(product.id) === String(productId)
+    ) ?? null;
+
+}
+
+/* ==========================================================
+   Find Product By Barcode
+========================================================== */
+
+export function findCachedBarcode(barcode) {
+
+    return productCache.find(product =>
+        String(product.barcode) === String(barcode)
+    ) ?? null;
+
+}
+
+/* ==========================================================
+   Product Count
+========================================================== */
+
+export function getProductCount() {
+
+    return productCache.length;
+
+}
+
+/* ==========================================================
+   Is Modal Open
+========================================================== */
+
+export function isProductSearchOpen() {
+
+    const element = qs("#productModal");
+
+    return element?.classList.contains("show") ?? false;
+
+}
+
+/* ==========================================================
+   Destroy Module
+========================================================== */
+
+export function destroyProductSearch() {
+
+    productCache = [];
+
+    filteredProducts = [];
+
+    selectedRow = null;
+
+    highlightedIndex = 0;
+
+    initialized = false;
+
+}
+
+/* ==========================================================
+   Public API
+========================================================== */
+
+export default {
+
+    initializeProductSearch,
+
+    openProductSearch,
+
+    closeProductSearch,
+
+    refreshProducts,
+
+    reloadProductCache,
+
+    resetProductSearch,
+
+    selectProduct,
+
+    searchBarcode,
+
+    fillProductFromBarcode,
+
+    getFilteredProducts,
+
+    getProductCache,
+
+    getProductCount,
+
+    productExists,
+
+    findProduct,
+
+    findCachedBarcode,
+
+    clearSearchBox,
+
+    focusSearchBox,
+
+    isProductSearchOpen,
+
+    destroyProductSearch
+
+};
+
