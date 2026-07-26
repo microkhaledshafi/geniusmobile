@@ -32,7 +32,7 @@ async function loadProducts() {
         const { data, error } = await supabase
             .from("products")
             .select("*")
-            .order("name");
+            .order("product_name");
 
         if (error) throw error;
 
@@ -157,7 +157,7 @@ function filterProducts(keyword) {
 
         return (
 
-            (product.name || "")
+            (product.product_name || "")
                 .toLowerCase()
                 .includes(keyword)
 
@@ -237,7 +237,7 @@ function renderProductList() {
 
             <td>${product.product_code ?? ""}</td>
 
-            <td>${product.name ?? ""}</td>
+            <td>${product.product_name ?? ""}</td>
 
             <td>${product.batch ?? ""}</td>
 
@@ -323,7 +323,7 @@ function fillInvoiceRow(product) {
         product.id ?? "";
 
     selectedRow.querySelector(".product-name").value =
-        product.name ?? "";
+        product.product_name ?? "";
 
     selectedRow.querySelector(".batch").value =
         product.batch ?? "";
