@@ -1,96 +1,41 @@
-/*
-==========================================================
-Genius Scientific ERP
-Billing Module
-
-File:
-api.js
-
-Purpose:
-Centralized Data Access Layer (DAL)
-
-Responsibilities:
-• Supabase communication
-• CRUD operations
-• Error handling
-• Response normalization
-
-Every database request must pass through this file.
-
-==========================================================
-*/
+/* ==========================================================
+   Genius Scientific ERP
+   api.js
+   Part 1
+   Data Access Layer
+========================================================== */
 
 import { supabase } from "../supabase.js";
 
-/*==========================================================
-Constants
-==========================================================*/
+let initialized = false;
 
-const DEFAULT_LIMIT = 10;
+/* ==========================================================
+   Initialize API
+========================================================== */
 
-/*==========================================================
-Execute Query
-==========================================================*/
+export function initializeAPI() {
 
-async function execute(queryPromise) {
+    if (initialized) return;
 
-    try {
+    initialized = true;
 
-        const { data, error } = await queryPromise;
+    console.log("[API] Initialized");
 
-        if (error) {
+}
 
-            throw error;
+/* ==========================================================
+   Execute Query
+========================================================== */
 
-        }
+async function execute(query) {
 
-        return data;
+    const { data, error } = await query;
 
-    }
+    if (error) {
 
-    catch (error) {
-
-        console.error(
-
-            "[API]",
-
-            error
-
-        );
+        console.error("[API]", error);
 
         throw error;
-
-    }
-
-}
-
-/*==========================================================
-Return First Row
-==========================================================*/
-
-function first(data) {
-
-    if (!Array.isArray(data)) {
-
-        return null;
-
-    }
-
-    return data.length > 0
-        ? data[0]
-        : null;
-
-}
-
-/*==========================================================
-Return Safe Array
-==========================================================*/
-
-function safeArray(data) {
-
-    if (!Array.isArray(data)) {
-
-        return [];
 
     }
 
@@ -98,1197 +43,470 @@ function safeArray(data) {
 
 }
 
-/*==========================================================
-Validate ID
-==========================================================*/
+/* ==========================================================
+   Execute Single Row Query
+========================================================== */
 
-function validateId(id) {
+async function executeSingle(query) {
 
-    if (id === null || id === undefined) {
+    const { data, error } = await query.single();
 
-        throw new Error("Invalid ID.");
+    if (error) {
 
-    }
+        console.error("[API]", error);
 
-}
-
-/*==========================================================
-Validate Object
-==========================================================*/
-
-function validateObject(value) {
-
-    if (
-
-        typeof value !== "object" ||
-
-        value === null
-
-    ) {
-
-        throw new Error("Invalid object.");
+        throw error;
 
     }
 
+    return data;
+
 }
 
-/*==========================================================
-Export Helpers
-==========================================================*/
+/* ==========================================================
+   Execute Maybe Single Row Query
+========================================================== */
 
-export {
+async function executeMaybeSingle(query) {
 
-    execute,
+    const { data, error } = await query.maybeSingle();
 
-    first,
+    if (error) {
 
-    safeArray,
+        console.error("[API]", error);
 
-    validateId,
+        throw error;
 
-    validateObject,
+    }
 
-    DEFAULT_LIMIT
+    return data;
 
-};
+}
 
-/*==========================================================
-Customer APIs
-==========================================================*/
+/* ==========================================================
+   Health Check
+========================================================== */
 
-/**
- * Search customers by name or phone
- */
-export async function searchCustomers(search = "", limit = DEFAULT_LIMIT) {
+export async function healthCheck() {
 
-    const keyword = search.trim();
+    try {
 
-    let query = supabase
-        .from("customers")
-        .select("*")
-        .order("name", { ascending: true })
-        .limit(limit);
+        await execute(
 
-    if (keyword !== "") {
+            supabase
+                .from("products")
+                .select("id")
+                .limit(1)
 
-        query = query.or(
-            `name.ilike.%${keyword}%,phone.ilike.%${keyword}%`
         );
 
+        return true;
+
     }
 
-    return safeArray(
-        await execute(query)
-    );
+    catch (error) {
+
+        return false;
+
+    }
 
 }
 
-/**
- * Get customer by ID
- */
-export async function getCustomerById(id) {
+/* ==========================================================
+   Test Database Connection
+========================================================== */
 
-    validateId(id);
+export async function testConnection() {
 
-    const data = await execute(
-
-        supabase
-            .from("customers")
-            .select("*")
-            .eq("id", id)
-
-    );
-
-    return first(data);
+    return healthCheck();
 
 }
 
+/* ==========================================================
+   Generic Count
+========================================================== */
+
+export async function getCount(table) {
+
+    const { count, error } = await supabase
+
+        .from(table)
+
+        .select("*", {
+
+            count: "exact",
+
+            head: true
+
+        });
+
+    if (error) {
+
+        console.error("[API]", error);
+
+        throw error;
+
+    }
+
+    return count || 0;
+
+}
+
+/* ==========================================================
+   Invoice APIs
+========================================================== */
+
 /**
- * Add customer
+ * Create Invoice
  */
-export async function addCustomer(customer) {
+export async function createInvoice(invoice) {
 
-    validateObject(customer);
-
-    const data = await execute(
+    return executeSingle(
 
         supabase
-            .from("customers")
-            .insert([customer])
+            .from("invoices")
+            .insert(invoice)
             .select()
 
     );
 
-    return first(data);
+}
+
+/**
+ * Update Invoice
+ */
+export async function updateInvoice(
+    invoiceId,
+    invoice
+) {
+
+    return executeSingle(
+
+        supabase
+            .from("invoices")
+            .update(invoice)
+            .eq("id", invoiceId)
+            .select()
+
+    );
 
 }
 
 /**
- * Update customer
+ * Get Invoice
  */
-export async function updateCustomer(id, customer) {
+export async function getInvoice(invoiceId) {
 
-    validateId(id);
-    validateObject(customer);
+    return executeMaybeSingle(
 
-    const data = await execute(
+        supabase
+            .from("invoices")
+            .select("*")
+            .eq("id", invoiceId)
+
+    );
+
+}
+
+/**
+ * Get All Invoices
+ */
+export async function getInvoices() {
+
+    return execute(
+
+        supabase
+            .from("invoices")
+            .select("*")
+            .order("invoice_date", {
+                ascending: false
+            })
+
+    );
+
+}
+
+/**
+ * Delete Invoice
+ */
+export async function deleteInvoice(invoiceId) {
+
+    await execute(
+
+        supabase
+            .from("invoices")
+            .delete()
+            .eq("id", invoiceId)
+
+    );
+
+}
+
+/* ==========================================================
+   Invoice Item APIs
+========================================================== */
+
+/**
+ * Create Invoice Items
+ */
+export async function createInvoiceItems(items) {
+
+    return execute(
+
+        supabase
+            .from("invoice_items")
+            .insert(items)
+
+    );
+
+}
+
+/**
+ * Get Invoice Items
+ */
+export async function getInvoiceItems(invoiceId) {
+
+    return execute(
+
+        supabase
+            .from("invoice_items")
+            .select("*")
+            .eq("invoice_id", invoiceId)
+            .order("id")
+
+    );
+
+}
+
+/**
+ * Delete Invoice Items
+ */
+export async function deleteInvoiceItems(invoiceId) {
+
+    await execute(
+
+        supabase
+            .from("invoice_items")
+            .delete()
+            .eq("invoice_id", invoiceId)
+
+    );
+
+}
+
+/**
+ * Replace Invoice Items
+ *
+ * Used while editing invoices.
+ */
+export async function replaceInvoiceItems(
+    invoiceId,
+    items
+) {
+
+    await deleteInvoiceItems(invoiceId);
+
+    if (!items.length)
+        return [];
+
+    return createInvoiceItems(items);
+
+}
+
+/* ==========================================================
+   Customer APIs
+========================================================== */
+
+/**
+ * Create Customer
+ */
+export async function createCustomer(customer) {
+
+    return executeSingle(
+
+        supabase
+            .from("customers")
+            .insert(customer)
+            .select()
+
+    );
+
+}
+
+/**
+ * Update Customer
+ */
+export async function updateCustomer(
+    customerId,
+    customer
+) {
+
+    return executeSingle(
 
         supabase
             .from("customers")
             .update(customer)
-            .eq("id", id)
+            .eq("id", customerId)
             .select()
 
     );
 
-    return first(data);
-
 }
 
 /**
- * Delete customer
+ * Get Customer
  */
-export async function deleteCustomer(id) {
+export async function getCustomer(customerId) {
 
-    validateId(id);
-
-    await execute(
-
-        supabase
-            .from("customers")
-            .delete()
-            .eq("id", id)
-
-    );
-
-    return true;
-
-}
-
-/**
- * Get all customers
- */
-export async function getCustomers(limit = 1000) {
-
-    const data = await execute(
+    return executeMaybeSingle(
 
         supabase
             .from("customers")
             .select("*")
-            .order("name", { ascending: true })
-            .limit(limit)
+            .eq("id", customerId)
 
     );
-
-    return safeArray(data);
 
 }
 
 /**
- * Check whether customer exists
+ * Search Customers
  */
-export async function customerExists(phone) {
+export async function searchCustomers(search = "") {
 
-    if (!phone) {
+    const term = search.trim();
 
-        return false;
+    if (!term) {
 
-    }
+        return execute(
 
-    const data = await execute(
+            supabase
+                .from("customers")
+                .select("*")
+                .order("name")
+                .limit(50)
 
-        supabase
-            .from("customers")
-            .select("id")
-            .eq("phone", phone)
-            .limit(1)
-
-    );
-
-    return data.length > 0;
-
-}
-/*==========================================================
-Product APIs
-==========================================================*/
-
-/**
- * Search products by name, barcode or HSN code
- */
-export async function searchProducts(search = "", limit = DEFAULT_LIMIT) {
-
-    const keyword = search.trim();
-
-    let query = supabase
-        .from("products")
-        .select("*")
-        .order("name", { ascending: true })
-        .limit(limit);
-
-    if (keyword !== "") {
-
-        query = query.or(
-            `name.ilike.%${keyword}%,barcode.ilike.%${keyword}%,hsn_code.ilike.%${keyword}%`
         );
 
     }
 
-    return safeArray(
-        await execute(query)
+    return execute(
+
+        supabase
+            .from("customers")
+            .select("*")
+            .or(
+                `name.ilike.%${term}%,phone.ilike.%${term}%`
+            )
+            .order("name")
+            .limit(50)
+
     );
 
 }
 
 /**
- * Get product by ID
+ * Get All Customers
  */
-export async function getProductById(id) {
+export async function getCustomers() {
 
-    validateId(id);
+    return execute(
 
-    const data = await execute(
+        supabase
+            .from("customers")
+            .select("*")
+            .order("name")
+
+    );
+
+}
+
+/* ==========================================================
+   Product APIs
+========================================================== */
+
+/**
+ * Get Products
+ */
+export async function getProducts(limit = 100) {
+
+    return execute(
 
         supabase
             .from("products")
             .select("*")
-            .eq("id", id)
+            .order("product_name")
+            .limit(limit)
 
     );
-
-    return first(data);
 
 }
 
 /**
- * Get product by barcode
+ * Get Product
+ */
+export async function getProduct(productId) {
+
+    return executeMaybeSingle(
+
+        supabase
+            .from("products")
+            .select("*")
+            .eq("id", productId)
+
+    );
+
+}
+
+/**
+ * Search Products
+ */
+export async function searchProducts(search = "") {
+
+    const term = search.trim();
+
+    if (!term) {
+
+        return getProducts();
+
+    }
+
+    return execute(
+
+        supabase
+            .from("products")
+            .select("*")
+            .or(
+                `product_name.ilike.%${term}%,
+                 barcode.ilike.%${term}%,
+                 hsn_code.ilike.%${term}%`
+            )
+            .order("product_name")
+            .limit(100)
+
+    );
+
+}
+
+/**
+ * Get Product By Barcode
  */
 export async function getProductByBarcode(barcode) {
 
-    if (!barcode) {
-
-        return null;
-
-    }
-
-    const data = await execute(
+    return executeMaybeSingle(
 
         supabase
             .from("products")
             .select("*")
             .eq("barcode", barcode)
-            .limit(1)
 
     );
 
-    return first(data);
-
 }
 
-/**
- * Add product
- */
-export async function addProduct(product) {
-
-    validateObject(product);
-
-    const data = await execute(
-
-        supabase
-            .from("products")
-            .insert([product])
-            .select()
-
-    );
-
-    return first(data);
-
-}
-
-/**
- * Update product
- */
-export async function updateProduct(id, product) {
-
-    validateId(id);
-    validateObject(product);
-
-    const data = await execute(
-
-        supabase
-            .from("products")
-            .update(product)
-            .eq("id", id)
-            .select()
-
-    );
-
-    return first(data);
-
-}
-
-/**
- * Delete product
- */
-export async function deleteProduct(id) {
-
-    validateId(id);
-
-    await execute(
-
-        supabase
-            .from("products")
-            .delete()
-            .eq("id", id)
-
-    );
-
-    return true;
-
-}
-
-/**
- * Get all products
- */
-export async function getProducts(limit = 1000) {
-
-    const data = await execute(
-
-        supabase
-            .from("products")
-            .select("*")
-            .order("name", { ascending: true })
-            .limit(limit)
-
-    );
-
-    return safeArray(data);
-
-}
-
-/**
- * Update product stock
- */
-export async function updateProductStock(id, quantity) {
-
-    validateId(id);
-
-    const product = await getProductById(id);
-
-    if (!product) {
-
-        throw new Error("Product not found.");
-
-    }
-
-    const currentStock = Number(product.stock || 0);
-
-    const data = await execute(
-
-        supabase
-            .from("products")
-            .update({
-
-                stock: currentStock + Number(quantity)
-
-            })
-            .eq("id", id)
-            .select()
-
-    );
-
-    return first(data);
-
-}
-
-/**
- * Set product stock
- */
-export async function setProductStock(id, stock) {
-
-    validateId(id);
-
-    const data = await execute(
-
-        supabase
-            .from("products")
-            .update({
-
-                stock: Number(stock)
-
-            })
-            .eq("id", id)
-            .select()
-
-    );
-
-    return first(data);
-
-}
-
-/**
- * Check whether product exists
- */
-export async function productExists(barcode) {
-
-    if (!barcode) {
-
-        return false;
-
-    }
-
-    const data = await execute(
-
-        supabase
-            .from("products")
-            .select("id")
-            .eq("barcode", barcode)
-            .limit(1)
-
-    );
-
-    return data.length > 0;
-
-}
-/*==========================================================
-Sales APIs
-==========================================================*/
-
-/**
- * Get next invoice number
- */
-export async function getNextInvoiceNumber() {
-
-    const data = await execute(
-
-        supabase
-            .from("sales")
-            .select("invoice_no")
-            .order("invoice_no", { ascending: false })
-            .limit(1)
-
-    );
-
-    const sale = first(data);
-
-    if (!sale) {
-
-        return 1;
-
-    }
-
-    return Number(sale.invoice_no) + 1;
-
-}
-
-/**
- * Save Sale (Master)
- */
-export async function saveSale(sale) {
-
-    validateObject(sale);
-
-    const data = await execute(
-
-        supabase
-            .from("sales")
-            .insert([sale])
-            .select()
-
-    );
-
-    return first(data);
-
-}
-
-/**
- * Save Sale Items
- */
-export async function saveSaleItems(items = []) {
-
-    if (!Array.isArray(items)) {
-
-        throw new Error("Invalid sale items.");
-
-    }
-
-    if (items.length === 0) {
-
-        return [];
-
-    }
-
-    return await execute(
-
-        supabase
-            .from("sales_items")
-            .insert(items)
-            .select()
-
-    );
-
-}
-
-/**
- * Save Payment
- */
-export async function savePayment(payment) {
-
-    validateObject(payment);
-
-    const data = await execute(
-
-        supabase
-            .from("payments")
-            .insert([payment])
-            .select()
-
-    );
-
-    return first(data);
-
-}
-
-/**
- * Get Sale
- */
-export async function getSale(id) {
-
-    validateId(id);
-
-    const data = await execute(
-
-        supabase
-            .from("sales")
-            .select("*")
-            .eq("id", id)
-
-    );
-
-    return first(data);
-
-}
-
-/**
- * Get Sale Items
- */
-export async function getSaleItems(saleId) {
-
-    validateId(saleId);
-
-    const data = await execute(
-
-        supabase
-            .from("sales_items")
-            .select("*")
-            .eq("sale_id", saleId)
-            .order("id")
-
-    );
-
-    return safeArray(data);
-
-}
-
-/**
- * Get Sale With Items
- */
-export async function getSaleWithItems(id) {
-
-    const sale = await getSale(id);
-
-    if (!sale) {
-
-        return null;
-
-    }
-
-    sale.items = await getSaleItems(id);
-
-    return sale;
-
-}
-
-/**
- * Update Sale
- */
-export async function updateSale(id, values) {
-
-    validateId(id);
-
-    validateObject(values);
-
-    const data = await execute(
-
-        supabase
-            .from("sales")
-            .update(values)
-            .eq("id", id)
-            .select()
-
-    );
-
-    return first(data);
-
-}
-
-/**
- * Delete Sale Items
- */
-export async function deleteSaleItems(saleId) {
-
-    validateId(saleId);
-
-    await execute(
-
-        supabase
-            .from("sales_items")
-            .delete()
-            .eq("sale_id", saleId)
-
-    );
-
-    return true;
-
-}
-
-/**
- * Delete Sale
- */
-export async function deleteSale(id) {
-
-    validateId(id);
-
-    await deleteSaleItems(id);
-
-    await execute(
-
-        supabase
-            .from("payments")
-            .delete()
-            .eq("sale_id", id)
-
-    );
-
-    await execute(
-
-        supabase
-            .from("sales")
-            .delete()
-            .eq("id", id)
-
-    );
-
-    return true;
-
-}
-
-/**
- * Sales History
- */
-export async function getSalesHistory(limit = 100) {
-
-    const data = await execute(
-
-        supabase
-            .from("sales")
-            .select("*")
-            .order("created_at", {
-
-                ascending: false
-
-            })
-            .limit(limit)
-
-    );
-
-    return safeArray(data);
-
-}
-
-/**
- * Sales Between Dates
- */
-export async function getSalesBetweenDates(from, to) {
-
-    const data = await execute(
-
-        supabase
-            .from("sales")
-            .select("*")
-            .gte("created_at", from)
-            .lte("created_at", to)
-            .order("created_at", {
-
-                ascending: false
-
-            })
-
-    );
-
-    return safeArray(data);
-
-}
-/*==========================================================
-Purchase APIs
-==========================================================*/
-
-/**
- * Save Purchase Master
- */
-export async function savePurchase(purchase) {
-
-    validateObject(purchase);
-
-    const data = await execute(
-
-        supabase
-            .from("purchase_master")
-            .insert([purchase])
-            .select()
-
-    );
-
-    return first(data);
-
-}
-
-/**
- * Save Purchase Items
- */
-export async function savePurchaseItems(items = []) {
-
-    if (!Array.isArray(items)) {
-
-        throw new Error("Invalid purchase items.");
-
-    }
-
-    if (items.length === 0) {
-
-        return [];
-
-    }
-
-    return await execute(
-
-        supabase
-            .from("purchase_items")
-            .insert(items)
-            .select()
-
-    );
-
-}
-
-/**
- * Get Purchase
- */
-export async function getPurchase(id) {
-
-    validateId(id);
-
-    const data = await execute(
-
-        supabase
-            .from("purchase_master")
-            .select("*")
-            .eq("id", id)
-
-    );
-
-    return first(data);
-
-}
-
-/**
- * Get Purchase Items
- */
-export async function getPurchaseItems(purchaseId) {
-
-    validateId(purchaseId);
-
-    const data = await execute(
-
-        supabase
-            .from("purchase_items")
-            .select("*")
-            .eq("purchase_id", purchaseId)
-            .order("id")
-
-    );
-
-    return safeArray(data);
-
-}
-
-/**
- * Get Purchase With Items
- */
-export async function getPurchaseWithItems(id) {
-
-    const purchase = await getPurchase(id);
-
-    if (!purchase) {
-
-        return null;
-
-    }
-
-    purchase.items = await getPurchaseItems(id);
-
-    return purchase;
-
-}
-
-/**
- * Update Purchase
- */
-export async function updatePurchase(id, values) {
-
-    validateId(id);
-
-    validateObject(values);
-
-    const data = await execute(
-
-        supabase
-            .from("purchase_master")
-            .update(values)
-            .eq("id", id)
-            .select()
-
-    );
-
-    return first(data);
-
-}
-
-/**
- * Delete Purchase Items
- */
-export async function deletePurchaseItems(purchaseId) {
-
-    validateId(purchaseId);
-
-    await execute(
-
-        supabase
-            .from("purchase_items")
-            .delete()
-            .eq("purchase_id", purchaseId)
-
-    );
-
-    return true;
-
-}
-
-/**
- * Delete Purchase
- */
-export async function deletePurchase(id) {
-
-    validateId(id);
-
-    await deletePurchaseItems(id);
-
-    await execute(
-
-        supabase
-            .from("purchase_master")
-            .delete()
-            .eq("id", id)
-
-    );
-
-    return true;
-
-}
-
-/**
- * Purchase History
- */
-export async function getPurchaseHistory(limit = 100) {
-
-    const data = await execute(
-
-        supabase
-            .from("purchase_master")
-            .select("*")
-            .order("created_at", {
-
-                ascending: false
-
-            })
-            .limit(limit)
-
-    );
-
-    return safeArray(data);
-
-}
-
-/**
- * Purchases Between Dates
- */
-export async function getPurchasesBetweenDates(from, to) {
-
-    const data = await execute(
-
-        supabase
-            .from("purchase_master")
-            .select("*")
-            .gte("created_at", from)
-            .lte("created_at", to)
-            .order("created_at", {
-
-                ascending: false
-
-            })
-
-    );
-
-    return safeArray(data);
-
-}
-
-/**
- * Save Supplier Ledger Entry
- */
-export async function saveSupplierLedger(entry) {
-
-    validateObject(entry);
-
-    const data = await execute(
-
-        supabase
-            .from("supplier_ledger")
-            .insert([entry])
-            .select()
-
-    );
-
-    return first(data);
-
-}
-
-/**
- * Get Supplier Ledger
- */
-export async function getSupplierLedger(supplierId) {
-
-    validateId(supplierId);
-
-    const data = await execute(
-
-        supabase
-            .from("supplier_ledger")
-            .select("*")
-            .eq("supplier_id", supplierId)
-            .order("created_at", {
-
-                ascending: false
-
-            })
-
-    );
-
-    return safeArray(data);
-
-}
-/*==========================================================
-Dashboard APIs
-==========================================================*/
-
-/**
- * Total Customers
- */
-export async function getCustomerCount() {
-
-    const { count, error } = await supabase
-        .from("customers")
-        .select("*", {
-
-            count: "exact",
-            head: true
-
-        });
-
-    if (error) {
-
-        throw error;
-
-    }
-
-    return count || 0;
-
-}
-
-/**
- * Total Products
- */
-export async function getProductCount() {
-
-    const { count, error } = await supabase
-        .from("products")
-        .select("*", {
-
-            count: "exact",
-            head: true
-
-        });
-
-    if (error) {
-
-        throw error;
-
-    }
-
-    return count || 0;
-
-}
-
-/**
- * Total Suppliers
- */
-export async function getSupplierCount() {
-
-    const { count, error } = await supabase
-        .from("suppliers")
-        .select("*", {
-
-            count: "exact",
-            head: true
-
-        });
-
-    if (error) {
-
-        throw error;
-
-    }
-
-    return count || 0;
-
-}
-
-/**
- * Total Sales
- */
-export async function getSalesCount() {
-
-    const { count, error } = await supabase
-        .from("sales")
-        .select("*", {
-
-            count: "exact",
-            head: true
-
-        });
-
-    if (error) {
-
-        throw error;
-
-    }
-
-    return count || 0;
-
-}
-
-/**
- * Total Purchases
- */
-export async function getPurchaseCount() {
-
-    const { count, error } = await supabase
-        .from("purchase_master")
-        .select("*", {
-
-            count: "exact",
-            head: true
-
-        });
-
-    if (error) {
-
-        throw error;
-
-    }
-
-    return count || 0;
-
-}
-
-/**
- * Recent Sales
- */
-export async function getRecentSales(limit = 10) {
-
-    const data = await execute(
-
-        supabase
-            .from("sales")
-            .select("*")
-            .order("created_at", {
-
-                ascending: false
-
-            })
-            .limit(limit)
-
-    );
-
-    return safeArray(data);
-
-}
-
-/**
- * Recent Purchases
- */
-export async function getRecentPurchases(limit = 10) {
-
-    const data = await execute(
-
-        supabase
-            .from("purchase_master")
-            .select("*")
-            .order("created_at", {
-
-                ascending: false
-
-            })
-            .limit(limit)
-
-    );
-
-    return safeArray(data);
-
-}
-
-/**
- * Low Stock Products
- */
-export async function getLowStockProducts(limit = 20) {
-
-    const data = await execute(
-
-        supabase
-            .from("products")
-            .select("*")
-            .lte("stock", 10)
-            .order("stock", {
-
-                ascending: true
-
-            })
-            .limit(limit)
-
-    );
-
-    return safeArray(data);
-
-}
+/* ==========================================================
+   Dashboard APIs
+========================================================== */
 
 /**
  * Dashboard Summary
@@ -1296,284 +514,143 @@ export async function getLowStockProducts(limit = 20) {
 export async function getDashboardSummary() {
 
     const [
-
-        customers,
-        products,
-        suppliers,
-        sales,
-        purchases
-
+        invoiceCount,
+        customerCount,
+        productCount
     ] = await Promise.all([
 
-        getCustomerCount(),
-        getProductCount(),
-        getSupplierCount(),
-        getSalesCount(),
-        getPurchaseCount()
+        getCount("invoices"),
+
+        getCount("customers"),
+
+        getCount("products")
 
     ]);
 
     return {
 
-        customers,
-        products,
-        suppliers,
-        sales,
-        purchases
+        invoiceCount,
+
+        customerCount,
+
+        productCount
 
     };
 
 }
-/*==========================================================
-Utilities
-==========================================================*/
 
 /**
- * Get application setting
+ * Today's Sales
  */
-export async function getSetting(key) {
+export async function getTodaySales() {
 
-    if (!key) {
+    const today = new Date()
+        .toISOString()
+        .split("T")[0];
 
-        return null;
-
-    }
-
-    const data = await execute(
+    return execute(
 
         supabase
-            .from("settings")
+
+            .from("invoices")
+
             .select("*")
-            .eq("key", key)
-            .limit(1)
+
+            .eq("invoice_date", today)
 
     );
-
-    return first(data);
 
 }
 
 /**
- * Save application setting
+ * Monthly Sales
  */
-export async function setSetting(key, value) {
+export async function getMonthlySales(year, month) {
 
-    if (!key) {
+    const start = `${year}-${String(month).padStart(2, "0")}-01`;
 
-        throw new Error("Invalid setting key.");
+    const end = new Date(year, month, 0)
+        .toISOString()
+        .split("T")[0];
 
-    }
-
-    const existing = await getSetting(key);
-
-    if (existing) {
-
-        const data = await execute(
-
-            supabase
-                .from("settings")
-                .update({
-
-                    value
-
-                })
-                .eq("key", key)
-                .select()
-
-        );
-
-        return first(data);
-
-    }
-
-    const data = await execute(
+    return execute(
 
         supabase
-            .from("settings")
-            .insert([{
 
-                key,
-                value
+            .from("invoices")
 
-            }])
-            .select()
-
-    );
-
-    return first(data);
-
-}
-
-/**
- * Delete setting
- */
-export async function deleteSetting(key) {
-
-    if (!key) {
-
-        return false;
-
-    }
-
-    await execute(
-
-        supabase
-            .from("settings")
-            .delete()
-            .eq("key", key)
-
-    );
-
-    return true;
-
-}
-
-/**
- * Get attachment list
- */
-export async function getAttachments(recordId, moduleName) {
-
-    validateId(recordId);
-
-    const data = await execute(
-
-        supabase
-            .from("attachments")
             .select("*")
-            .eq("record_id", recordId)
-            .eq("module", moduleName)
-            .order("created_at", {
 
+            .gte("invoice_date", start)
+
+            .lte("invoice_date", end)
+
+    );
+
+}
+
+/**
+ * Recent Invoices
+ */
+export async function getRecentInvoices(limit = 10) {
+
+    return execute(
+
+        supabase
+
+            .from("invoices")
+
+            .select("*")
+
+            .order("invoice_date", {
                 ascending: false
-
             })
 
-    );
-
-    return safeArray(data);
-
-}
-
-/**
- * Save attachment
- */
-export async function saveAttachment(file) {
-
-    validateObject(file);
-
-    const data = await execute(
-
-        supabase
-            .from("attachments")
-            .insert([file])
-            .select()
+            .limit(limit)
 
     );
 
-    return first(data);
-
 }
 
-/**
- * Delete attachment
- */
-export async function deleteAttachment(id) {
+/* ==========================================================
+   Public API
+========================================================== */
 
-    validateId(id);
+export default {
 
-    await execute(
+    initializeAPI,
 
-        supabase
-            .from("attachments")
-            .delete()
-            .eq("id", id)
+    healthCheck,
 
-    );
+    testConnection,
 
-    return true;
+    getCount,
 
-}
+    createInvoice,
+    updateInvoice,
+    getInvoice,
+    getInvoices,
+    deleteInvoice,
 
-/**
- * Generic lookup by ID
- */
-export async function findById(table, id) {
+    createInvoiceItems,
+    getInvoiceItems,
+    deleteInvoiceItems,
+    replaceInvoiceItems,
 
-    validateId(id);
+    createCustomer,
+    updateCustomer,
+    getCustomer,
+    getCustomers,
+    searchCustomers,
 
-    const data = await execute(
+    getProducts,
+    getProduct,
+    getProductByBarcode,
+    searchProducts,
 
-        supabase
-            .from(table)
-            .select("*")
-            .eq("id", id)
-            .limit(1)
+    getDashboardSummary,
+    getTodaySales,
+    getMonthlySales,
+    getRecentInvoices
 
-    );
-
-    return first(data);
-
-}
-
-/**
- * Generic delete by ID
- */
-export async function deleteById(table, id) {
-
-    validateId(id);
-
-    await execute(
-
-        supabase
-            .from(table)
-            .delete()
-            .eq("id", id)
-
-    );
-
-    return true;
-
-}
-
-/**
- * Generic record count
- */
-export async function getRecordCount(table) {
-
-    const { count, error } = await supabase
-        .from(table)
-        .select("*", {
-
-            count: "exact",
-            head: true
-
-        });
-
-    if (error) {
-
-        throw error;
-
-    }
-
-    return count || 0;
-
-}
-
-/**
- * Health check
- */
-export async function pingDatabase() {
-
-    await execute(
-
-        supabase
-            .from("settings")
-            .select("id")
-            .limit(1)
-
-    );
-
-    return true;
-
-}
-
+};
