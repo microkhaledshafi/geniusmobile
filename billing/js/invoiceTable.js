@@ -2,17 +2,18 @@
    Genius Scientific ERP
    invoiceTable.js
    Part 1
-   Invoice Table Foundation
+   Invoice Table Engine
 ========================================================== */
 
 import { state } from "./state.js";
 import { qs } from "./utils.js";
 import { recalculateRow } from "./calculations.js";
+import { openProductSearch } from "./productSearch.js";
+import { getProductByBarcode } from "./api.js";
 
 let initialized = false;
 
 let tableBody = null;
-let rowTemplate = null;
 
 /* ==========================================================
    Initialize
@@ -20,80 +21,37 @@ let rowTemplate = null;
 
 export function initializeInvoiceTable() {
 
-    if (initialized) return;
+    if (initialized)
+        return;
 
-    initialized = true;
-
-    tableBody = qs("#invoiceItemsBody");
-
-    rowTemplate = qs("#invoiceRowTemplate");
+    tableBody = qs("#invoiceTableBody");
 
     if (!tableBody)
-        throw new Error("Invoice table body not found.");
-
-    if (!rowTemplate)
-        throw new Error("Invoice row template not found.");
+        throw new Error("invoiceTableBody not found.");
 
     registerTableEvents();
 
-    if (state.invoiceItems.length === 0) {
+    addInvoiceRow();
 
-        addInvoiceRow();
+    initialized = true;
 
-    }
-
-    console.log("[Invoice Table] Initialized");
+    console.log("[InvoiceTable] Initialized");
 
 }
 
 /* ==========================================================
-   Event Registration
+   Register Events
 ========================================================== */
 
 function registerTableEvents() {
 
-    tableBody.addEventListener("click", onTableClick);
+    tableBody.addEventListener("click", handleTableClick);
 
-}
+    tableBody.addEventListener("input", handleInput);
 
-/* ==========================================================
-   Table Click Handler
-========================================================== */
+    tableBody.addEventListener("change", handleChange);
 
-function onTableClick(event) {
-
-    const button = event.target.closest("button");
-
-    if (!button) return;
-
-    if (button.classList.contains("btn-add-row")) {
-
-        addInvoiceRow();
-
-        return;
-
-    }
-
-    if (button.classList.contains("btn-delete-row")) {
-
-        const row = button.closest("tr");
-
-        removeInvoiceRow(row);
-
-    }
-
-}
-
-/* ==========================================================
-   Create Row
-========================================================== */
-
-function createInvoiceRow() {
-
-    const fragment =
-        rowTemplate.content.cloneNode(true);
-
-    return fragment;
+    tableBody.addEventListener("keydown", handleKeyDown);
 
 }
 
@@ -103,24 +61,21 @@ function createInvoiceRow() {
 
 export function addInvoiceRow(product = null) {
 
-    const fragment = createInvoiceRow();
+    const row = document.createElement("tr");
 
-    tableBody.appendChild(fragment);
+    row.innerHTML = createRowHTML();
 
-    const row =
-        tableBody.lastElementChild;
-
-   registerRowEvents(row);
+    tableBody.appendChild(row);
 
     renumberRows();
+
+    state.invoiceItems.push({});
 
     if (product) {
 
         fillRow(row, product);
 
     }
-
-    state.invoiceItems.push({});
 
     return row;
 
@@ -132,23 +87,212 @@ export function addInvoiceRow(product = null) {
 
 export function removeInvoiceRow(row) {
 
-    if (!row) return;
+    if (!row)
+        return;
 
     if (tableBody.rows.length === 1)
         return;
 
-    const index =
-        [...tableBody.rows].indexOf(row);
+    const index = getRowIndex(row);
 
     row.remove();
 
-    if (index >= 0) {
-
+    if (index >= 0)
         state.invoiceItems.splice(index, 1);
 
-    }
-
     renumberRows();
+
+}
+
+/* ==========================================================
+   Row HTML
+========================================================== */
+
+function createRowHTML() {
+
+    return `
+
+<tr>
+
+<td class="serial text-center">1</td>
+
+<td>
+
+<input
+type="hidden"
+class="form-control productId">
+
+<input
+type="text"
+class="form-control productBarcode"
+placeholder="Barcode">
+
+</td>
+
+<td>
+
+<div class="input-group">
+
+<input
+type="text"
+class="form-control productName"
+readonly>
+
+<button
+type="button"
+class="btn btn-outline-primary btnProductSearch">
+
+<i class="bi bi-search"></i>
+
+</button>
+
+</div>
+
+</td>
+
+<td>
+
+<input
+type="text"
+class="form-control batch">
+
+</td>
+
+<td>
+
+<input
+type="month"
+class="form-control expiry">
+
+</td>
+
+<td>
+
+<input
+type="text"
+class="form-control hsn">
+
+</td>
+
+<td>
+
+<input
+type="number"
+class="form-control qty"
+value="1"
+min="1">
+
+</td>
+
+<td>
+
+<input
+type="number"
+class="form-control mrp"
+value="0">
+
+</td>
+
+<td>
+
+<input
+type="number"
+class="form-control rate"
+value="0">
+
+</td>
+
+<td>
+
+<input
+type="number"
+class="form-control discount"
+value="0">
+
+</td>
+
+<td>
+
+<input
+type="number"
+class="form-control gst"
+value="0">
+
+</td>
+
+<td>
+
+<input
+type="number"
+class="form-control amount"
+readonly>
+
+</td>
+
+<td class="text-center">
+
+<button
+type="button"
+class="btn btn-danger btnDeleteRow">
+
+×
+
+</button>
+
+</td>
+
+</tr>
+
+`;
+
+}
+
+/* ==========================================================
+   Fill Row From Product
+========================================================== */
+
+export function fillRow(row, product) {
+
+    if (!row || !product)
+        return;
+
+    row.querySelector(".productId").value =
+        product.id ?? "";
+
+    row.querySelector(".productBarcode").value =
+        product.barcode ?? "";
+
+    row.querySelector(".productName").value =
+        product.product_name ??
+        product.name ??
+        "";
+
+    row.querySelector(".batch").value =
+        product.batch ?? "";
+
+    row.querySelector(".expiry").value =
+        product.expiry ?? "";
+
+    row.querySelector(".hsn").value =
+        product.hsn_code ?? "";
+
+    row.querySelector(".qty").value = 1;
+
+    row.querySelector(".mrp").value =
+        Number(product.mrp ?? 0);
+
+    row.querySelector(".rate").value =
+        Number(product.rate ?? 0);
+
+    row.querySelector(".discount").value =
+        Number(product.discount ?? 0);
+
+    row.querySelector(".gst").value =
+        Number(product.gst ?? product.tax ?? 0);
+
+    updateInvoiceItem(row);
+
+    recalculateRow(row);
 
 }
 
@@ -163,92 +307,86 @@ function renumberRows() {
         const serial =
             row.querySelector(".serial");
 
-        if (serial) {
-
+        if (serial)
             serial.textContent = index + 1;
-
-        }
 
     });
 
 }
 
 /* ==========================================================
-   Fill Row From Product
+   Row Index
 ========================================================== */
 
-function fillRow(row, product) {
+export function getRowIndex(row) {
 
-    if (!row || !product) return;
-
-    row.querySelector(".productCode").value =
-        product.product_code || "";
-
-    row.querySelector(".productName").value =
-        product.name || "";
-
-    row.querySelector(".hsn").value =
-        product.hsn_code || "";
-
-    row.querySelector(".qty").value = 1;
-
-    row.querySelector(".rate").value =
-        product.rate || 0;
-
-    row.querySelector(".discount").value =
-        product.discount || 0;
-
-    row.querySelector(".gst").value =
-        product.tax || product.gst || 0;
-
-    updateInvoiceItem(row);
-
-    recalculateRow(row);
+    return [...tableBody.rows]
+        .indexOf(row);
 
 }
 
 /* ==========================================================
-   Update State From Row
+   Update State
 ========================================================== */
 
 export function updateInvoiceItem(row) {
 
-    if (!row) return;
+    if (!row)
+        return;
 
-    const index =
-        [...tableBody.rows].indexOf(row);
+    const index = getRowIndex(row);
 
-    if (index < 0) return;
+    if (index < 0)
+        return;
 
     state.invoiceItems[index] = {
 
-        product_code:
-            row.querySelector(".productCode")?.value || "",
+        product_id:
+            row.querySelector(".productId").value,
+
+        barcode:
+            row.querySelector(".productBarcode").value,
 
         product_name:
-            row.querySelector(".productName")?.value || "",
+            row.querySelector(".productName").value,
+
+        batch:
+            row.querySelector(".batch").value,
+
+        expiry:
+            row.querySelector(".expiry").value,
 
         hsn_code:
-            row.querySelector(".hsn")?.value || "",
+            row.querySelector(".hsn").value,
 
         quantity:
             Number(
-                row.querySelector(".qty")?.value || 0
+                row.querySelector(".qty").value
+            ),
+
+        mrp:
+            Number(
+                row.querySelector(".mrp").value
             ),
 
         rate:
             Number(
-                row.querySelector(".rate")?.value || 0
+                row.querySelector(".rate").value
             ),
 
         discount:
             Number(
-                row.querySelector(".discount")?.value || 0
+                row.querySelector(".discount").value
             ),
 
         gst:
             Number(
-                row.querySelector(".gst")?.value || 0
+                row.querySelector(".gst").value
+            ),
+
+        amount:
+            Number(
+                row.querySelector(".amount").value
             )
 
     };
@@ -256,7 +394,23 @@ export function updateInvoiceItem(row) {
 }
 
 /* ==========================================================
-   Read All Rows
+   Synchronize Table
+========================================================== */
+
+export function syncInvoiceItems() {
+
+    state.invoiceItems = [];
+
+    [...tableBody.rows].forEach(row => {
+
+        updateInvoiceItem(row);
+
+    });
+
+}
+
+/* ==========================================================
+   Read Invoice Items
 ========================================================== */
 
 export function getInvoiceItems() {
@@ -268,54 +422,7 @@ export function getInvoiceItems() {
 }
 
 /* ==========================================================
-   Sync Complete Table
-========================================================== */
-
-export function syncInvoiceItems() {
-
-    state.invoiceItems = [];
-
-    [...tableBody.rows].forEach(row => {
-
-        state.invoiceItems.push({
-
-            product_code:
-                row.querySelector(".productCode")?.value || "",
-
-            product_name:
-                row.querySelector(".productName")?.value || "",
-
-            hsn_code:
-                row.querySelector(".hsn")?.value || "",
-
-            quantity:
-                Number(
-                    row.querySelector(".qty")?.value || 0
-                ),
-
-            rate:
-                Number(
-                    row.querySelector(".rate")?.value || 0
-                ),
-
-            discount:
-                Number(
-                    row.querySelector(".discount")?.value || 0
-                ),
-
-            gst:
-                Number(
-                    row.querySelector(".gst")?.value || 0
-                )
-
-        });
-
-    });
-
-}
-
-/* ==========================================================
-   Clear Invoice Table
+   Clear Table
 ========================================================== */
 
 export function clearInvoiceItems() {
@@ -329,38 +436,53 @@ export function clearInvoiceItems() {
 }
 
 /* ==========================================================
-   Find Row Index
-========================================================== */
-
-export function getRowIndex(row) {
-
-    return [...tableBody.rows].indexOf(row);
-
-}
-
-/* ==========================================================
    Get Row
 ========================================================== */
 
 export function getRow(index) {
 
-    return tableBody.rows[index] || null;
+    return tableBody.rows[index] ?? null;
 
 }
 
 /* ==========================================================
-   Register Row Events
+   Table Click Events
 ========================================================== */
 
-function registerRowEvents(row) {
+function handleTableClick(event) {
 
-    if (!row) return;
+    const row = event.target.closest("tr");
 
-    row.addEventListener("input", onRowInput);
+    if (!row)
+        return;
 
-    row.addEventListener("keydown", onRowKeyDown);
+    /* ----------------------------------------
+       Product Search
+    ---------------------------------------- */
 
-    row.addEventListener("change", onRowChange);
+    if (
+        event.target.closest(".btnProductSearch")
+    ) {
+
+        openProductSearch(row);
+
+        return;
+
+    }
+
+    /* ----------------------------------------
+       Delete Row
+    ---------------------------------------- */
+
+    if (
+        event.target.closest(".btnDeleteRow")
+    ) {
+
+        removeInvoiceRow(row);
+
+        return;
+
+    }
 
 }
 
@@ -368,11 +490,20 @@ function registerRowEvents(row) {
    Input Events
 ========================================================== */
 
-function onRowInput(event) {
+function handleInput(event) {
 
     const row = event.target.closest("tr");
 
-    if (!row) return;
+    if (!row)
+        return;
+
+   if (event.target.classList.contains("productBarcode")) {
+
+    handleBarcodeSearch(event.target);
+
+    return;
+
+}
 
     updateInvoiceItem(row);
 
@@ -384,11 +515,12 @@ function onRowInput(event) {
    Change Events
 ========================================================== */
 
-function onRowChange(event) {
+function handleChange(event) {
 
     const row = event.target.closest("tr");
 
-    if (!row) return;
+    if (!row)
+        return;
 
     updateInvoiceItem(row);
 
@@ -397,14 +529,15 @@ function onRowChange(event) {
 }
 
 /* ==========================================================
-   Keyboard Navigation
+   Keyboard Events
 ========================================================== */
 
-function onRowKeyDown(event) {
+function handleKeyDown(event) {
 
     const row = event.target.closest("tr");
 
-    if (!row) return;
+    if (!row)
+        return;
 
     switch (event.key) {
 
@@ -412,7 +545,7 @@ function onRowKeyDown(event) {
 
             event.preventDefault();
 
-            focusNextField(event.target);
+            focusNextField(row, event.target);
 
             break;
 
@@ -428,6 +561,14 @@ function onRowKeyDown(event) {
 
             break;
 
+        case "F2":
+
+            event.preventDefault();
+
+            openProductSearch(row);
+
+            break;
+
     }
 
 }
@@ -436,57 +577,101 @@ function onRowKeyDown(event) {
    Focus Next Field
 ========================================================== */
 
-function focusNextField(current) {
+function focusNextField(row, currentField) {
 
     const fields = [
 
-        ".productCode",
+        ".productBarcode",
+
         ".productName",
+
         ".qty",
+
+        ".mrp",
+
         ".rate",
+
         ".discount",
+
         ".gst"
 
     ];
 
-    const row = current.closest("tr");
+    const currentIndex = fields.findIndex(selector =>
+        currentField.matches(selector)
+    );
 
-    if (!row) return;
+    if (currentIndex === -1)
+        return;
 
-    let index = -1;
+    /* ----------------------------------------
+       Last Field
+    ---------------------------------------- */
 
-    fields.forEach((selector, i) => {
-
-        if (current.matches(selector))
-            index = i;
-
-    });
-
-    if (index === -1) return;
-
-    if (index === fields.length - 1) {
+    if (currentIndex === fields.length - 1) {
 
         const nextRow = row.nextElementSibling;
 
         if (nextRow) {
 
-            nextRow.querySelector(fields[0])?.focus();
+            nextRow
+                .querySelector(fields[0])
+                ?.focus();
 
-        } else {
-
-            const newRow = addInvoiceRow();
-
-            registerRowEvents(newRow);
-
-            newRow.querySelector(fields[0])?.focus();
+            return;
 
         }
+
+        const newRow = addInvoiceRow();
+
+        newRow
+            .querySelector(fields[0])
+            ?.focus();
 
         return;
 
     }
 
-    row.querySelector(fields[index + 1])?.focus();
+    row.querySelector(
+        fields[currentIndex + 1]
+    )?.focus();
+
+}
+
+/* ==========================================================
+   Barcode Search
+========================================================== */
+
+async function handleBarcodeSearch(input) {
+
+    const barcode = input.value.trim();
+
+    if (!barcode)
+        return;
+
+    /*
+        Part 4 will connect this to api.js
+
+        getProductByBarcode(barcode)
+
+        and automatically fill the row.
+    */
+
+}
+
+/* ==========================================================
+   Recalculate Complete Invoice
+========================================================== */
+
+export function refreshInvoiceTable() {
+
+    [...tableBody.rows].forEach(row => {
+
+        updateInvoiceItem(row);
+
+        recalculateRow(row);
+
+    });
 
 }
 
@@ -498,41 +683,255 @@ export function loadInvoiceItems(items = []) {
 
     clearInvoiceItems();
 
+    if (!items.length)
+        return;
+
+    tableBody.innerHTML = "";
+
+    state.invoiceItems = [];
+
     items.forEach(item => {
 
-        const row = addInvoiceRow(item);
-
-        registerRowEvents(row);
-
-        updateInvoiceItem(row);
-
-        recalculateRow(row);
+        addInvoiceRow(item);
 
     });
 
-    if (items.length === 0) {
+    refreshInvoiceTable();
 
-        const row = addInvoiceRow();
+}
 
-        registerRowEvents(row);
+/* ==========================================================
+   Invoice Total
+========================================================== */
+
+export function getGrandTotal() {
+
+    let total = 0;
+
+    [...tableBody.rows].forEach(row => {
+
+        total += Number(
+
+            row.querySelector(".amount")
+                ?.value || 0
+
+        );
+
+    });
+
+    return total;
+
+}
+
+/* ==========================================================
+   Barcode Lookup
+========================================================== */
+
+async function handleBarcodeSearch(input) {
+
+    const row = input.closest("tr");
+
+    if (!row)
+        return;
+
+    const barcode = input.value.trim();
+
+    if (!barcode)
+        return;
+
+    try {
+
+        const product =
+            await getProductByBarcode(barcode);
+
+        if (!product)
+            return;
+
+        fillRow(row, product);
+
+        const qty =
+            row.querySelector(".qty");
+
+        qty?.focus();
+        qty?.select();
+
+    }
+
+    catch (error) {
+
+        console.error(error);
 
     }
 
 }
 
 /* ==========================================================
-   Refresh Table
+   Validate Row
 ========================================================== */
 
-export function refreshInvoiceTable() {
+export function validateRow(row) {
 
-    syncInvoiceItems();
+    if (!row)
+        return false;
 
-    [...tableBody.rows].forEach(row => {
+    const productName =
+        row.querySelector(".productName")?.value;
 
-        recalculateRow(row);
+    const qty =
+        Number(
+            row.querySelector(".qty")?.value
+        );
 
-    });
+    if (!productName)
+        return false;
+
+    if (qty <= 0)
+        return false;
+
+    return true;
+
+}
+
+/* ==========================================================
+   Validate Complete Invoice
+========================================================== */
+
+export function validateInvoiceItems() {
+
+    const rows = [...tableBody.rows];
+
+    if (!rows.length)
+        return false;
+
+    for (const row of rows) {
+
+        if (!validateRow(row))
+            return false;
+
+    }
+
+    return true;
+
+}
+
+/* ==========================================================
+   Find Product Row
+========================================================== */
+
+export function findProductRow(productId) {
+
+    return [...tableBody.rows].find(row =>
+
+        row.querySelector(".productId")
+            ?.value == productId
+
+    );
+
+}
+
+/* ==========================================================
+   Duplicate Product Check
+========================================================== */
+
+export function addOrUpdateProduct(product) {
+
+    const existingRow =
+        findProductRow(product.id);
+
+    if (existingRow) {
+
+        const qty =
+            existingRow.querySelector(".qty");
+
+        qty.value =
+            Number(qty.value) + 1;
+
+        updateInvoiceItem(existingRow);
+
+        recalculateRow(existingRow);
+
+        qty.focus();
+
+        return existingRow;
+
+    }
+
+    return addInvoiceRow(product);
+
+}
+
+/* ==========================================================
+   Empty Row Check
+========================================================== */
+
+export function isRowEmpty(row) {
+
+    return !row
+        .querySelector(".productName")
+        ?.value
+        .trim();
+
+}
+
+/* ==========================================================
+   Get Last Row
+========================================================== */
+
+export function getLastRow() {
+
+    return tableBody.lastElementChild;
+
+}
+
+/* ==========================================================
+   Ensure Blank Row Exists
+========================================================== */
+
+export function ensureBlankRow() {
+
+    const lastRow = getLastRow();
+
+    if (!lastRow) {
+
+        addInvoiceRow();
+
+        return;
+
+    }
+
+    if (!isRowEmpty(lastRow)) {
+
+        addInvoiceRow();
+
+    }
+
+}
+
+/* ==========================================================
+   Table Reset
+========================================================== */
+
+export function resetInvoiceTable() {
+
+    tableBody.innerHTML = "";
+
+    state.invoiceItems = [];
+
+    addInvoiceRow();
+
+}
+
+/* ==========================================================
+   Destroy
+========================================================== */
+
+export function destroyInvoiceTable() {
+
+    tableBody.innerHTML = "";
+
+    state.invoiceItems = [];
+
+    initialized = false;
 
 }
 
@@ -548,20 +947,43 @@ export default {
 
     removeInvoiceRow,
 
-    clearInvoiceItems,
-
-    getInvoiceItems,
+    fillRow,
 
     updateInvoiceItem,
 
     syncInvoiceItems,
 
+    getInvoiceItems,
+
     loadInvoiceItems,
 
     refreshInvoiceTable,
+
+    clearInvoiceItems,
+
+    validateRow,
+
+    validateInvoiceItems,
+
+    addOrUpdateProduct,
+
+    findProductRow,
+
+    getGrandTotal,
+
+    getLastRow,
+
+    ensureBlankRow,
+
+    resetInvoiceTable,
+
+    destroyInvoiceTable,
 
     getRow,
 
     getRowIndex
 
 };
+
+
+
