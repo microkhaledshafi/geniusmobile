@@ -1,69 +1,59 @@
-/*
-==========================================================
-Genius Scientific ERP
-Billing Module
-
-File:
-payment.js
-
-Purpose:
-Invoice payment management.
-
-Responsibilities
-
-• Manage payment details
-• Calculate balance/change
-• Validate payment
-• Expose payment API
-
-==========================================================
-*/
-
-/*==========================================================
-Imports
-==========================================================*/
+/* ==========================================================
+   Genius Scientific ERP
+   payment.js
+   Part 1
+   Payment Engine
+========================================================== */
 
 import {
 
-    getInvoiceTotals
+    getGrandTotal
 
 } from "./calculations.js";
 
-/*==========================================================
-Constants
-==========================================================*/
+/* ==========================================================
+   Constants
+========================================================== */
 
-const DECIMAL_PLACES = 2;
+const PAYMENT_STATUS = {
 
-/*==========================================================
-Module State
-==========================================================*/
+    PAID: "Paid",
 
-let paymentState = {
+    PARTIAL: "Partial",
 
-    paymentMode: "Cash",
+    PENDING: "Pending",
 
-    amountReceived: 0,
-
-    amountPayable: 0,
-
-    balance: 0,
-
-    change: 0
+    EXCESS: "Excess"
 
 };
 
-/*==========================================================
-Private Helper Functions
-==========================================================*/
+/* ==========================================================
+   Module State
+========================================================== */
 
-/**
- * Safely convert a value to number.
- *
- * @param {*} value
- * @returns {number}
- */
-function parseNumber(value) {
+const paymentState = {
+
+    paymentMode: "Cash",
+
+    amountPayable: 0,
+
+    amountReceived: 0,
+
+    balanceAmount: 0,
+
+    changeAmount: 0,
+
+    paymentStatus: PAYMENT_STATUS.PENDING
+
+};
+
+let initialized = false;
+
+/* ==========================================================
+   Number Helpers
+========================================================== */
+
+function toNumber(value) {
 
     const number = Number(value);
 
@@ -75,475 +65,504 @@ function parseNumber(value) {
 
 }
 
-/**
- * Round decimal value.
- *
- * @param {number} value
- * @returns {number}
- */
-function roundValue(value) {
+function round(value) {
 
     return Number(
 
-        parseNumber(value)
+        toNumber(value)
 
-            .toFixed(
-
-                DECIMAL_PLACES
-
-            )
+            .toFixed(2)
 
     );
 
 }
 
-/**
- * Reset payment state.
- */
-function resetPaymentState() {
+/* ==========================================================
+   UI Helper
+========================================================== */
 
-    paymentState.paymentMode = "Cash";
+function setValue(id, value) {
 
-    paymentState.amountReceived = 0;
+    const element =
 
-    paymentState.amountPayable = 0;
+        document.getElementById(id);
 
-    paymentState.balance = 0;
-
-    paymentState.change = 0;
-
-}
-
-/**
- * Return cloned payment state.
- *
- * Prevent external modification.
- *
- * @returns {Object}
- */
-function clonePaymentState() {
-
-    return {
-
-        paymentMode:
-
-            paymentState.paymentMode,
-
-        amountReceived:
-
-            paymentState.amountReceived,
-
-        amountPayable:
-
-            paymentState.amountPayable,
-
-        balance:
-
-            paymentState.balance,
-
-        change:
-
-            paymentState.change
-
-    };
-
-}
-
-/*==========================================================
-End of Part 1
-==========================================================*/
-/*==========================================================
-Payment Calculation Engine
-==========================================================*/
-
-/**
- * Update amount payable
- * from invoice totals.
- */
-function updateAmountPayable() {
-
-    const totals = getInvoiceTotals();
-
-    paymentState.amountPayable =
-
-        roundValue(
-
-            totals.grandTotal
-
-        );
-
-}
-
-/**
- * Calculate payment values.
- *
- * Balance =
- * Amount Payable − Amount Received
- *
- * Change =
- * Amount Received − Amount Payable
- */
-function calculatePayment() {
-
-    updateAmountPayable();
-
-    const payable =
-
-        paymentState.amountPayable;
-
-    const received =
-
-        paymentState.amountReceived;
+    if (!element)
+        return;
 
     if (
 
-        received >= payable
+        element.tagName === "INPUT" ||
+
+        element.tagName === "SELECT" ||
+
+        element.tagName === "TEXTAREA"
 
     ) {
 
-        paymentState.change =
-
-            roundValue(
-
-                received - payable
-
-            );
-
-        paymentState.balance = 0;
+        element.value = value;
 
     }
 
     else {
 
-        paymentState.balance =
-
-            roundValue(
-
-                payable - received
-
-            );
-
-        paymentState.change = 0;
+        element.textContent = value;
 
     }
 
 }
 
-/**
- * Update payment screen.
- */
-function updatePaymentUI() {
+/* ==========================================================
+   Read UI Values
+========================================================== */
 
-    const payableElement =
+function readPaymentMode() {
 
-        document.getElementById(
+    return (
 
-            "amountPayable"
+        document.getElementById("paymentMode")
+
+            ?.value ||
+
+        "Cash"
+
+    );
+
+}
+
+function readReceivedAmount() {
+
+    return round(
+
+        document.getElementById("amountReceived")
+
+            ?.value
+
+    );
+
+}
+
+/* ==========================================================
+   End Part 1
+========================================================== */
+
+/* ==========================================================
+   Payment Calculation Engine
+========================================================== */
+
+function calculatePayment() {
+
+    paymentState.amountPayable =
+
+        round(
+
+            getGrandTotal()
 
         );
 
-    const receivedElement =
+    paymentState.amountReceived =
 
-        document.getElementById(
+        round(
 
-            "amountReceived"
-
-        );
-
-    const balanceElement =
-
-        document.getElementById(
-
-            "balanceAmount"
+            readReceivedAmount()
 
         );
 
-    const changeElement =
+    if (!paymentState.paymentMode) {
 
-        document.getElementById(
+    paymentState.paymentMode =
+        readPaymentMode();
 
-            "changeAmount"
+}
 
-        );
+    const difference =
 
-    const paymentModeElement =
+        round(
 
-        document.getElementById(
-
-            "paymentMode"
-
-        );
-
-    if (
-
-        payableElement
-
-    ) {
-
-        payableElement.textContent =
+            paymentState.amountReceived -
 
             paymentState.amountPayable
 
-                .toFixed(
+        );
 
-                    DECIMAL_PLACES
+    if (difference >= 0) {
 
-                );
+        paymentState.changeAmount =
 
-    }
+            difference;
 
-    if (
-
-        receivedElement
-
-    ) {
-
-        receivedElement.value =
-
-            paymentState.amountReceived
-
-                .toFixed(
-
-                    DECIMAL_PLACES
-
-                );
+        paymentState.balanceAmount = 0;
 
     }
 
-    if (
+    else {
 
-        balanceElement
+        paymentState.balanceAmount =
 
-    ) {
+            Math.abs(difference);
 
-        balanceElement.textContent =
-
-            paymentState.balance
-
-                .toFixed(
-
-                    DECIMAL_PLACES
-
-                );
+        paymentState.changeAmount = 0;
 
     }
 
-    if (
-
-        changeElement
-
-    ) {
-
-        changeElement.textContent =
-
-            paymentState.change
-
-                .toFixed(
-
-                    DECIMAL_PLACES
-
-                );
-
-    }
-
-    if (
-
-        paymentModeElement
-
-    ) {
-
-        paymentModeElement.value =
-
-            paymentState.paymentMode;
-
-    }
+    determinePaymentStatus();
 
 }
 
-/**
- * Refresh payment.
- */
-function refreshPayment() {
+/* ==========================================================
+   Payment Status
+========================================================== */
+
+function determinePaymentStatus() {
+
+    if (paymentState.amountPayable <= 0) {
+
+        paymentState.paymentStatus =
+
+            PAYMENT_STATUS.PENDING;
+
+        return;
+
+    }
+
+    if (
+
+        paymentState.amountReceived === 0
+
+    ) {
+
+        paymentState.paymentStatus =
+
+            PAYMENT_STATUS.PENDING;
+
+        return;
+
+    }
+
+    if (
+
+        paymentState.amountReceived <
+
+        paymentState.amountPayable
+
+    ) {
+
+        paymentState.paymentStatus =
+
+            PAYMENT_STATUS.PARTIAL;
+
+        return;
+
+    }
+
+    if (
+
+        paymentState.amountReceived ===
+
+        paymentState.amountPayable
+
+    ) {
+
+        paymentState.paymentStatus =
+
+            PAYMENT_STATUS.PAID;
+
+        return;
+
+    }
+
+    paymentState.paymentStatus =
+
+        PAYMENT_STATUS.EXCESS;
+
+}
+
+/* ==========================================================
+   Update Payment
+========================================================== */
+
+export function updatePayment() {
 
     calculatePayment();
 
     updatePaymentUI();
 
 }
-/*==========================================================
-Event Registration
-==========================================================*/
 
-/**
- * Update payment mode.
- */
-function updatePaymentMode() {
+/* ==========================================================
+   Public Helper
+========================================================== */
 
-    const element =
-        document.getElementById(
-            "paymentMode"
-        );
+export function getPaymentState() {
 
-    if (!element) {
+    return {
 
-        return;
+        ...paymentState
 
-    }
-
-    paymentState.paymentMode =
-        element.value;
+    };
 
 }
 
-/**
- * Update amount received.
- */
-function updateAmountReceived() {
+/* ==========================================================
+   Update Payment UI
+========================================================== */
 
-    const element =
-        document.getElementById(
-            "amountReceived"
-        );
+function updatePaymentUI() {
 
-    if (!element) {
+    setValue(
 
-        return;
+        "paymentMode",
 
-    }
+        paymentState.paymentMode
 
-    paymentState.amountReceived =
+    );
 
-        roundValue(
+    setValue(
 
-            parseNumber(
-                element.value
-            )
+        "amountPayable",
 
-        );
+        paymentState.amountPayable.toFixed(2)
+
+    );
+
+    setValue(
+
+        "amountReceived",
+
+        paymentState.amountReceived.toFixed(2)
+
+    );
+
+    setValue(
+
+        "balanceAmount",
+
+        paymentState.balanceAmount.toFixed(2)
+
+    );
+
+    setValue(
+
+        "changeAmount",
+
+        paymentState.changeAmount.toFixed(2)
+
+    );
+
+    setValue(
+
+        "paymentStatus",
+
+        paymentState.paymentStatus
+
+    );
 
 }
 
-/**
- * Register payment events.
- */
+/* ==========================================================
+   Refresh UI From Current State
+========================================================== */
+
+export function refreshPaymentUI() {
+
+    updatePaymentUI();
+
+}
+
+/* ==========================================================
+   Register Events
+========================================================== */
+
 function registerPaymentEvents() {
+
+    const receivedInput =
+
+        document.getElementById(
+
+            "amountReceived"
+
+        );
 
     const paymentMode =
 
         document.getElementById(
+
             "paymentMode"
-        );
-
-    const amountReceived =
-
-        document.getElementById(
-            "amountReceived"
-        );
-
-    if (paymentMode) {
-
-        paymentMode.addEventListener(
-
-            "change",
-
-            () => {
-
-                updatePaymentMode();
-
-                refreshPayment();
-
-            }
 
         );
 
-    }
+    receivedInput?.addEventListener(
 
-    if (amountReceived) {
+        "input",
 
-        amountReceived.addEventListener(
+        () => {
 
-            "input",
+            updatePayment();
 
-            () => {
+        }
 
-                updateAmountReceived();
+    );
 
-                refreshPayment();
+    paymentMode?.addEventListener(
 
-            }
+        "change",
 
-        );
+        () => {
 
-    }
+            paymentState.paymentMode =
+
+                paymentMode.value;
+
+            updatePayment();
+
+        }
+
+    );
 
 }
 
-/*==========================================================
-Public API
-==========================================================*/
+/* ==========================================================
+   Set Payment Mode
+========================================================== */
 
-/**
- * Initialize payment module.
- */
-export function initPayment() {
+export function setPaymentMode(mode) {
+
+    paymentState.paymentMode =
+
+        mode;
+
+    updatePayment();
+
+}
+
+/* ==========================================================
+   Initialize
+========================================================== */
+
+export function initializePayment() {
+
+    if (initialized)
+        return;
 
     registerPaymentEvents();
 
-    refreshPayment();
+    updatePayment();
+
+    initialized = true;
 
     console.log(
-
-        "[Payment] Module initialized."
-
+        "[Payment] Initialized"
     );
 
 }
 
-/**
- * Refresh payment values.
- */
-export function updatePayment() {
+/* ==========================================================
+   Clear Payment
+========================================================== */
 
-    refreshPayment();
+export functionclearPayment() {
 
-}
+    paymentState.paymentMode = "Cash";
 
-/**
- * Get payment details.
- *
- * @returns {Object}
- */
-export function getPaymentDetails() {
+    paymentState.amountReceived = 0;
 
-    return clonePaymentState();
+    updatePayment();
 
 }
 
-/**
- * Reset payment module.
- */
-export function clearPayment() {
+/* ==========================================================
+   Validation
+========================================================== */
 
-    resetPaymentState();
-
-    refreshPayment();
-
-}
-
-/**
- * Validate payment.
- *
- * @returns {boolean}
- */
 export function validatePayment() {
 
-    return (
+    updatePayment();
 
-        paymentState.amountPayable >= 0 &&
+    return {
 
-        paymentState.amountReceived >= 0
+        valid:
 
-    );
+            paymentState.amountPayable >= 0 &&
+
+            paymentState.amountReceived >= 0,
+
+        paymentStatus:
+
+            paymentState.paymentStatus,
+
+        balanceAmount:
+
+            paymentState.balanceAmount,
+
+        changeAmount:
+
+            paymentState.changeAmount
+
+    };
+
+}
+
+/* ==========================================================
+   Reset Module
+========================================================== */
+
+export function resetPayment() {
+
+    initialized = false;
+
+    clearPayment();
+
+}
+
+/* ==========================================================
+   Default Export
+========================================================== */
+
+export default {
+
+    initializePayment,
+
+    updatePayment,
+
+    refreshPayment,
+
+    refreshPaymentUI,
+
+    clearPayment,
+
+    resetPayment,
+
+    validatePayment,
+
+    getPaymentState,
+
+    setPaymentMode,
+
+    setReceivedAmount
+
+};
+
+/* ==========================================================
+   Set Received Amount
+========================================================== */
+
+export function setReceivedAmount(amount) {
+
+    paymentState.amountReceived =
+
+        round(amount);
+
+    updatePayment();
+
+}
+
+/* ==========================================================
+   Refresh From Invoice
+========================================================== */
+
+export function refreshPayment() {
+
+    updatePayment();
 
 }
 
