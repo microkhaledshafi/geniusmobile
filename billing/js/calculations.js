@@ -457,7 +457,7 @@ function refreshInvoiceCalculations() {
 
     updateTotalsUI();
 
-    updatePayment();
+    updatePayment(getInvoiceTotals());
 
 }
 /*==========================================================
